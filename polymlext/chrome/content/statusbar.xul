@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<overlay id="sample" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<script src="main.js" />
+	<statusbar id="status-bar">
+		<statusbarpanel id="polyml-statusbar-icon" class="statusbarpanel-iconic" src="chrome://polymlext/skin/polyml_16x16t.png" tooltiptext="PolyML extension is active" />
+	</statusbar>
+</overlay>

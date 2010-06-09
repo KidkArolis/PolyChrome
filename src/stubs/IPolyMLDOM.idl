@@ -1,0 +1,7 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(300FD938-7265-11DF-8006-62E1DFD72085)]
+interface IPolyMLDOM : nsISupports
+{
+  long Add(in long a, in long b);
+}; 

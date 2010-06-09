@@ -1,0 +1,18 @@
+$ poly
+Poly/ML 5.0 Release
+> fun f () = print "Hello World\n";
+val f = fn : unit -> unit
+> PolyML.export("hello", f);
+val it = () : unit
+> ^D
+$ cc -o hello hello.o -lpolymain -lpolyml
+$ ./hello
+Hello World
+
+---
+$ poly
+Poly/ML 5.0 Release
+> PolyML.use "polymlext.sml"
+> PolyML.export("polymlext", main);
+> ^D
+$ cc -o polymlext polymlext.o -lpolymain -lpolyml

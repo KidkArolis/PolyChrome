@@ -1,0 +1,24 @@
+### EDIT ###
+#make sure this is the profile you will be using the extension with
+ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
+############
+
+#the directory of the extension
+extension=`pwd`/polymlext
+
+#copy the updated components to the extension dir
+cp src/Release/libpolymldom.so polymlext/components/
+cp src/stubs/IPolyMLDOM.xpt polymlext/components/
+
+cp src/stubs_js/PolyMLDOMjs.xpt polymlext/components
+
+#update the extension file and move it to the firefox
+echo $extension > polymlext@ed.ac.uk
+cp polymlext@ed.ac.uk $ff_profile/extensions/
+
+#remove this file to make firefox reregister the updated component
+if [ -e $ff_profile/xpti.dat ]
+then
+rm "$ff_profile/xpti.dat"
+rm "$ff_profile/compreg.dat"
+fi

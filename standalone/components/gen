@@ -1,0 +1,2 @@
+~/xulrunner-sdk/sdk/bin/xpidl -m header -I ~/xulrunner-sdk/idl IMyComponent.idl
+~/xulrunner-sdk/sdk/bin/xpidl -m typelib -I ~/xulrunner-sdk/idl IMyComponent.idl
