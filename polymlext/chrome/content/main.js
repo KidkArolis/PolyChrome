@@ -37,7 +37,7 @@ var PolyMLext = (function() {
 	}
 
 	var init = function() {
-		//runCppXPCOM();
+		runCppXPCOM();
 		runJsXPCOM(); 
 	}
 

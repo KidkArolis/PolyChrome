@@ -22,3 +22,10 @@ then
 rm "$ff_profile/xpti.dat"
 rm "$ff_profile/compreg.dat"
 fi
+
+#if run parameters is passed run the firefox in debug mode
+if [ "$1" == "run" ]
+then
+#NSPR_LOG_MODULES=all:5 firefox
+NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
+fi

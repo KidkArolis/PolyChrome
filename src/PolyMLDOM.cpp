@@ -1,12 +1,15 @@
+#define MOZILLA_STRICT_API
+
+//#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStringAPI.h"
+#include "nsIConsoleService.h"
+
 #include "PolyMLDOM.h"
 #include "IPolyMLDOM.h"
 #include "xpcom-config.h"
 #define XPCOM_GLUE
-
-//#include "nsIServiceManager.h"
-//#include "nsIConsoleService.h"
-//#include "nsStringAPI.h"
-#include "nsCOMPtr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,11 +31,14 @@ NS_IMETHODIMP PolyMLDOM::Add(PRInt32 a, PRInt32 b, PRInt32 *_retval NS_OUTPARAM)
 {
 	nsCOMPtr<nsIConsoleService> aConsoleService =
 	    do_GetService( "@mozilla.org/consoleservice;1" );
-	aConsoleService->LogStringMessage(
-	    NS_LITERAL_STRING( "running poly" ).get());
+
+	//aConsoleService->LogStringMessage(
+	    //NS_LITERAL_STRING( "logging from C++" ).get());
+
+
 
 	//return NS_ERROR_NOT_IMPLEMENTED;
 	*_retval = a + b;
-	int r = system("/home/karolis/Dropbox/msc/extension/poly/polymlext");
+	//system("/home/karolis/Dropbox/msc/extension/poly/polymlext");
 	return NS_OK;
 }
