@@ -1,2 +1,5 @@
 src/.project
 src/.cproject
+src/Release
+src/Debug
+*.so
