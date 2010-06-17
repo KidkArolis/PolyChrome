@@ -1,0 +1,7 @@
+fun main() =
+    let val s = INetSock.TCP.socket()
+    in
+        Socket.bind(s, INetSock.any 9997);
+        Socket.listen(s, 5);
+        print "Listening\n"
+    end

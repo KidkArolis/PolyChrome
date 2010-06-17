@@ -7,8 +7,11 @@ ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
 extension=`pwd`/polymlext
 
 #copy the updated components to the extension dir
+if [ -e src/Release/libpolymldom.so ]
+then
 cp src/Release/libpolymldom.so polymlext/components/
 cp src/stubs/IPolyMLDOM.xpt polymlext/components/
+fi
 
 cp src/stubs_js/PolyMLDOMjs.xpt polymlext/components
 
@@ -26,6 +29,6 @@ fi
 #if run parameters is passed run the firefox in debug mode
 if [ "$1" == "run" ]
 then
-#NSPR_LOG_MODULES=all:5 firefox
-NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
+NSPR_LOG_MODULES=all:5 firefox
+#NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
 fi
