@@ -42,11 +42,22 @@ var PolyMLext = (function ()
     }
     
     var startPoly = function () {
-//        run the component that starts poly
-//        var myComponent = Components.classes['@ed.ac.uk/polymlext/runpoly;1']
-//        .createInstance(Components.interfaces.nsIRunPoly);
-//        myComponent.run();
-        log("Not implemented.");
+        // create an nsILocalFile for the executable
+        var file = Cc["@mozilla.org/file/local;1"]
+                             .createInstance(Components.interfaces.nsILocalFile);
+        file.initWithPath("/home/karolis/Dropbox/msc/extension/poly/polymlext");
+        // create an nsIProcess
+        var process = Cc["@mozilla.org/process/util;1"]
+                                .createInstance(Ci.nsIProcess);
+        process.init(file);
+
+        // Run the process.
+        // If first param is true, calling thread will be blocked until
+        // called process terminates.
+        // Second and third params are used to pass command-line arguments
+        // to the process.
+        var args = [];
+        process.run(false, args, args.length);
     }
     
     var startSocket = function () {
