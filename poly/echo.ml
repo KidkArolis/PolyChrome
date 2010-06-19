@@ -64,7 +64,6 @@ struct
                     print "listening...\n";
                     s 0
                 end
-            (*
             fun client () =
                 let
                     fun c 0 = closeSock(client_sock)
@@ -79,7 +78,6 @@ struct
                 in
                     c num
                 end
-            *)
         in
         (*
             case Posix.Process.fork () of
@@ -87,7 +85,7 @@ struct
               | NONE => server ();
             OS.Process.success
         *)
-            server()
+            client()
         end;
         
 end;

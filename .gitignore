@@ -1,5 +1,6 @@
-src/.project
-src/.cproject
 src/Release
 src/Debug
+src/libmldom/Release
 *.so
+.project
+.cproject

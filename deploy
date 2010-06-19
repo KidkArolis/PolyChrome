@@ -4,20 +4,20 @@ ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
 ############
 
 #the directory of the extension
-extension=`pwd`/polymlext
+#extension=`pwd`/polymlext
 
 #copy the updated components to the extension dir
-if [ -e src/Release/libpolymldom.so ]
-then
-cp src/Release/libpolymldom.so polymlext/components/
-cp src/stubs/IPolyMLDOM.xpt polymlext/components/
-fi
+#if [ -e src/Release/libpolymldom.so ]
+#then
+#cp src/Release/libpolymldom.so polymlext/components/
+#cp src/stubs/IPolyMLDOM.xpt polymlext/components/
+#fi
 
 cp src/stubs_js/PolyMLDOMjs.xpt polymlext/components
 
 #update the extension file and move it to the firefox
-echo $extension > polymlext@ed.ac.uk
-cp polymlext@ed.ac.uk $ff_profile/extensions/
+#echo $extension > polymlext@ed.ac.uk
+#cp polymlext@ed.ac.uk $ff_profile/extensions/
 
 #remove this file to make firefox reregister the updated component
 if [ -e $ff_profile/xpti.dat ]
@@ -29,6 +29,7 @@ fi
 #if run parameters is passed run the firefox in debug mode
 if [ "$1" == "run" ]
 then
-NSPR_LOG_MODULES=all:5 firefox
+#NSPR_LOG_MODULES=all:5 firefox
 #NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
+firefox
 fi

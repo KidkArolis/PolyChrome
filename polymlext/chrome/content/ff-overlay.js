@@ -1,3 +1,4 @@
+/*
 PolyMLext.onFirefoxLoad = function(event) {
   document.getElementById("contentAreaContextMenu")
           .addEventListener("popupshowing", function (e){ PolyMLext.showFirefoxContextMenu(e); }, false);
@@ -9,3 +10,4 @@ PolyMLext.showFirefoxContextMenu = function(event) {
 };
 
 window.addEventListener("load", PolyMLext.onFirefoxLoad, false);
+*/

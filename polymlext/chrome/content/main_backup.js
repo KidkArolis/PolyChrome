@@ -61,7 +61,7 @@
                     return;
                 }
                 //log("Msg received: " + received);
-                log('waiting...');
+                log('closing the stream...');
                 stream.close();
             }
         }

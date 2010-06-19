@@ -2,13 +2,44 @@ var BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1
                             "nsIBinaryInputStream",
                             "setInputStream");
 
-var PolyMLext = (function ()
-{
-    var log = dump = function (aMessage) {
+var log = dump = function (aMessage) {
         var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
         consoleService.logStringMessage("PolyMLext: " + aMessage);
+}
+
+var PolyMLext = (function ()
+{
+    var onPageLoad = function(aEvent) {
+        //if (aEvent.originalTarget.nodeName != "#document") {return;}
+        var doc = aEvent.originalTarget; // doc is document that triggered "onload" event  
+        // do something with the loaded page.  
+        // doc.location is a Location object (see below for a link).  
+        // You can use it to make your code executed on certain pages only.  
+        log("page loaded:" + doc.location.href);
+          
+        // add event listener for page unload   
+        aEvent.originalTarget.defaultView.addEventListener("unload", function(){ PolyMLext.onPageUnload(); }, true);
+        
+        PolyMLext.foo();
     }
     
+    var onPageUnload = function(aEvent) {
+        if (aEvent.originalTarget.nodeName != "#document") {return;}
+        if (aEvent.originalTarget instanceof HTMLDocument) {
+            var doc = aEvent.originalTarget;
+            log("page unloaded:" + doc.location.href);
+        }
+    }
+    
+    var bindLoadUnload = function() {
+        
+        var appcontent = document.getElementById("appcontent");   // browser  
+        if(appcontent) {
+            appcontent.addEventListener("DOMContentLoaded", PolyMLext.onPageLoad, true);
+        }
+        //window.addEventListener("pagehide", PolyMLext.onPageUnload, false); 
+    }
+
     var runCppXPCOM = function () {
         try {
             // normally Firefox extensions implicitly have XPCOM privileges, but since this is a file we have to request it.
@@ -45,7 +76,7 @@ var PolyMLext = (function ()
         // create an nsILocalFile for the executable
         var file = Cc["@mozilla.org/file/local;1"]
                              .createInstance(Components.interfaces.nsILocalFile);
-        file.initWithPath("/home/karolis/Dropbox/msc/extension/poly/polymlext");
+        file.initWithPath("/home/karolis/Dropbox/msc/extension/polymlext/poly/poly");
         // create an nsIProcess
         var process = Cc["@mozilla.org/process/util;1"]
                                 .createInstance(Ci.nsIProcess);
@@ -96,13 +127,22 @@ var PolyMLext = (function ()
                         }
                         log('received: '+data);
                         
-                        var n = output.write(data, data.length);
-                        log(">>> wrote "+n+" bytes\n");
+                        //var n = output.write(data, data.length);
+                        //log(">>> wrote "+n+" bytes\n");
                         
                         input.asyncWait(reader,0,0,null);
                     } 
                 }
 
+                var data = ''+
+                ' let'+
+                    ' val out = TextIO.openOut "/home/karolis/Desktop/debug"'+
+                ' in'+
+                    ' TextIO.output(out, "foo");'+
+                    ' TextIO.closeOut out'+
+                ' end;';
+                var n = output.write(data, data.length);
+                log(">>> wrote "+n+" bytes\n");
                 input.asyncWait(reader,0,0,null);
                 
 //                var waitForMoreInput = function (stream) {
@@ -179,15 +219,26 @@ var PolyMLext = (function ()
         window.addEventListener("unload", closeSocket, false);
     }
     
+    var foo = function() {
+        var document = window.content.document;
+        var element = document.getElementById('abc');
+        element.innerHTML ="working on it";
+    }
+    
     var init = function () {
+        bindLoadUnload();
         //runCppXPCOM();
         //runJsXPCOM();
-        //startPoly();
-        startSocket();
+        //startSocket();
+//        startPoly();
+        //PolyMLext.testing(); 
     }
     
     return {
-        init: init
+        init: init,
+        onPageLoad : onPageLoad,
+        onPageUnload : onPageUnload,
+        foo : foo
     }
     
 }());
@@ -295,5 +346,70 @@ function findCRLF(array)
   }
   return -1;
 }
+
+PolyMLext.testing = function() {
+    // instanciate component object
+    //var oMyPriority = Components.classes['@mozillazine.org/example/priority;1'].
+                                 //createInstance(Components.interfaces.nsISupportsPriority);
+
+    // lower priority
+    //oMyPriority.adjustPriority(10);
+    var test = Components.classes['@mozilla.org/example/testas;1'].
+                            createInstance(Components.interfaces.nsISupportsPriority);
+    log(test.GetScriptTypeID());
+}
+
+/*
+ *  Get the file path to the installation directory of this 
+ *  extension.var doc = aEvent.originalTarget; // doc is document that triggered "onload" event  
+    // do something with the loaded page.  
+    // doc.location is a Location object (see below for a link).  
+    // You can use it to make your code executed on certain pages only.  
+    if(doc.location.href.search("forum") > -1)  
+      alert("a forum page is loaded");  
+      
+    // add event listener for page unload   
+    aEvent.originalTarget.defaultView.addEventListener("unload", function(){ myExtension.onPageUnload(); }, true);  
+ */
+PolyMLext._getExtensionPath = function(extensionName) {
+    var chromeRegistry =
+        Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+            .getService(Components.interfaces.nsIChromeRegistry);
+            
+    var uri =
+        Components.classes["@mozilla.org/network/standard-url;1"]
+            .createInstance(Components.interfaces.nsIURI);
+    
+    uri.spec = "chrome://" + extensionName + "/content/";
+    
+    var path = chromeRegistry.convertChromeURL(uri);
+    if (typeof(path) == "object") {
+        path = path.spec;
+    }
+    
+    path = path.substring(0, path.indexOf("/chrome/") + 1);
+    
+    return path;
+};
+    
+/*
+ *  Retrieve the file path to the user's profile directory.
+ *  We don't really use it here but it might come in handy
+ *  for you.
+ */
+PolyMLext._getProfilePath = function() {
+    var fileLocator =
+        Components.classes["@mozilla.org/file/directory_service;1"]
+            .getService(Components.interfaces.nsIProperties);
+    
+    var path = escape(fileLocator.get("ProfD", Components.interfaces.nsIFile).path.replace(/\\/g, "/")) + "/";
+    if (path.indexOf("/") == 0) {
+        path = 'file://' + path;
+    } else {
+        path = 'file:///' + path;
+    }
+    
+    return path;
+};
 
 PolyMLext.init();
