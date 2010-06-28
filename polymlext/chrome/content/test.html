@@ -4,17 +4,51 @@
 <meta charset="utf-8" />
 <title>Hello PolyML</title>
 
+<!--
 <script type="application/x-polyml">
 	fun f () = print "Hello PolyML\n";
 	f();
 	//debugging?
 </script>
+-->
 
-<script type="application/belekas">
-</script>
+<style type= "text/css">
+    body, html {
+        padding:0;
+        margin:0;
+        font-family: verdana, sans;
+        font-size:12px;
+    }
+    pre {
+        margin:0;
+    }
+    #code {
+        padding:20px;
+        background-color:#eee;
+        border-bottom:1px solid #ccc;
+    }
+    #body { padding:20px; }
+</style> 
 
 </head>
 <body>
-<p id="abc">does not work yet...</p>
+<pre id="code">
+(*
+let
+    val out = TextIO.openOut "/home/karolis/Desktop/debug"
+in
+    TextIO.output(out, "yaay");
+    TextIO.closeOut out
+end;
+*)
+val elem = 
+    case Js.getElementById Js.document "abc" of 
+      SOME e => e
+    | NONE => raise Fail "no box element in DOM"
+val text = Js.innerHTML elem;
+</pre>
+<div id="body">
+    <p id="abc">does not work yet...</p>
+</div>
 </body>
 </html>
