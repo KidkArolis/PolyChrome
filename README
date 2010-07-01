@@ -1,5 +1,4 @@
-To build and deploy the extension:
+To deploy the extension:
 
-1. Build the Eclipse project located in the src. (list compiler parameters here...)
-2. Edit the deploy script to contain correct path to firefox profile.
-3. Run the deploy script.
+1. Edit the deploy script to contain correct path to firefox profile.
+2. Run the deploy script.

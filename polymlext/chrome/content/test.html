@@ -41,11 +41,14 @@ in
     TextIO.closeOut out
 end;
 *)
+(*
 val elem = 
     case Js.getElementById Js.document "abc" of 
       SOME e => e
-    | NONE => raise Fail "no box element in DOM"
+    | NONE => raise Fail "no box element in DOM";
 val text = Js.innerHTML elem;
+*)
+ext.send("yaay");
 </pre>
 <div id="body">
     <p id="abc">does not work yet...</p>

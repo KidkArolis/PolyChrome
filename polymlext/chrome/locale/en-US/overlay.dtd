@@ -1,8 +1,0 @@
-<!ENTITY PolyMLext.label "Your localized menuitem">
-<!ENTITY PolyMLextContext.label "Your Menuitem">
-<!ENTITY PolyMLextContext.accesskey "Y">
-<!ENTITY PolyMLextToolbarButton.label "Your Toolbar Button">
-<!ENTITY PolyMLextToolbarButton.tooltip "This is your toolbar button!">
-<!ENTITY PolyMLextSidebar.label "Your Sidebar">
-<!ENTITY PolyMLextToolbar.name  "example">
-<!ENTITY PolyMLextToolbar.label "This is an example toolbar. You can hide it under View &gt; toolbars &gt; &PolyMLextToolbar.name;">

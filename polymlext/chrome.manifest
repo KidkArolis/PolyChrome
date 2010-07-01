@@ -2,6 +2,4 @@ content   PolyMLext                 chrome/content/
 skin      PolyMLext   classic/1.0   chrome/skin/
 locale    PolyMLext   en-US         chrome/locale/en-US/
 
-
-overlay   chrome://browser/content/browser.xul   chrome://PolyMLext/content/ff-overlay.xul
 overlay   chrome://browser/content/browser.xul   chrome://PolyMLext/content/statusbar.xul

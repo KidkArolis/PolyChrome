@@ -5,8 +5,11 @@ sig
   val main: unit -> unit
 end;
 
-structure ext: PolyMLext =
-struct
+structure ext
+(* : PolyMLext *) 
+= struct
+
+    val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
 
     exception Error of string
 
@@ -40,11 +43,13 @@ struct
         client
     end
     
-    fun send (s,str) =
+    
+    
+    fun send (str) =
         let
             val outv = Word8VectorSlice.full
                 (Byte.stringToBytes str)
-            val bytes_sent = Socket.sendVec(s, outv);
+            val bytes_sent = Socket.sendVec(Option.valOf (!gsock), outv);
         in
             PolyML.print ("Sent " ^ (Int.toString bytes_sent) 
                 ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))
@@ -72,8 +77,11 @@ struct
     fun main() = 
         let
             val client_sock = mkSock();
+            val _ = (gsock := SOME client_sock);
+            
             val code = Byte.bytesToString(Socket.recvVec(client_sock,1000));
         in
+            (*send("teeeeest");*)
             eval(code);
             closeSock(client_sock);
             OS.Process.exit OS.Process.success

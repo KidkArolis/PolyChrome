@@ -1,11 +1,26 @@
-### EDIT ###
+### EDIT #######################################################################
 #make sure this is the profile you will be using the extension with
 ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
-############
+################################################################################
 
 #the directory of the extension
-#extension=`pwd`/polymlext
+extension=`pwd`/polymlext
 
+#update the extension file and move it to the firefox
+echo $extension > polymlext@ed.ac.uk
+cp polymlext@ed.ac.uk $ff_profile/extensions/
+
+#if run is passed as a parameter run the firefox
+if [ "$1" == "run" ]
+then
+#NSPR_LOG_MODULES=all:5 firefox
+#NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
+firefox
+fi
+
+
+
+### NOT USEFUL UNLESS WE USE C++ COMPONENTS ####################################
 #copy the updated components to the extension dir
 #if [ -e src/Release/libpolymldom.so ]
 #then
@@ -13,23 +28,13 @@ ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
 #cp src/stubs/IPolyMLDOM.xpt polymlext/components/
 #fi
 
-cp src/stubs_js/PolyMLDOMjs.xpt polymlext/components
-
-#update the extension file and move it to the firefox
-#echo $extension > polymlext@ed.ac.uk
-#cp polymlext@ed.ac.uk $ff_profile/extensions/
-
-#remove this file to make firefox reregister the updated component
-if [ -e $ff_profile/xpti.dat ]
-then
-rm "$ff_profile/xpti.dat"
-rm "$ff_profile/compreg.dat"
-fi
-
-#if run parameters is passed run the firefox in debug mode
-if [ "$1" == "run" ]
-then
-#NSPR_LOG_MODULES=all:5 firefox
-#NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
-firefox
-fi
+#remove these files to make firefox reregister the updated component
+#if [ -e $ff_profile/xpti.dat ]
+#then
+#rm "$ff_profile/xpti.dat"
+#fi
+#if [ -e $ff_profile/compreg.dat ]
+#then
+#rm "$ff_profile/compreg.dat"
+#fi
+################################################################################
