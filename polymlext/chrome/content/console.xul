@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://PolyMLext/locale/console.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <label value="PolyML output" />
+    <hbox>
+      <textbox id="polyml" multiline="true" rows="14" cols="80" />
+    </hbox>
+
+    <label value="Extension debug" />
+    <hbox>
+      <textbox id="debug" multiline="true" rows="14" cols="80" />
+    </hbox>
+</window>

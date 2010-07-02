@@ -33,22 +33,8 @@
 </head>
 <body>
 <pre id="code">
-(*
-let
-    val out = TextIO.openOut "/home/karolis/Desktop/debug"
-in
-    TextIO.output(out, "yaay");
-    TextIO.closeOut out
-end;
-*)
-(*
-val elem = 
-    case Js.getElementById Js.document "abc" of 
-      SOME e => e
-    | NONE => raise Fail "no box element in DOM";
-val text = Js.innerHTML elem;
-*)
-ext.send("yaay");
+(*js "document.getElementById(\"abc\").innerHTML=\"FOOOOO\"";*)
+js "aha";
 </pre>
 <div id="body">
     <p id="abc">does not work yet...</p>

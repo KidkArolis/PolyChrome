@@ -12,7 +12,7 @@ Hello World
 ---
 $ poly
 Poly/ML 5.0 Release
-> PolyML.use "polymlext.sml"
-> PolyML.export("polymlext", main);
+> PolyML.use "ext.sml"
+> PolyML.export("poly", main);
 > ^D
-$ cc -o polymlext polymlext.o -lpolymain -lpolyml
+$ cc -o poly poly.o -lpolymain -lpolyml

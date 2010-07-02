@@ -1,61 +1,48 @@
-use "js.ml";
-
 signature PolyMLext =
 sig
   val main: unit -> unit
+  val send: string -> string
+  val recv: unit -> string
+  val test: unit -> unit
 end;
 
-structure ext
-(* : PolyMLext *) 
+structure ext : PolyMLext
 = struct
 
     val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
 
     exception Error of string
-
-    val tempFile = "/var/tmp/polymlext";
+   
+    fun the (reference) = Option.valOf (!reference)
     
-    fun toFile(text: string) =
+    fun mkSock () =
         let
-            val out = TextIO.openOut tempFile
+            val client = INetSock.TCP.socket()
+            val me = case NetHostDB.getByName "localhost" of
+	                    NONE => raise Error ""
+	                  | SOME en => en;
+            val localhost = NetHostDB.addr me;
+            val port = 9998;
+            val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
+            val _ = INetSock.TCP.setNODELAY(client,true)
         in
-            TextIO.output(out, text);
-            TextIO.closeOut out
-        end;
-        
-    fun eval(code: string) =
-        let
-            val _ = toFile(code);
-        in
-            PolyML.use tempFile
-        end;
-    
-    fun mkSock () = let
-        val client = INetSock.TCP.socket()
-        val me = case NetHostDB.getByName "localhost" of
-	                NONE => raise Error ""
-	              | SOME en => en;
-        val localhost = NetHostDB.addr me;
-        val port = 9998;
-        val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
-        val _ = INetSock.TCP.setNODELAY(client,true)
-    in
-        client
-    end
-    
-    
+            client
+        end
     
     fun send (str) =
         let
             val outv = Word8VectorSlice.full
                 (Byte.stringToBytes str)
-            val bytes_sent = Socket.sendVec(Option.valOf (!gsock), outv);
+            val bytes_sent = Socket.sendVec(the gsock, outv);
         in
             PolyML.print ("Sent " ^ (Int.toString bytes_sent) 
                 ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))
         end
+        
+    fun recv () =
+        Byte.bytesToString(Socket.recvVec(the gsock, 1000))
    
-    fun readString (s,n) =
+    fun recv2 (s,n) =
         let
             fun loop(0) = []
               | loop(n) =
@@ -72,19 +59,95 @@ structure ext
     
     fun closeSock s =
         (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
-         Socket.close s)
+         Socket.close s);
+         
+    fun evaluate location_url txt =
+        let
+            (* uses input and output buffers for compilation and output message *)
+            val in_buffer = ref (String.explode txt);
+            val out_buffer = ref ([]: string list);
+            val current_line = ref 1;
+
+            (* helper function *)
+            fun drop_newline s =
+            if String.isSuffix "\n" s then String.substring (s, 0, size s - 1)
+            else s;
+
+            fun output () = (String.concat (rev (! out_buffer)));
+
+            (* take a charcter out of the input txt string *)
+            fun get () =
+              (case ! in_buffer of
+                [] => NONE
+              | c :: cs =>
+                  (in_buffer := cs; if c = #"\n" then current_line := ! current_line + 1 else (); SOME c));
+
+            (* add to putput buffer *)
+            fun put s = (out_buffer := s :: ! out_buffer);
+            
+            (* handling error messages *)
+            fun put_message { message = msg1, hard, location : PolyML.location, 
+                              context } =
+                let val line_width = 76; in
+                   (put (if hard then "Error: " else "Warning: ");
+                    PolyML.prettyPrint (put, line_width) msg1;
+                    (case context of NONE => () 
+                     | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
+                     put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: " 
+                          ^ location_url ^ "\n"))
+                end;
+
+            val compile_params = 
+              [(* keep track of line numbers *)
+               PolyML.Compiler.CPLineNo (fn () => ! current_line),
+
+               (* the following catches any output during 
+                  compilation/evaluation and store it in the put stream. *)
+               PolyML.Compiler.CPOutStream put,
+                      (* the following handles error messages specially 
+                  to say where they come from in the error message into 
+                  the put stream. *)
+               PolyML.Compiler.CPErrorMessageProc put_message
+              ]
+
+            val (worked,_) = 
+              (true, while not (List.null (! in_buffer)) do 
+                     PolyML.compiler (get, compile_params) ())
+              handle exn => (* something went wrong... *)
+               (false, (put ("Exception- " ^ General.exnMessage exn ^ " raised"); ()
+                (* Can do other stuff here: e.g. raise exn *) ));
+
+              (* finally, print out any messages in the output buffer *)
+        in
+            if worked then TextIO.print ("AllGOOD: " ^ (output ()))
+            else TextIO.print ("PANTS!: " ^ (output ()))
+(*              send("{\"type:1\", \"output\":\""^output()^"\"}")*)
+(*              send("{\"type\":1, \"output\":\"booga\"}")*)
+        end;
+    
+    fun test() = print "not good\n";
+         
+    fun loop () =
+        let
+            val code = recv();
+        in
+            evaluate "foo" code
+(*            loop()*)
+        end
 
     fun main() = 
         let
             val client_sock = mkSock();
             val _ = (gsock := SOME client_sock);
-            
-            val code = Byte.bytesToString(Socket.recvVec(client_sock,1000));
         in
-            (*send("teeeeest");*)
-            eval(code);
+            loop();
             closeSock(client_sock);
             OS.Process.exit OS.Process.success
-        end;
+        end
         
 end;
+
+use "js.ml";
+open Js;
+PolyML.fullGC ();
+map PolyML.Compiler.forgetStructure["PolyMLext"];

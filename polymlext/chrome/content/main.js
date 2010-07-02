@@ -1,8 +1,13 @@
+var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+
 /*helpers*/
 var log = dump = function (aMessage) {
+/*
         var consoleService = Cc["@mozilla.org/consoleservice;1"].
                                 getService(Ci.nsIConsoleService);
         consoleService.logStringMessage("PolyMLext: " + aMessage);
+*/
+    PolyMLext.Console.log(aMessage);
 }
 
 /*
@@ -80,6 +85,8 @@ var PolyMLext = (function ()
 {
 
     var process;
+    
+    var listeners = [];
 
     var onPageLoad = function(aEvent) {
         if (!aEvent) { return; }
@@ -96,7 +103,7 @@ var PolyMLext = (function ()
         if (aEvent.originalTarget.nodeName != "#document") {return;}
         if (aEvent.originalTarget instanceof HTMLDocument) {
             var doc = aEvent.originalTarget;
-            log("page unloaded:" + doc.location.href);
+            log("Page unloaded:" + doc.location.href);
         }
     }
     
@@ -127,11 +134,32 @@ var PolyMLext = (function ()
     }
     
     var dispatch = function(request) {
-        log('not implemented');
-        return;
+        var document = window.content.document;
+        try {
+            request = nativeJSON.encode(request);
+        } catch (e) {
+            log("ERROR >>> Could not decode JSON.")
+        }
+        log("ABUGA"+request.type);
+        switch (request.type) {
+            //output
+            case 1:
+                PolyMLext.Console.poly(request.output);
+                break;
+            //code to evaluate
+            case 2:
+                var response = null;
+                response = eval(request.code);
+                PolyMLext.Server.send(response);
+                break;
+            //add event listener
+            case 3:
+                log("Event listeners are not implemented");
+                break;
+            default:
+                log("ERROR >>> unexpected request from Poly");
+        }
     }
-    
-    
     
     var Server = function() {
     
@@ -141,7 +169,7 @@ var PolyMLext = (function ()
     
         var send = function(data) {
             var n = output.write(data, data.length);
-            log("wrote "+n+" bytes\n");
+            log("Sent "+n+" bytes.");
         }
         
         var reader = {
@@ -152,13 +180,14 @@ var PolyMLext = (function ()
                     sin.init(input);
                     sin.available();
                     var request = '';
+                    log('Waiting for input.');
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-                    log('received: ' + request);
+                    log('Received: ' + request);
                     //perform the requested action
-                    dispatch(request);
-                    
+                    //PolyMLext.dispatch(request);
+                    //wait for another request
                     input.asyncWait(reader,0,0,null);
                 } catch (e) {
                     log('ERROR >>> Poly was closed.');
@@ -168,14 +197,14 @@ var PolyMLext = (function ()
         
         var listener = {
             onSocketAccepted: function(serverSocket, clientSocket) {
-                log("accepted connection on "+clientSocket.host+":"+clientSocket.port+"\n");
+                log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
+
 
                 input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
                 output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-                
-//                evaluateScript();
-                
+                log('ping ping.');
                 input.asyncWait(reader,0,0,null);
+                log('pong pong.');
 
 //                input.close();
 //                output.close();
@@ -185,11 +214,14 @@ var PolyMLext = (function ()
             }
         }
         
-        var closeSocket = function() {
-            process.kill();
-            serverSocket.close();
+        var cleanUp = function() {
             log("Closing the socket.");
+            serverSocket.close();
+//            process.kill();
+            PolyMLext.Console.close();
         }
+        
+        
         
         var init = function () {
             serverSocket = Cc["@mozilla.org/network/server-socket;1"].
@@ -197,13 +229,12 @@ var PolyMLext = (function ()
             try {
                 serverSocket.init(9998, true, 5);
                 serverSocket.asyncListen(listener);
-                log("listening on port 9998.");
-            }
-            catch (e) {
+                log("Listening on port 9998.");
+            } catch (e) {
                 log("The port is already in use.")
             }
             
-            window.addEventListener("unload", closeSocket, false);
+            //window.addEventListener("unload", cleanUp, false);
         }
         
         return {
@@ -219,7 +250,7 @@ var PolyMLext = (function ()
         if (document.getElementById('code')!=null) {
             var code = document.getElementById('code').innerHTML;
             PolyMLext.Server.send(code);
-        }        
+        }
     }
     
     var init = function () {
@@ -232,9 +263,47 @@ var PolyMLext = (function ()
         init: init,
         onPageLoad : onPageLoad,
         onPageUnload : onPageUnload,
-        Server : Server
+        Server : Server,
+        dispatch : dispatch
     }
     
 }());
 
-PolyMLext.init();
+PolyMLext.Console = (function() {
+    var win;
+    
+    var log = function(m) {
+        win.document.getElementById('debug').value = win.document.getElementById('debug').value + m + "\n";
+        win.focus();
+    }
+    
+    var poly = function(m) {
+        win.document.getElementById('polyml').value = win.document.getElementById('polyml').value + m + "\n";
+        win.focus();
+    }
+    
+    var close = function() {
+        win.close();
+    }
+
+    var init = function() {
+        win = window.open("chrome://polymlext/content/console.xul",
+                  "console", "chrome,centerscreen, resizable=no");
+        return win;
+    }
+    
+    return {
+        init: init,
+        log : log,
+        poly : poly,
+    }
+}());
+
+window.onclose = PolyMLext.cleanUp;
+
+//have to wait for the console to be loaded before we can proceed :-/
+win = PolyMLext.Console.init();
+win.onload = function() {
+    PolyMLext.init();
+};
+
