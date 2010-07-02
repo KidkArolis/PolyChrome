@@ -1,7 +1,7 @@
 (* Example evaluation function: use PolyML's compiler to evaluate a 
    string in ML *)
 
-fun evaluate file_name txt =
+fun evaluate location_url txt =
   let
     (* uses input and output buffers for compilation and output message *)
     val in_buffer = ref (String.explode txt);
@@ -33,8 +33,8 @@ fun evaluate file_name txt =
         PolyML.prettyPrint (put, line_width) msg1;
         (case context of NONE => () 
          | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
-         put ("At line " ^ (Int.toString (#startLine location)) ^ "; of file: " 
-              ^ file_name ^ "\n"))
+         put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: " 
+              ^ location_url ^ "\n"))
     end;
 
     val compile_params = 
@@ -44,26 +44,35 @@ fun evaluate file_name txt =
        (** the following catches any output during 
           compilation/evaluation and store it in the put stream. **)
        PolyML.Compiler.CPOutStream put,
-      
+       
        (** the following handles error messages specially 
           to say where they come from in the error message into 
           the put stream. **)
        PolyML.Compiler.CPErrorMessageProc put_message
       ]
 
-    val _ = 
-      (while not (List.null (! in_buffer)) do 
+    val (worked,_) = 
+      (true, while not (List.null (! in_buffer)) do 
              PolyML.compiler (get, compile_params) ())
       handle exn => (* something went wrong... *)
-       (put ("Exception- " ^ General.exnMessage exn ^ " raised"); ()
-        (* Can do other stuff here: e.g. raise exn *) );
+       (false, (put ("Exception- " ^ General.exnMessage exn ^ " raised"); ()
+        (* Can do other stuff here: e.g. raise exn *) ));
 
   (* finally, print out any messages in the output buffer *)
-  in TextIO.print (output ()) end;
+  in if worked then TextIO.print ("AllGOOD: " ^ (output ()))
+     else TextIO.print ("PANTS!: " ^ (output ()))
+  end;
+
+
+map PolyML.Compiler.forgetStructure
+  ["TextIO", "BinIO", "BinPrimIO", "PolyML", "ImperativeIO", "StreamIO",
+ "PrimIO", "Posix", "Windows"];
 
 (* some examples. *)
 (* this one works fine *)
-val _ = evaluate "foo" "PolyML.print \"hi!\";";
+val _ = evaluate "http://foo/blah1" "PolyML.print \"hi!\";";
 
 (* this one goes wrong *)
-val _ = evaluate "foo" "\n\nPolyML.prisnt \"hi!\";";
+val _ = evaluate "http://foo/blah2" "\n\nPolyML.prisnt \"hi!\";";
+
+val x = TextIO.print;
