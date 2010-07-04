@@ -7,7 +7,8 @@ var log = dump = function (aMessage) {
                                 getService(Ci.nsIConsoleService);
         consoleService.logStringMessage("PolyMLext: " + aMessage);
 */
-    PolyMLext.Console.log(aMessage);
+    //PolyMLext.Console.log(aMessage);
+    dump(aMessage);
 }
 
 /*
@@ -22,7 +23,7 @@ var log = dump = function (aMessage) {
     // add event listener for page unload   
     aEvent.originalTarget.defaultView.addEventListener("unload", function(){ myExtension.onPageUnload(); }, true);  
  */
- 
+ /*
 var getExtensionPath = function(extensionName) {
     var chromeRegistry =
         Components.classes["@mozilla.org/chrome/chrome-registry;1"]
@@ -49,6 +50,7 @@ var getExtensionPath = function(extensionName) {
  *  We don't really use it here but it might come in handy
  *  for you.
  */
+ /*
 var getProfilePath = function() {
     var fileLocator =
         Components.classes["@mozilla.org/file/directory_service;1"]
@@ -77,17 +79,11 @@ function readFile(filename) {
 	var output = sis.read( sis.available() );
 	return output;
 }
-
 /*end helpers*/
 
 
 var PolyMLext = (function ()
 {
-
-    var process;
-    
-    var listeners = [];
-
     var onPageLoad = function(aEvent) {
         if (!aEvent) { return; }
         if (aEvent.originalTarget.nodeName != "#document") {return;}
@@ -113,24 +109,6 @@ var PolyMLext = (function ()
             appcontent.addEventListener("load", PolyMLext.onPageLoad, true);
         }
         //window.addEventListener("pagehide", PolyMLext.onPageUnload, false); 
-    }
-
-    var startPoly = function () {
-        //figure out the path of poly executable
-        var binpath = readFile(getProfilePath()+'/extensions/polymlext@ed.ac.uk');
-        binpath = binpath.substring(0, binpath.length-1) + '/poly/poly';
-        //run it
-        var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-        file.initWithPath(binpath);
-        process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-        process.init(file);
-        // Run the process.
-        // If first param is true, calling thread will be blocked until
-        // called process terminates.
-        // Second and third params are used to pass command-line arguments
-        // to the process.
-        var args = [];
-        process.run(false, args, args.length);
     }
     
     var dispatch = function(request) {
@@ -161,89 +139,6 @@ var PolyMLext = (function ()
         }
     }
     
-    var Server = function() {
-    
-        var input;
-        var output;
-        var serverSocket;
-    
-        var send = function(data) {
-            var n = output.write(data, data.length);
-            log("Sent "+n+" bytes.");
-        }
-        
-        var reader = {
-            onInputStreamReady : function(input) {
-                try {
-                    var sin = Cc["@mozilla.org/scriptableinputstream;1"]
-                                .createInstance(Ci.nsIScriptableInputStream);
-                    sin.init(input);
-                    sin.available();
-                    var request = '';
-                    log('Waiting for input.');
-                    while (sin.available()) {
-                      request = request + sin.read(512);
-                    }
-                    log('Received: ' + request);
-                    //perform the requested action
-                    //PolyMLext.dispatch(request);
-                    //wait for another request
-                    input.asyncWait(reader,0,0,null);
-                } catch (e) {
-                    log('ERROR >>> Poly was closed.');
-                }
-            } 
-        }
-        
-        var listener = {
-            onSocketAccepted: function(serverSocket, clientSocket) {
-                log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
-
-
-                input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
-                output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-                log('ping ping.');
-                input.asyncWait(reader,0,0,null);
-                log('pong pong.');
-
-//                input.close();
-//                output.close();
-            },
-            onStopListening: function(serverSocket, status) {
-                closeSocket();
-            }
-        }
-        
-        var cleanUp = function() {
-            log("Closing the socket.");
-            serverSocket.close();
-//            process.kill();
-            PolyMLext.Console.close();
-        }
-        
-        
-        
-        var init = function () {
-            serverSocket = Cc["@mozilla.org/network/server-socket;1"].
-                    createInstance(Ci.nsIServerSocket);            
-            try {
-                serverSocket.init(9998, true, 5);
-                serverSocket.asyncListen(listener);
-                log("Listening on port 9998.");
-            } catch (e) {
-                log("The port is already in use.")
-            }
-            
-            //window.addEventListener("unload", cleanUp, false);
-        }
-        
-        return {
-            init : init,
-            send : send
-        }
-        
-    }();
-    
     var evaluateScript = function () {
         var document = window.content.document;
         
@@ -255,20 +150,22 @@ var PolyMLext = (function ()
     
     var init = function () {
         bindLoadUnload();
-        Server.init();
-        //startPoly();
+//        Server.init();
+//        startPoly();
+        poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
+        poly.Server.init();
     }
     
     return {
         init: init,
         onPageLoad : onPageLoad,
         onPageUnload : onPageUnload,
-        Server : Server,
         dispatch : dispatch
     }
     
 }());
 
+/*
 PolyMLext.Console = (function() {
     var win;
     
@@ -298,12 +195,9 @@ PolyMLext.Console = (function() {
         poly : poly,
     }
 }());
+*/
 
-window.onclose = PolyMLext.cleanUp;
+//window.onclose = PolyMLext.cleanUp;
 
-//have to wait for the console to be loaded before we can proceed :-/
-win = PolyMLext.Console.init();
-win.onload = function() {
-    PolyMLext.init();
-};
+PolyMLext.init();
 

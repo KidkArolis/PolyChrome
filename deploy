@@ -10,6 +10,16 @@ extension=`pwd`/polymlext
 echo $extension > polymlext@ed.ac.uk
 cp polymlext@ed.ac.uk $ff_profile/extensions/
 
+#remove these files to make firefox reregister the updated component
+if [ -e $ff_profile/xpti.dat ]
+then
+rm "$ff_profile/xpti.dat"
+fi
+if [ -e $ff_profile/compreg.dat ]
+then
+rm "$ff_profile/compreg.dat"
+fi
+
 #if run is passed as a parameter run the firefox
 if [ "$1" == "run" ]
 then
@@ -26,15 +36,5 @@ fi
 #then
 #cp src/Release/libpolymldom.so polymlext/components/
 #cp src/stubs/IPolyMLDOM.xpt polymlext/components/
-#fi
-
-#remove these files to make firefox reregister the updated component
-#if [ -e $ff_profile/xpti.dat ]
-#then
-#rm "$ff_profile/xpti.dat"
-#fi
-#if [ -e $ff_profile/compreg.dat ]
-#then
-#rm "$ff_profile/compreg.dat"
 #fi
 ################################################################################
