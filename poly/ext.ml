@@ -1,6 +1,6 @@
 signature PolyMLext =
 sig
-  val main: unit -> unit
+  val main: 'a * string list -> 'b
   val send: string -> string
   val recv: unit -> string
   val test: unit -> unit
@@ -15,14 +15,14 @@ structure ext : PolyMLext
    
     fun the (reference) = Option.valOf (!reference)
     
-    fun mkSock () =
+    fun mkSock (port) =
         let
             val client = INetSock.TCP.socket()
             val me = case NetHostDB.getByName "localhost" of
 	                    NONE => raise Error ""
 	                  | SOME en => en;
             val localhost = NetHostDB.addr me;
-            val port = 9998;
+(*            val port = 9998;*)
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
         in
@@ -135,9 +135,12 @@ structure ext : PolyMLext
 (*            loop()*)
         end
 
-    fun main() = 
+    fun main(_, args) = 
         let
-            val client_sock = mkSock();
+            val port = case args of
+                    nil => raise Error "port of the server not provided"
+                  | n::_ => valOf (Int.fromString n)
+            val client_sock = mkSock(port);
             val _ = (gsock := SOME client_sock);
         in
             loop();

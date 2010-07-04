@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Hello PolyML</title>
+
+<!--
+<script type="application/x-polyml">
+	fun f () = print "Hello PolyML\n";
+	f();
+	//debugging?
+</script>
+-->
+
+<style type= "text/css">
+    body, html {
+        padding:0;
+        margin:0;
+        font-family: verdana, sans;
+        font-size:12px;
+    }
+    pre {
+        margin:0;
+    }
+    #code {
+        padding:20px;
+        background-color:#eee;
+        border-bottom:1px solid #ccc;
+    }
+    #body { padding:20px; }
+</style> 
+
+</head>
+<body>
+<pre id="code">
+(*js "document.getElementById(\"abc\").innerHTML=\"FOOOOO\"";*)
+js "aha";
+</pre>
+<div id="body">
+    <p id="abc">does not work yet...</p>
+</div>
+</body>
+</html>

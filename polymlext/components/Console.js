@@ -3,13 +3,25 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Console.prototype = (function() {
-    var win = {};
+    var win;
     var initialized = false;
     var ready = false;
     
-    var log = function(m) {
-        if (initialized&&ready) {
-            win.document.getElementById('debug').value = win.document.getElementById('debug').value + m + "\n";
+    var _log = function(m, level, location) {
+        if (initialized&&ready) {  
+            var prefix = "INFO: ";   
+            switch (level) {
+                case "empty":
+                    prefix = ""
+                    break;
+                case "error":
+                    prefix = "ERORR: "
+                    break;
+                case "warning":
+                    prefix = "WARNING: "
+                    break;
+            }
+            win.document.getElementById(location).value = win.document.getElementById(location).value + prefix + m + "\n";
             win.focus();
         } else if (initialized&&!ready) {
             // Now it is time to create the timer...  
@@ -28,9 +40,12 @@ Console.prototype = (function() {
         }
     }
     
-    var poly = function(m) {
-        win.document.getElementById('polyml').value = win.document.getElementById('polyml').value + m + "\n";
-        win.focus();
+    var log = function(m, level) {
+        _log(m, level, 'debug');
+    }
+    
+    var poly = function(m, level) {
+        _log(m, "empty", 'polyml');
     }
     
     var close = function() {
@@ -40,7 +55,7 @@ Console.prototype = (function() {
     var setReady = function() {
         ready = true;
     }
-
+    
     var init = function() {
         initialized = true;
         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]

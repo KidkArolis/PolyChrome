@@ -2,11 +2,17 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+const RUN_POLY_MANUALLY = true;
+
 Poly.prototype = (function() {
 
     var console;
+    
+    var document;
 
     var process;
+    
+    var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
     var getProfilePath = function() {
         var fileLocator =
@@ -38,6 +44,10 @@ Poly.prototype = (function() {
     }
 
     var startPoly = function () {
+        if (RUN_POLY_MANUALLY) {
+            console.log("Please start Poly module manually");
+            return;
+        }
         //figure out the path of poly executable
         var binpath = readFile(getProfilePath()+'/extensions/polymlext@ed.ac.uk');
         binpath = binpath.substring(0, binpath.length-1) + '/poly/poly';
@@ -52,7 +62,67 @@ Poly.prototype = (function() {
         // Second and third params are used to pass command-line arguments
         // to the process.
         var args = [];
-        process.run(false, args, args.length);
+        process.run(false, args, args.length);  
+    }
+    
+        var dispatch = function(request) {
+//            var document = window.content.document;
+            try {
+                request = nativeJSON.encode(request);
+            } catch (e) {
+                console.log("Could not decode JSON.", "error")
+            }
+            console.log("ABUGA"+request.type);
+            /*
+            switch (request.type) {
+                //output
+                case 1:
+                    PolyMLext.Console.poly(request.output);
+                    break;
+                //code to evaluate
+                case 2:
+                    var response = null;
+                    response = eval(request.code);
+                    PolyMLext.Server.send(response);
+                    break;
+                //add event listener
+                case 3:
+                    console.log("Event listeners are not implemented");
+                    break;
+                default:
+                    console.log("unexpected request from Poly", "error");
+            }
+            */
+        }
+    
+    var processCode = function(doc, code) {
+        document = doc;
+        if (RUN_POLY_MANUALLY) {
+            if (Server.ready()) {
+                Server.send(code);
+            } else {
+//                console.log("I'll wait 10 seconds for you to launch Poly.");
+                var timer = Components.classes["@mozilla.org/timer;1"]
+                   .createInstance(Components.interfaces.nsITimer);
+                timer.initWithCallback(
+                    { notify: function() { processCode(document, code); } },
+                    10000,
+                    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+                );
+            }
+            return;
+        }
+        
+        Server.send(code);
+    }
+    
+    var evaluateScript = function () {
+        var document = window.content.document;
+        
+        if (document.getElementById('code')!=null) {
+            var code = document.getElementById('code').innerHTML;
+            PolyMLext.Server.send(code);
+        }
     }
 
     var Server = function() {
@@ -74,17 +144,17 @@ Poly.prototype = (function() {
                     sin.init(input);
                     sin.available();
                     var request = '';
-                    console.log('Waiting for input.');
+                    console.log('waiting for input');
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
                     console.log('Received: ' + request);
                     //perform the requested action
-                    //PolyMLext.dispatch(request);
+                    dispatch(request);
                     //wait for another request
                     input.asyncWait(reader,0,0,null);
                 } catch (e) {
-                    console.log('ERROR >>> Poly was closed.');
+                    console.log('Poly was closed.', 'error');
                 }
             } 
         }
@@ -92,13 +162,9 @@ Poly.prototype = (function() {
         var listener = {
             onSocketAccepted: function(serverSocket, clientSocket) {
                 console.log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
-
-
                 input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
                 output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-                console.log('ping ping.');
                 input.asyncWait(reader,0,0,null);
-                console.log('pong pong.');
 
 //                input.close();
 //                output.close();
@@ -108,41 +174,57 @@ Poly.prototype = (function() {
             }
         }
         
-        var cleanUp = function() {
-            console.log("Closing the socket.");
+        var destroy = function() {
+            console.log("Closing the socket " + serverSocket.port + ".");
             serverSocket.close();
-//            process.kill();
-            PolyMLext.Console.close();
         }
         
-        
+        var ready = function() {
+            return output!=null;
+        }     
         
         var init = function () {
-            console = Cc["@ed.ac.uk/poly/console;1"].
-                    getService().wrappedJSObject;
-        
             serverSocket = Cc["@mozilla.org/network/server-socket;1"].
-                    createInstance(Ci.nsIServerSocket);            
-            try {
-                serverSocket.init(9998, true, 5);
-                serverSocket.asyncListen(listener);
-                console.log("Listening on port 9998.");
-            } catch (e) {
-                console.log("The port is already in use.")
-            }
+                    createInstance(Ci.nsIServerSocket);
+            serverSocket.init(-1, true, 5);
+            serverSocket.asyncListen(listener);
+            console.log("Created a server socket on port " + serverSocket.port);//. serverSocket.port);
             
             //window.addEventListener("unload", cleanUp, false);
         }
         
-        return {
-            init : init,
-            send : send
+        var port = function() {
+            return serverSocket.port;
         }
         
+        return {
+            init : init,
+            send : send,
+            ready : ready,
+            destroy : destroy,
+            port : port
+        }
     }();
+    
+    var destroy = function() {
+        console.log("Destroying this instance of Poly.")
+        Server.destroy();
+        if (!RUN_POLY_MANUALLY) {
+            process.kill();
+        }
+    }
+    
+    var init = function() {
+        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        Server.init();
+        startPoly();
+    }
 
     return {
+        init : init,
         Server : Server,
+        processCode : processCode,
+        destroy : destroy
     }
 }())
     
@@ -150,6 +232,8 @@ Poly.prototype = (function() {
 // turning Poly Class into an XPCOM component
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function Poly() {
+    //IMPORTANT TO CALL THE init() METHOD
+    this.init();
     this.wrappedJSObject = this;
 }
 prototype2 = {
