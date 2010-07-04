@@ -148,9 +148,10 @@ Poly.prototype = (function() {
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
+                    dump("received " + request)
                     console.log('Received: ' + request);
                     //perform the requested action
-                    dispatch(request);
+                    //dispatch(request);
                     //wait for another request
                     input.asyncWait(reader,0,0,null);
                 } catch (e) {
