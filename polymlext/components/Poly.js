@@ -6,13 +6,15 @@ const RUN_POLY_MANUALLY = true;
 
 Poly.prototype = (function() {
 
+    var Server;
     var console;
-    
-    var doc;
-
     var process;
-    
     var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+
+    var _document;
+    
+    var self = this;
+    
 
     var getProfilePath = function() {
         var fileLocator =
@@ -67,8 +69,7 @@ Poly.prototype = (function() {
     
         var dispatch = function(req) {
 //            var document = window.content.document;
-            var document = doc;
-            console.log("DDD: " + document.location.href);
+            var document = _document;
             try {
                 var request = nativeJSON.decode(req);
             } catch (e) {
@@ -84,7 +85,7 @@ Poly.prototype = (function() {
                 case 2:
                     var response = null;
                     response = eval(request.code);
-                    Server.send(response);
+                    this.Server.send(response);
                     break;
                 //add event listener
                 case 3:
@@ -94,19 +95,23 @@ Poly.prototype = (function() {
                     console.log("unexpected request from Poly", "error");
             }
         }
+        
+    if (RUN_POLY_MANUALLY) {
+        var timer;
+    }
     
-    var processCode = function(doc2, code) {
-        doc = doc2;
-        console.log("AAAAA: " + doc.location.href);
+    var processCode = function(doc, code) {
+        _document = doc;
         if (RUN_POLY_MANUALLY) {
-            if (Server.ready()) {
-                Server.send(code);
+            if (this.Server.ready()) {
+                this.Server.send(code);
             } else {
-//                console.log("I'll wait 10 seconds for you to launch Poly.");
-                var timer = Components.classes["@mozilla.org/timer;1"]
+                console.log("I'll wait 10 seconds for you to launch Poly.");
+                timer = Components.classes["@mozilla.org/timer;1"]
                    .createInstance(Components.interfaces.nsITimer);
+                var self = this;
                 timer.initWithCallback(
-                    { notify: function() { processCode(doc, code); } },
+                    { notify: function() { self.processCode(_document, code); } },
                     10000,
                     Components.interfaces.nsITimer.TYPE_ONE_SHOT
                 );
@@ -114,19 +119,10 @@ Poly.prototype = (function() {
             return;
         }
         
-        Server.send(code);
+        this.Server.send(code);
     }
     
-    var evaluateScript = function () {
-        var document = window.content.document;
-        
-        if (document.getElementById('code')!=null) {
-            var code = document.getElementById('code').innerHTML;
-            PolyMLext.Server.send(code);
-        }
-    }
-
-    var Server = function() {
+    var ServerClass = (function() {
     
         var input;
         var output;
@@ -169,9 +165,7 @@ Poly.prototype = (function() {
 //                input.close();
 //                output.close();
             },
-            onStopListening: function(serverSocket, status) {
-                closeSocket();
-            }
+            onStopListening: function() {}
         }
         
         var destroy = function() {
@@ -202,21 +196,24 @@ Poly.prototype = (function() {
             send : send,
             ready : ready,
             destroy : destroy,
-            port : port
+            port : port,
         }
-    }();
+    })
     
     var destroy = function() {
         console.log("Destroying this instance of Poly.")
-        Server.destroy();
+        this.Server.destroy();
         if (!RUN_POLY_MANUALLY) {
             process.kill();
+        } else {
+            timer.cancel();
         }
     }
     
     var init = function() {
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        Server.init();
+        this.Server = new ServerClass();
+        this.Server.init();
         startPoly();
     }
 

@@ -28,6 +28,9 @@ then
 firefox
 fi
 
+#XPCOM_MEM_LEAK_LOG=1 firefox
+#XPCOM_MEM_BLOAT_LOG
+#XPCOM_MEM_REFCNT_LOG
 
 
 ### NOT USEFUL UNLESS WE USE C++ COMPONENTS ####################################

@@ -6,7 +6,7 @@ sig
   val test: unit -> unit
 end;
 
-structure ext : PolyMLext
+structure ext (*: PolyMLext*)
 = struct
 
     val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
@@ -135,7 +135,7 @@ structure ext : PolyMLext
 (*            loop()*)
         end
 
-    fun main(_, args) = 
+    fun main _ args:unit = 
         let
             val port = case args of
                     nil => raise Error "port of the server not provided"
@@ -154,3 +154,5 @@ use "js.ml";
 open Js;
 PolyML.fullGC ();
 map PolyML.Compiler.forgetStructure["PolyMLext"];
+
+(*PolyML.export ("bin/poly", ext.main);*)
