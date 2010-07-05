@@ -28,14 +28,14 @@ struct
     
     fun js code =
         let
-            val _ = ext.send("{\"type:2\", \"code\":\""^code^"\"}")
+            val _ = ext.send("{\"type\":2, \"code\":\""^code^"\"}")
         in
             ext.recv()
         end
         
     fun addEventListener elem eventType f =
         let
-            val _ = ext.send("{\"type:3\", \"elem\":\""^elem^"\", eventType:\""^eventType^"\", f:\""^f^"\"}")
+            val _ = ext.send("{\"type\":3, \"elem\":\""^elem^"\", eventType:\""^eventType^"\", f:\""^f^"\"}")
         in
             ext.recv()
         end

@@ -119,10 +119,9 @@ structure ext (*: PolyMLext*)
 
               (* finally, print out any messages in the output buffer *)
         in
-            if worked then TextIO.print ("AllGOOD: " ^ (output ()))
-            else TextIO.print ("PANTS!: " ^ (output ()))
-(*              send("{\"type:1\", \"output\":\""^output()^"\"}")*)
-(*              send("{\"type\":1, \"output\":\"booga\"}")*)
+(*            if worked then TextIO.print ("AllGOOD: " ^ (output ()))*)
+(*            else TextIO.print ("PANTS!: " ^ (output ()))*)
+              send("{\"type\":1, \"output\":\""^output()^"\"}")
         end;
     
     fun test() = print "not good\n";
@@ -131,8 +130,8 @@ structure ext (*: PolyMLext*)
         let
             val code = recv();
         in
-            evaluate "foo" code
-(*            loop()*)
+            evaluate "foo" code;
+            loop()
         end
 
     fun main _ args = 
