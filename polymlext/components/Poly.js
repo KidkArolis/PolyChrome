@@ -8,7 +8,7 @@ Poly.prototype = (function() {
 
     var console;
     
-    var document;
+    var doc;
 
     var process;
     
@@ -65,15 +65,16 @@ Poly.prototype = (function() {
         process.run(false, args, args.length);  
     }
     
-        var dispatch = function(request) {
+        var dispatch = function(req) {
 //            var document = window.content.document;
+            var document = doc;
+            console.log("DDD: " + document.location.href);
             try {
-                request = nativeJSON.encode(request);
+                var request = nativeJSON.decode(req);
             } catch (e) {
                 console.log("Could not decode JSON.", "error")
             }
-            console.log("ABUGA"+request.type);
-            /*
+            console.log("ABUGA "+request.type);
             switch (request.type) {
                 //output
                 case 1:
@@ -83,7 +84,7 @@ Poly.prototype = (function() {
                 case 2:
                     var response = null;
                     response = eval(request.code);
-                    PolyMLext.Server.send(response);
+                    Server.send(response);
                     break;
                 //add event listener
                 case 3:
@@ -92,11 +93,11 @@ Poly.prototype = (function() {
                 default:
                     console.log("unexpected request from Poly", "error");
             }
-            */
         }
     
-    var processCode = function(doc, code) {
-        document = doc;
+    var processCode = function(doc2, code) {
+        doc = doc2;
+        console.log("AAAAA: " + doc.location.href);
         if (RUN_POLY_MANUALLY) {
             if (Server.ready()) {
                 Server.send(code);
@@ -105,7 +106,7 @@ Poly.prototype = (function() {
                 var timer = Components.classes["@mozilla.org/timer;1"]
                    .createInstance(Components.interfaces.nsITimer);
                 timer.initWithCallback(
-                    { notify: function() { processCode(document, code); } },
+                    { notify: function() { processCode(doc, code); } },
                     10000,
                     Components.interfaces.nsITimer.TYPE_ONE_SHOT
                 );
@@ -144,14 +145,12 @@ Poly.prototype = (function() {
                     sin.init(input);
                     sin.available();
                     var request = '';
-                    console.log('waiting for input');
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-                    dump("received " + request)
                     console.log('Received: ' + request);
                     //perform the requested action
-                    //dispatch(request);
+                    dispatch(request);
                     //wait for another request
                     input.asyncWait(reader,0,0,null);
                 } catch (e) {

@@ -4,14 +4,14 @@ var PolyMLext = (function ()
     
     var polyPages = [];
     
-    var lookForPolyML = function(document) {
+    var lookForPolyML = function(doc) {
         //currently we're not looking for <script type="application/x-polyml">
         //but for an element with id "code"
-        var code = document.getElementById('code');
+        var code = doc.getElementById('code');
         if (code!=null) {
-            console.log("Found PolyML code on page: " + document.location.href);
-            var poly = createPolyInstance(document, code.innerHTML);
-            polyPages.push({"document": document});
+            console.log("Found PolyML code on page: " + doc.location.href);
+            var poly = createPolyInstance(doc, code.innerHTML);
+            polyPages.push({"document": doc});
             polyPages[polyPages.length-1].poly = poly;
             poly = null;
             //add event listener for page unload   
@@ -28,9 +28,10 @@ var PolyMLext = (function ()
         }
     }
     
-    var createPolyInstance = function(documnent, code) {
+    var createPolyInstance = function(doc, code) {
         var poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
-        poly.processCode(document, code);
+        console.log("BBBBB: " + doc.location.href);
+        poly.processCode(doc, code);
         return poly;
     }
 
@@ -38,8 +39,8 @@ var PolyMLext = (function ()
         if (!aEvent) { return; }
         if (aEvent.originalTarget.nodeName != "#document") {return;}
         if (aEvent.originalTarget instanceof HTMLDocument) {
-            var doc = aEvent.originalTarget;
-            lookForPolyML(doc);
+            console.log("CCCCC: " + aEvent.originalTarget.location.href)
+            lookForPolyML(aEvent.originalTarget);
         }
     }
     
@@ -99,7 +100,5 @@ var PolyMLext = (function ()
     }
     
 }());
-
-//window.onclose = PolyMLext.cleanUp;
 
 PolyMLext.init();

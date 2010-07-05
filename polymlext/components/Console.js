@@ -7,6 +7,8 @@ Console.prototype = (function() {
     var initialized = false;
     var ready = false;
     
+    var consoleService;
+    
     var _log = function(m, level, location) {
         if (initialized&&ready) {  
             var prefix = "INFO: ";   
@@ -40,11 +42,15 @@ Console.prototype = (function() {
         }
     }
     
-    var log = function(m, level) {
+    var log = poly = function(m, level) {
+        consoleService.logStringMessage("PolyMLext: " + m);
+    }
+    
+    var log2 = function(m, level) {
         _log(m, level, 'debug');
     }
     
-    var poly = function(m, level) {
+    var poly2 = function(m, level) {
         _log(m, "empty", 'polyml');
     }
     
@@ -58,12 +64,15 @@ Console.prototype = (function() {
     
     var init = function() {
         initialized = true;
-        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                    .getService(Components.interfaces.nsIWindowWatcher);
-        win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
-                         "console", "chrome,centerscreen, resizable=no", null);
-        win.onload = setReady;
-        return win;
+//        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+//                    .getService(Components.interfaces.nsIWindowWatcher);
+//        win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
+//                         "console", "chrome,centerscreen, resizable=no", null);
+//        win.onload = setReady;
+//        return win;
+
+        consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                            .getService(Components.interfaces.nsIConsoleService);
     }
     
     return {
@@ -76,6 +85,7 @@ Console.prototype = (function() {
 // turning Console Class into an XPCOM component
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function Console() {
+    this.init();
     this.wrappedJSObject = this;
 }
 prototype2 = {
