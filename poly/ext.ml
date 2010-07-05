@@ -135,7 +135,7 @@ structure ext (*: PolyMLext*)
 (*            loop()*)
         end
 
-    fun main _ args:unit = 
+    fun main _ args = 
         let
             val port = case args of
                     nil => raise Error "port of the server not provided"
