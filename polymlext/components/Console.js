@@ -10,7 +10,7 @@ Console.prototype = (function() {
     var consoleService;
     
     var _log = function(m, level, location) {
-        if (initialized&&ready) {  
+        if (initialized&&ready) {
             var prefix = "INFO: ";   
             switch (level) {
                 case "empty":
@@ -30,20 +30,24 @@ Console.prototype = (function() {
             var timer = Components.classes["@mozilla.org/timer;1"]
                .createInstance(Components.interfaces.nsITimer);
             // ... and to initialize it, we want to call event.notify() ...
-            // ... one time after exactly ten second. 
+            // ... one time after exactly ten second.
             timer.initWithCallback(
-                { notify: function() { log(m); } },
+                { notify: function() { _log(m, level, location); } },
                 10,
                 Components.interfaces.nsITimer.TYPE_ONE_SHOT
             );
         } else {
             init();
-            log(m);
+            _log(m, level, location);
         }
     }
     
-    var log = poly = function(m, level) {
+    var log = function(m, level) {
         consoleService.logStringMessage("PolyMLext: " + m);
+    }
+    
+    var poly = function(m, level) {
+        consoleService.logStringMessage("Poly Output: " + m);
     }
     
     var log2 = function(m, level) {
@@ -61,15 +65,14 @@ Console.prototype = (function() {
     var setReady = function() {
         ready = true;
     }
-    
+        
     var init = function() {
-        initialized = true;
+//        initialized = true;
 //        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
 //                    .getService(Components.interfaces.nsIWindowWatcher);
 //        win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
 //                         "console", "chrome,centerscreen, resizable=no", null);
 //        win.onload = setReady;
-//        return win;
 
         consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);
@@ -78,7 +81,7 @@ Console.prototype = (function() {
     return {
         init: init,
         log : log,
-        poly : poly,
+        poly : poly
     }
 }());
 
