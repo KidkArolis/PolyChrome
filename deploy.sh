@@ -1,3 +1,4 @@
+#!/bin/bash
 ### EDIT THIS!! ################################################################
 # make sure this is the profile you will be using the extension with
 ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
@@ -14,12 +15,12 @@ if [ "$1" == "build" ]
 then
 cd poly
 echo "use \"build.ml\";" | poly
-if [ ! -e bin/PolyMLext.o ]; then exit; fi
+if [ ! -e bin/PolyMLext.o ]; then echo "Error compiling the PolyML program"; exit; fi
 cd bin
 ls
 cc -o PolyMLext PolyMLext.o -lpolymain -lpolyml
 rm PolyMLext.o
-mv PolyMLext ../../polymlext/poly
+mv PolyMLext ../../polymlext/poly/
 cd ../..
 fi
 

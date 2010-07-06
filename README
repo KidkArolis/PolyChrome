@@ -4,11 +4,11 @@ README
 To use the extension
 --------------------
 
- * Edit the path to your firefox profile in the deploy script.
- * Run the deploy script with build option:
-    e.g $ ./deploy build
+ * Edit the path to your firefox profile in the deploy.sh script.
+ * Run the deploy.sh script with build option:
+    e.g $ ./deploy.sh build
  * Then run Firefox. You can execute deploy script with run option to do that:
-    e.g. $ ./deploy run
+    e.g. $ ./deploy.sh run
     
     
 Other tips

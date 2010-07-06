@@ -1,4 +1,3 @@
-dump("buga");
 var PolyMLext = (function ()
 {
     var console;
