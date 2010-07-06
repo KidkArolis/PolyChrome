@@ -19,6 +19,7 @@ function RunMyComponent() {
 
 }
 </script>
+<div id="code">print "yaay";</div>
 	<caption label="Hello World"/>
 	<button onclick="RunMyComponent();">Run</button>
 </window>

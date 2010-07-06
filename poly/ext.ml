@@ -1,12 +1,12 @@
-signature PolyMLext =
-sig
-  val main: 'a * string list -> 'b
-  val send: string -> string
-  val recv: unit -> string
-  val test: unit -> unit
-end;
+(*signature POLYMLEXT =*)
+(*sig*)
+(*  val main: 'a * string list -> 'b*)
+(*  val send: string -> string*)
+(*  val recv: unit -> string*)
+(*  val test: unit -> unit*)
+(*end;*)
 
-structure ext (*: PolyMLext*)
+structure PolyMLext (*: POLYMLEXT*)
 = struct
 
     val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
@@ -14,6 +14,8 @@ structure ext (*: PolyMLext*)
     exception Error of string
    
     fun the (reference) = Option.valOf (!reference)
+
+    fun escape_quotes s = implode (foldr op@ [] (map (fn #"\"" => [#"\\", #"\""] | x => [x]) (explode s)));
     
     fun mkSock (port) =
         let
@@ -33,10 +35,11 @@ structure ext (*: PolyMLext*)
         let
             val outv = Word8VectorSlice.full
                 (Byte.stringToBytes str)
-            val bytes_sent = Socket.sendVec(the gsock, outv);
+(*            val bytes_sent = Socket.sendVec(the gsock, outv);*)
         in
-            PolyML.print ("Sent " ^ (Int.toString bytes_sent) 
-                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))
+(*            PolyML.print ("Sent " ^ (Int.toString bytes_sent) *)
+(*                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))*)
+            Socket.sendVec(the gsock, outv)
         end
         
     fun recv () =
@@ -118,10 +121,11 @@ structure ext (*: PolyMLext*)
                 (* Can do other stuff here: e.g. raise exn *) ));
 
               (* finally, print out any messages in the output buffer *)
+            val output_string = output();
         in
-(*            if worked then TextIO.print ("AllGOOD: " ^ (output ()))*)
-(*            else TextIO.print ("PANTS!: " ^ (output ()))*)
-              send("{\"type\":1, \"output\":\""^output()^"\"}")
+(*            if worked then TextIO.print (output())*)
+(*            else TextIO.print (output())*)
+            send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
         end;
     
     fun test() = print "not good\n";
@@ -134,14 +138,16 @@ structure ext (*: PolyMLext*)
             loop()
         end
 
-    fun main _ args = 
+    fun main () = 
         let
-            val port = case args of
+            val port = case CommandLine.arguments() of
                     nil => raise Error "port of the server not provided"
                   | n::_ => valOf (Int.fromString n)
             val client_sock = mkSock(port);
             val _ = (gsock := SOME client_sock);
         in
+            PolyML.fullGC();
+            map PolyML.Compiler.forgetStructure["PolyMLext"];
             loop();
             closeSock(client_sock);
             OS.Process.exit OS.Process.success
@@ -151,7 +157,3 @@ end;
 
 use "js.ml";
 open Js;
-PolyML.fullGC ();
-map PolyML.Compiler.forgetStructure["PolyMLext"];
-
-(*PolyML.export ("bin/poly", ext.main);*)

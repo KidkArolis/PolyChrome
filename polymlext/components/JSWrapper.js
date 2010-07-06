@@ -7,6 +7,9 @@ JSWrapper.prototype = (function() {
     var _document;
     var console;
     var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    var Server;
+    
+    var f;
         
     var process = function(req) {
         //var document = window.content.document;
@@ -29,16 +32,21 @@ JSWrapper.prototype = (function() {
                 break;
             //add event listener
             case 3:
-                console.log("Event listeners are not implemented");
+                f = function() {
+                    console.log('gotta call ' + request.f);
+                    Server.send(request.f);
+                }
+                document.getElementById(request.elem).addEventListener(request.eventType, f, false);
                 break;
             default:
                 console.log("unexpected request from Poly", "error");
         }
         return response;
     }
-    var init = function(doc) {
+    var init = function(doc, s) {
         _document = doc;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        Server = s;
     }
     
     return {

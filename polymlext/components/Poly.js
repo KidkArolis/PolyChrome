@@ -2,7 +2,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const RUN_POLY_MANUALLY = true;
+const RUN_POLY_MANUALLY = false;
 
 Poly.prototype = (function() {
 
@@ -27,7 +27,7 @@ Poly.prototype = (function() {
         return path;
     };
 
-    function readFile(filename) {
+    var readFile = function(filename) {
 	    var file = Cc["@mozilla.org/file/local;1"]
 		    .createInstance(Ci.nsILocalFile);
 	    file.initWithPath(filename);
@@ -44,27 +44,27 @@ Poly.prototype = (function() {
 	    return output;
     }
 
-    var startPoly = function () {
+    var startPoly = function (port) {
         if (RUN_POLY_MANUALLY) {
             console.log("Please start Poly module manually");
             return;
         }
         //figure out the path of poly executable
-        var binpath = readFile(getProfilePath()+'/extensions/polymlext@ed.ac.uk');
-        binpath = binpath.substring(0, binpath.length-1) + '/poly/poly';
+        var binpath = readFile(getProfilePath()+'extensions/polymlext@ed.ac.uk');
+        binpath = binpath.substring(0, binpath.length-1) + '/poly/PolyMLext';
         //run it
         var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(binpath);
         process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         process.init(file);
-        var args = [];
-        process.run(false, args, args.length);  
+        var args = [port];
+        process.run(false, args, args.length);
     }
     
     var processCode = function(doc, code) {
         wrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                         createInstance().wrappedJSObject;
-        wrapper.init(doc);
+        wrapper.init(doc, this.Server);
         _document = doc;
         
         if (RUN_POLY_MANUALLY) {
@@ -84,7 +84,18 @@ Poly.prototype = (function() {
             return;
         }
         
-        this.Server.send(code);
+        if (this.Server.ready()) {
+            this.Server.send(code);
+        } else {
+             timer = Components.classes["@mozilla.org/timer;1"]
+                   .createInstance(Components.interfaces.nsITimer);
+            var self = this;
+            timer.initWithCallback(
+            { notify: function() { self.processCode(_document, code); } },
+            10,
+            Components.interfaces.nsITimer.TYPE_ONE_SHOT
+            );
+        }
     }
     
     var ServerClass = (function() {
@@ -94,7 +105,7 @@ Poly.prototype = (function() {
     
         var send = function(data) {
             var n = output.write(data, data.length);
-            console.log("Sent "+n+" bytes.");
+            console.log("Sent "+n+" bytes: " + data);
         }
         
         var reader = {
@@ -108,12 +119,12 @@ Poly.prototype = (function() {
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-                    console.log('Received: ' + request);
+//                    console.log('Received: ' + request);
                     //perform the requested action
                     var response = wrapper.process(request);
-                    //if (response!="") {
+                    if (response!="") {
                         send(response);
-                    //}
+                    }
                     //wait for another request
                     input.asyncWait(reader,0,0,null);
                 //} catch (e) {
@@ -150,12 +161,17 @@ Poly.prototype = (function() {
             serverSocket.asyncListen(listener);
             console.log("Created a server socket on port " + serverSocket.port);
         }
+        
+        var port = function() {
+            return serverSocket.port;
+        }
                 
         return {
             init : init,
             send : send,
             ready : ready,
-            destroy : destroy
+            destroy : destroy,
+            port : port
         }
     })
     
@@ -164,18 +180,15 @@ Poly.prototype = (function() {
         this.Server.destroy();
         if (!RUN_POLY_MANUALLY) {
             process.kill();
-        } else {
-            if (timer!=null) {
-                timer.cancel();
-            }
         }
+        timer.cancel();
     }
     
     var init = function() {
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         this.Server = new ServerClass();
         this.Server.init();
-        startPoly();
+        startPoly(this.Server.port());
     }
 
     return {

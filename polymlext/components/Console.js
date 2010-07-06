@@ -47,7 +47,7 @@ Console.prototype = (function() {
     }
     
     var poly = function(m, level) {
-        consoleService.logStringMessage("Poly Output: " + m);
+        consoleService.logStringMessage("Poly Output:\n" + m);
     }
     
     var log2 = function(m, level) {

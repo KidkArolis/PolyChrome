@@ -1,4 +1,29 @@
-To deploy the extension:
+README
+======
 
-1. Edit the deploy script to contain correct path to firefox profile.
-2. Run the deploy script.
+To use the extension
+--------------------
+
+ * Edit the path to your firefox profile in the deploy script.
+ * Run the deploy script with build option:
+    e.g $ ./deploy build
+ * Then run Firefox. You can execute deploy script with run option to do that:
+    e.g. $ ./deploy run
+    
+    
+Other tips
+----------
+
+ * You should see a red PolyML logo in the status bar of the browser (or check
+    Tools > Add-ons ;)
+ * Use "Tools > Error Console" to observe various log info printed out in the
+    extension.
+ * To see an example page with PolyML code open:
+    chrome://polymlext/content/test.html
+
+
+Problems
+--------
+
+If building the extension failed, you'll have to dig through the deploy script
+to see what went wrong ;) or let me know at assembla.com/spaces/polymlext/

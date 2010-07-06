@@ -20,24 +20,25 @@ struct
              
     fun innerHTML (e:elem) =
         let
-            val _ = ext.send("a = document.getElementById(\""^e^"\").innerHTML");
+            val _ = PolyMLext.send("a = document.getElementById(\""^e^"\").innerHTML");
         in
-            ext.recv()
+            PolyMLext.recv()
         end
     *)
     
     fun js code =
         let
-            val _ = ext.send("{\"type\":2, \"code\":\""^code^"\"}")
+            val _ = PolyMLext.send("{\"type\":2, \"code\":\""^(PolyMLext.escape_quotes code)^"\"}")
         in
-            ext.recv()
+            PolyMLext.recv()
         end
         
     fun addEventListener elem eventType f =
-        let
-            val _ = ext.send("{\"type\":3, \"elem\":\""^elem^"\", eventType:\""^eventType^"\", f:\""^f^"\"}")
-        in
-            ext.recv()
-        end
+(*        let*)
+(*            val _ = PolyMLext.send("{\"type\":3, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}")*)
+(*        in*)
+(*            PolyMLext.recv()*)
+(*        end*)
+        PolyMLext.send("{\"type\":3, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}")
         
 end;
