@@ -33,11 +33,19 @@
 </head>
 <body>
 <pre id="code">
-(*js "document.getElementById(\"abc\").innerHTML=\"FOOOOO\"";*)
-js "document.getElementById('abc').innerHTML='FOOOOO'";
+fun updateText() =
+    let
+        val new_text = js "document.getElementById('field').value";
+        val newcmd = "document.getElementById('abc').innerHTML = '"^new_text^"'";
+    in
+        js newcmd
+    end;
+addEventListener "button" "click" "updateText()"
 </pre>
 <div id="body">
     <p id="abc">does not work yet...</p>
+    <input id="field" type="text" value="enter smth"/>
+    <input id="button" type="button" value="change text" />
 </div>
 </body>
 </html>
