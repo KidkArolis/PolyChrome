@@ -23,7 +23,7 @@ Console.prototype = (function() {
                     prefix = "WARNING: "
                     break;
             }
-            win.document.getElementById(location).value = win.document.getElementById(location).value + prefix + m + "\n";
+            win.document.getElementById(location).innerHTML = win.document.getElementById(location).innerHTML + prefix + m.replace(/\n/, "<html:br />") + "<html:br /><html:br />";
             win.focus();
         } else if (initialized&&!ready) {
             // Now it is time to create the timer...  

@@ -32,13 +32,18 @@ struct
         in
             PolyMLext.recv()
         end
-        
+
     fun addEventListener elem eventType f =
-(*        let*)
-(*            val _ = PolyMLext.send("{\"type\":3, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}")*)
-(*        in*)
-(*            PolyMLext.recv()*)
-(*        end*)
-        PolyMLext.send("{\"type\":3, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}")
+        let
+        in
+        PolyMLext.send("{\"type\":3, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}");
+        PolyMLext.recv()
+        end
         
+    fun removeEventListener elem eventType f =
+        let
+        in
+        PolyMLext.send("{\"type\":4, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}");
+        PolyMLext.recv()
+        end
 end;

@@ -24,7 +24,6 @@ structure PolyMLext (*: POLYMLEXT*)
 	                    NONE => raise Error ""
 	                  | SOME en => en;
             val localhost = NetHostDB.addr me;
-(*            val port = 9998;*)
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
         in
@@ -43,7 +42,7 @@ structure PolyMLext (*: POLYMLEXT*)
         end
         
     fun recv () =
-        Byte.bytesToString(Socket.recvVec(the gsock, 1000))
+        Byte.bytesToString(Socket.recvVec(the gsock, 1024))
    
     fun recv2 (s,n) =
         let
@@ -117,7 +116,7 @@ structure PolyMLext (*: POLYMLEXT*)
               (true, while not (List.null (! in_buffer)) do 
                      PolyML.compiler (get, compile_params) ())
               handle exn => (* something went wrong... *)
-               (false, (put ("Exception- " ^ General.exnMessage exn ^ " raised"); ()
+               (false, (put ("Exception - " ^ General.exnMessage exn ^ " raised"); ()
                 (* Can do other stuff here: e.g. raise exn *) ));
 
               (* finally, print out any messages in the output buffer *)

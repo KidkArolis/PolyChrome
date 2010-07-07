@@ -9,7 +9,7 @@ JSWrapper.prototype = (function() {
     var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     var Server;
     
-    var f;
+    var listeners = {};
         
     var process = function(req) {
         //var document = window.content.document;
@@ -18,7 +18,7 @@ JSWrapper.prototype = (function() {
         try {
             var request = nativeJSON.decode(req);
         } catch (e) {
-            console.log("Could not decode JSON. Reason: " + e, "error")
+            console.log("Could not decode JSON. Reason: " + e, "error");
             return response;
         }
         switch (request.type) {
@@ -32,11 +32,28 @@ JSWrapper.prototype = (function() {
                 break;
             //add event listener
             case 3:
-                f = function() {
-                    console.log('gotta call ' + request.f);
+                /*
+                f = function(e) {
+                    //console.log('gotta call ' + request.f);
+                    //var serializer = new ONEGEEK.GSerializer();
+                    //var xml = serializer.serialize(e, 'Event');
+                    //Server.send(e.originalTarget.toString());
                     Server.send(request.f);
                 }
-                document.getElementById(request.elem).addEventListener(request.eventType, f, false);
+                */
+                var hash = request.elem + request.f;
+                listeners[hash] = function(e) {
+                    Server.send(request.f);
+                }
+                document.getElementById(request.elem).addEventListener(request.eventType, listeners[hash], false);
+                response = "done";
+                break;
+            //remove event listener
+            case 4:
+                var hash = request.elem + request.f;
+                document.getElementById(request.elem).removeEventListener(request.eventType, listeners[hash], false);
+                delete listeners[hash];
+                response = "done";
                 break;
             default:
                 console.log("unexpected request from Poly", "error");

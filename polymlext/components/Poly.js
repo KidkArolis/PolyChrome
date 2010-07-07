@@ -110,7 +110,7 @@ Poly.prototype = (function() {
         
         var reader = {
             onInputStreamReady : function(input) {
-                //try {
+                try {
                     var sin = Cc["@mozilla.org/scriptableinputstream;1"]
                                 .createInstance(Ci.nsIScriptableInputStream);
                     sin.init(input);
@@ -119,7 +119,7 @@ Poly.prototype = (function() {
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-//                    console.log('Received: ' + request);
+                    console.log('Received: ' + request);
                     //perform the requested action
                     var response = wrapper.process(request);
                     if (response!="") {
@@ -127,9 +127,9 @@ Poly.prototype = (function() {
                     }
                     //wait for another request
                     input.asyncWait(reader,0,0,null);
-                //} catch (e) {
-                //    console.log('Poly was closed.', 'error');
-                //}
+                } catch (e) {
+                    console.log('Could not process the request. Reason: '+e, 'error');
+                }
             } 
         }
         

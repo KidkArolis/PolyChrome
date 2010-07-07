@@ -4,14 +4,16 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://PolyMLext/locale/console.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
     <label value="PolyML output" />
     <hbox>
-      <textbox id="polyml" multiline="true" rows="14" cols="80" />
+<!--      <textbox id="polyml" multiline="true" rows="14" cols="80" />-->
+        <html:div id="polyml" style="background-color:white; width:800px; height:340px; overflow:scroll"></html:div>
     </hbox>
 
     <label value="Extension debug" />
     <hbox>
-      <textbox id="debug" multiline="true" rows="14" cols="80" />
+<!--      <textbox id="debug" multiline="true" rows="14" cols="80" />-->
+        <html:div id="debug" style="background-color:white; width:800px; height:340px; overflow:scroll"></html:div>
     </hbox>
 </window>
