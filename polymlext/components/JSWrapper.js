@@ -30,8 +30,41 @@ JSWrapper.prototype = (function() {
             case 2:
                 response = eval(request.code);
                 break;
-            //add event listener
+            //one of js functions
             case 3:
+                var cmd = "document.getElementById('" + request.id + "')." + request.operations;
+                response = eval(cmd);
+                if (response==""||response==null) {
+                    response = "done";
+                }
+                break;
+            //add event listener
+            case 4:
+                /*
+                f = function(e) {
+                    //console.log('gotta call ' + request.f);
+                    //var serializer = new ONEGEEK.GSerializer();
+                    //var xml = serializer.serialize(e, 'Event');
+                    //Server.send(e.originalTarget.toString());
+                    Server.send(request.f);
+                }
+                */
+                var hash = request.elem + request.eventType + request.f;
+                listeners[hash] = function(e) {
+                    Server.send(request.f);
+                }
+                document.getElementById(request.elem).addEventListener(request.eventType, listeners[hash], false);
+                response = "done";
+                break;
+            //remove event listener
+            case 5:
+                var hash = request.elem + request.eventType + request.f;
+                document.getElementById(request.elem).removeEventListener(request.eventType, listeners[hash], false);
+                delete listeners[hash];
+                response = "done";
+                break;
+            //onMouseMove
+            case 6:
                 /*
                 f = function(e) {
                     //console.log('gotta call ' + request.f);
@@ -43,16 +76,9 @@ JSWrapper.prototype = (function() {
                 */
                 var hash = request.elem + request.f;
                 listeners[hash] = function(e) {
-                    Server.send(request.f);
+                    Server.send(request.f + "("+e.clientX+","+e.clientY+")");
                 }
-                document.getElementById(request.elem).addEventListener(request.eventType, listeners[hash], false);
-                response = "done";
-                break;
-            //remove event listener
-            case 4:
-                var hash = request.elem + request.f;
-                document.getElementById(request.elem).removeEventListener(request.eventType, listeners[hash], false);
-                delete listeners[hash];
+                document.getElementById(request.elem).addEventListener("mousemove", listeners[hash], false);
                 response = "done";
                 break;
             default:

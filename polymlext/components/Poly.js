@@ -105,7 +105,7 @@ Poly.prototype = (function() {
     
         var send = function(data) {
             var n = output.write(data, data.length);
-            console.log("Sent "+n+" bytes: " + data);
+            //console.log("Sent "+n+" bytes: " + data);
         }
         
         var reader = {
@@ -119,7 +119,7 @@ Poly.prototype = (function() {
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-                    console.log('Received: ' + request);
+//                    console.log('Received: ' + request);
                     //perform the requested action
                     var response = wrapper.process(request);
                     if (response!="") {
