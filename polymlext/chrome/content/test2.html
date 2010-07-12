@@ -47,22 +47,21 @@
 <pre id="code">
 fun addOne() =
     let
-        val current_value = valOf (Int.fromString(js "document.getElementById('abc').innerHTML"));
+        val current_value = valOf (Int.fromString(eval "document.getElementById('abc').innerHTML"));
         val new_value = current_value + 1;
         val new_text = Int.toString new_value;
     in
-        js ("document.getElementById('abc').innerHTML = '"^new_text^"'")
+        eval ("document.getElementById('abc').innerHTML = '"^new_text^"'")
     end;
 addEventListener "button" "click" "addOne();";
 
 fun subtractOne() =
     let
-        val current_value = valOf (Int.fromString(js "document.getElementById('abc2').innerHTML"));
+        val current_value = valOf (Int.fromString(eval "document.getElementById('abc2').innerHTML"));
         val new_value = current_value - 1;
         val new_text = Int.toString new_value;
-        val _ = addEventListener "button" "click" "addOne();";
     in
-        js ("document.getElementById('abc2').innerHTML = '"^new_text^"'")
+        eval ("document.getElementById('abc2').innerHTML = '"^new_text^"'")
     end;
 addEventListener "button2" "click" "subtractOne();";
 

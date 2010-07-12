@@ -10,6 +10,8 @@ Poly.prototype = (function() {
     var console;
     var process;
     var wrapper;
+    
+    var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
     var _document;
     if (RUN_POLY_MANUALLY) var timer;
@@ -126,7 +128,7 @@ Poly.prototype = (function() {
                         send(response);
                     }
                     //wait for another request
-                    input.asyncWait(reader,0,0,null);
+                    input.asyncWait(reader,0,0,tm.mainThread);
                 } catch (e) {
                     console.log('Could not process the request. Reason: '+e, 'error');
                 }
@@ -138,7 +140,7 @@ Poly.prototype = (function() {
                 console.log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
                 input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
                 output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-                input.asyncWait(reader,0,0,null);         
+                input.asyncWait(reader,0,0,tm.mainThread);         
             },
             onStopListening: function() {}
         }

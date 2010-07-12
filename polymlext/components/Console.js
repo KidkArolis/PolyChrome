@@ -11,7 +11,9 @@ Console.prototype = (function() {
     
     var _log = function(m, level, location) {
         if (initialized&&ready) {
-            var prefix = "INFO: ";   
+            var newline = "\n";
+            var prefix = "INFO: ";  
+            var textbox = win.document.getElementById(location); 
             switch (level) {
                 case "empty":
                     prefix = ""
@@ -23,8 +25,12 @@ Console.prototype = (function() {
                     prefix = "WARNING: "
                     break;
             }
-            win.document.getElementById(location).innerHTML = win.document.getElementById(location).innerHTML + prefix + m.replace(/\n/, "<html:br />") + "<html:br /><html:br />";
-            win.focus();
+            if (location=="polyml") {
+                newline = "";
+            }
+            textbox.value += prefix + m + newline;
+            var ti = win.document.getAnonymousNodes(textbox)[0].childNodes[0];
+            ti.scrollTop = ti.scrollHeight;
         } else if (initialized&&!ready) {
             // Now it is time to create the timer...  
             var timer = Components.classes["@mozilla.org/timer;1"]
@@ -42,19 +48,19 @@ Console.prototype = (function() {
         }
     }
     
-    var log = function(m, level) {
+    var log2 = function(m, level) {
         consoleService.logStringMessage("PolyMLext: " + m);
     }
     
-    var poly = function(m, level) {
+    var poly2 = function(m, level) {
         consoleService.logStringMessage("Poly Output:\n" + m);
     }
     
-    var log2 = function(m, level) {
+    var log = function(m, level) {
         _log(m, level, 'debug');
     }
     
-    var poly2 = function(m, level) {
+    var poly = function(m, level) {
         _log(m, "empty", 'polyml');
     }
     
@@ -62,17 +68,23 @@ Console.prototype = (function() {
         win.close();
     }
     
+    var clearConsole = function() {
+        win.document.getElementById("debug").value = "";
+        win.document.getElementById("polyml").value = "";
+    }
+    
     var setReady = function() {
         ready = true;
+        win.document.getElementById("clear").addEventListener("click", clearConsole, false);
     }
         
     var init = function() {
-//        initialized = true;
-//        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-//                    .getService(Components.interfaces.nsIWindowWatcher);
-//        win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
-//                         "console", "chrome,centerscreen, resizable=no", null);
-//        win.onload = setReady;
+        initialized = true;
+        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                    .getService(Components.interfaces.nsIWindowWatcher);
+        win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
+                         "console", "chrome,resizable=no", null);
+        win.onload = setReady;
 
         consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);
