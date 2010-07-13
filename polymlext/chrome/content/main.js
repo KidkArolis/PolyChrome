@@ -1,25 +1,30 @@
 var PolyMLext = (function ()
 {
     var console;
-    
+
     var polyPages = [];
-    
-    var lookForPolyML = function(doc) {    
+
+    var lookForPolyML = function(doc) {
         //currently we're not looking for <script type="application/x-polyml">
         //but for an element with id "code"
         var code = doc.getElementById('code');
-        if (code!=null) {        
+        if (code!=null) {
             console.log("Found PolyML code on page: " + doc.location.href);
             var poly = createPolyInstance(doc, code.innerHTML);
-            polyPages.push({"document": doc});
-            polyPages[polyPages.length-1].poly = poly;
-            poly = null;
-            //add event listener for page unload   
-            doc.defaultView.addEventListener("unload", 
+            polyPages.push({"document": doc, "poly":poly});
+            /*
+            for (var i=0; i<polyPages.length; i++) {
+                console.log(polyPages[i].poly.Server.port());
+            }
+            */
+            //polyPages[polyPages.length-1].poly = poly;
+            //poly = null;
+            //add event listener for page unload
+            doc.defaultView.addEventListener("unload",
                 onPageUnload, true);
         }
     }
-    
+
     var createPolyInstance = function(doc, code) {
         var poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
         poly.processCode(doc, code);
@@ -33,7 +38,7 @@ var PolyMLext = (function ()
             lookForPolyML(aEvent.originalTarget);
         }
     }
-    
+
     var onPageUnload = function(aEvent) {
         var doc = aEvent.originalTarget;
         console.log("Page unloaded:" + doc.location.href);
@@ -45,24 +50,29 @@ var PolyMLext = (function ()
                 break;
             }
         }
+        console.log("Pages that are still active: ");
+        for (var i=0, len=polyPages.length; i<len; ++i) {
+            console.log(polyPages[i].poly.Server.port());
+        }
     }
-    
+
     var bindLoadUnload = function() {
-        var appcontent = document.getElementById("appcontent");   // browser  
+        var appcontent = document.getElementById("appcontent");   // browser
         if(appcontent) {
             appcontent.addEventListener("load", onPageLoad, true);
         }
     }
-    
+
     var init = function () {
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         bindLoadUnload();
     }
-    
+
     return {
         init: init
     }
-    
+
 }());
 
 PolyMLext.init();
+

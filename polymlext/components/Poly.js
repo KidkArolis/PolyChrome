@@ -4,28 +4,35 @@ const Cr = Components.results;
 
 const RUN_POLY_MANUALLY = false;
 
+Poly.prototype = function() {return { methods, variables} }()
+
+
+var myClass = function(){};
+
+
+
 Poly.prototype = (function() {
 
     var Server;
     var console;
     var process;
     var wrapper;
-    
+
     var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
     var _document;
     if (RUN_POLY_MANUALLY) var timer;
-    
+
     var self = this;
 
     var getProfilePath = function() {
         var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                 .getService(Components.interfaces.nsIProperties);
-        
+
         var path = escape(fileLocator.get("ProfD", Components.interfaces.nsIFile).path.replace(/\\/g, "/")) + "/";
         if (path.indexOf("/") != 0) {
             path = '/' + path;
-        }    
+        }
         return path;
     };
 
@@ -62,13 +69,13 @@ Poly.prototype = (function() {
         var args = [port];
         process.run(false, args, args.length);
     }
-    
+
     var processCode = function(doc, code) {
+        this._document = doc;
         wrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                         createInstance().wrappedJSObject;
-        wrapper.init(doc, this.Server);
-        _document = doc;
-        
+        wrapper.init(this._document, this.Server);
+
         if (RUN_POLY_MANUALLY) {
             if (this.Server.ready()) {
                 this.Server.send(code);
@@ -85,7 +92,7 @@ Poly.prototype = (function() {
             }
             return;
         }
-        
+
         if (this.Server.ready()) {
             this.Server.send(code);
         } else {
@@ -93,23 +100,23 @@ Poly.prototype = (function() {
                    .createInstance(Components.interfaces.nsITimer);
             var self = this;
             timer.initWithCallback(
-            { notify: function() { self.processCode(_document, code); } },
+            { notify: function() { self.processCode(self._document, code); } },
             10,
             Components.interfaces.nsITimer.TYPE_ONE_SHOT
             );
         }
     }
-    
+
     var ServerClass = (function() {
         var input;
         var output;
         var serverSocket;
-    
+
         var send = function(data) {
             var n = output.write(data, data.length);
             //console.log("Sent "+n+" bytes: " + data);
         }
-        
+
         var reader = {
             onInputStreamReady : function(input) {
                 try {
@@ -132,30 +139,30 @@ Poly.prototype = (function() {
                 } catch (e) {
                     console.log('Could not process the request. Reason: '+e, 'error');
                 }
-            } 
+            }
         }
-        
+
         var listener = {
             onSocketAccepted: function(serverSocket, clientSocket) {
                 console.log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
                 input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
                 output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-                input.asyncWait(reader,0,0,tm.mainThread);         
+                input.asyncWait(reader,0,0,tm.mainThread);
             },
             onStopListening: function() {}
         }
-        
+
         var destroy = function() {
             console.log("Closing the socket " + serverSocket.port + ".");
             input.close();
             output.close();
             serverSocket.close();
         }
-        
+
         var ready = function() {
             return output!=null;
-        }     
-        
+        }
+
         var init = function () {
             serverSocket = Cc["@mozilla.org/network/server-socket;1"].
                     createInstance(Ci.nsIServerSocket);
@@ -163,20 +170,21 @@ Poly.prototype = (function() {
             serverSocket.asyncListen(listener);
             console.log("Created a server socket on port " + serverSocket.port);
         }
-        
+
         var port = function() {
             return serverSocket.port;
         }
-                
+
         return {
             init : init,
             send : send,
             ready : ready,
             destroy : destroy,
-            port : port
+            port : port,
+            output : output
         }
     })
-    
+
     var destroy = function() {
         console.log("Destroying this instance of Poly.")
         this.Server.destroy();
@@ -185,7 +193,7 @@ Poly.prototype = (function() {
         }
         timer.cancel();
     }
-    
+
     var init = function() {
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         this.Server = new ServerClass();
@@ -197,10 +205,11 @@ Poly.prototype = (function() {
         init : init,
         Server : Server,
         processCode : processCode,
-        destroy : destroy
+        destroy : destroy,
+        _document : _document
     }
 }())
-    
+
 
 // turning Poly Class into an XPCOM component
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -209,6 +218,9 @@ function Poly() {
     this.init();
     this.wrappedJSObject = this;
 }
+Poly.prototype =
+var a = new Poly();
+
 prototype2 = {
   classDescription: "Javascript XPCOM Component that communicates to PolyML",
   classID:          Components.ID("{29d11222-bb8e-41ee-a80d-909bdaf4620d}"),
@@ -223,3 +235,4 @@ var components = [Poly];
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule(components);
 }
+

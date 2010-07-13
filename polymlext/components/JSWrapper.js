@@ -8,12 +8,12 @@ JSWrapper.prototype = (function() {
     var console;
     var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     var Server;
-    
+
     var listeners = {};
-        
+
     var process = function(req) {
         //var document = window.content.document;
-        var document = _document;
+        var document = this._document;
         var response = "";
         try {
             var request = nativeJSON.decode(req);
@@ -29,6 +29,9 @@ JSWrapper.prototype = (function() {
             //code to evaluate
             case 2:
                 response = eval(request.code);
+                if (response==""||response==null) {
+                    response = "done";
+                }
                 break;
             //one of js functions
             case 3:
@@ -50,17 +53,18 @@ JSWrapper.prototype = (function() {
                 }
                 */
                 var hash = request.elem + request.eventType + request.f;
-                listeners[hash] = function(e) {
-                    Server.send(request.f);
+                var self = this;
+                this.listeners[hash] = function(e) {
+                    self.Server.send(request.f);
                 }
-                document.getElementById(request.elem).addEventListener(request.eventType, listeners[hash], false);
+                document.getElementById(request.elem).addEventListener(request.eventType, this.listeners[hash], false);
                 response = "done";
                 break;
             //remove event listener
             case 5:
                 var hash = request.elem + request.eventType + request.f;
-                document.getElementById(request.elem).removeEventListener(request.eventType, listeners[hash], false);
-                delete listeners[hash];
+                document.getElementById(request.elem).removeEventListener(request.eventType, this.listeners[hash], false);
+                delete this.listeners[hash];
                 response = "done";
                 break;
             //onMouseMove
@@ -75,10 +79,10 @@ JSWrapper.prototype = (function() {
                 }
                 */
                 var hash = request.elem + request.f;
-                listeners[hash] = function(e) {
-                    Server.send(request.f + "("+e.clientX+","+e.clientY+")");
+                this.listeners[hash] = function(e) {
+                    this.Server.send(request.f + "("+e.clientX+","+e.clientY+")");
                 }
-                document.getElementById(request.elem).addEventListener("mousemove", listeners[hash], false);
+                document.getElementById(request.elem).addEventListener("mousemove", this.listeners[hash], false);
                 response = "done";
                 break;
             default:
@@ -87,14 +91,17 @@ JSWrapper.prototype = (function() {
         return response;
     }
     var init = function(doc, s) {
-        _document = doc;
+        this._document = doc;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        Server = s;
+        this.Server = s;
     }
-    
+
     return {
         init: init,
-        process : process
+        process : process,
+        Server : Server,
+        listeners : listeners,
+        _document : _document
     }
 }());
 
@@ -117,3 +124,4 @@ var components = [JSWrapper];
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule(components);
 }
+

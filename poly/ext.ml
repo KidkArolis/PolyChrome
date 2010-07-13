@@ -12,11 +12,11 @@ structure PolyMLext (*: POLYMLEXT*)
     val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
 
     exception Error of string
-   
+
     fun the (reference) = Option.valOf (!reference)
 
     fun escape_quotes s = implode (foldr op@ [] (map (fn #"\"" => [#"\\", #"\""] | x => [x]) (explode s)));
-    
+
     fun mkSock (port) =
         let
             val client = INetSock.TCP.socket()
@@ -29,7 +29,7 @@ structure PolyMLext (*: POLYMLEXT*)
         in
             client
         end
-    
+
     fun send (str) =
         let
             val outv = Word8VectorSlice.full
@@ -40,10 +40,10 @@ structure PolyMLext (*: POLYMLEXT*)
 (*                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))*)
             Socket.sendVec(the gsock, outv)
         end
-        
+
     fun recv () =
         Byte.bytesToString(Socket.recvVec(the gsock, 1024))
-   
+
     fun recv2 (s,n) =
         let
             fun loop(0) = []
@@ -58,11 +58,11 @@ structure PolyMLext (*: POLYMLEXT*)
         in
             String.concat (loop n)
         end
-    
+
     fun closeSock s =
         (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
          Socket.close s);
-         
+
     fun evaluate location_url txt =
         let
             (* uses input and output buffers for compilation and output message *)
@@ -86,34 +86,34 @@ structure PolyMLext (*: POLYMLEXT*)
 
             (* add to putput buffer *)
             fun put s = (out_buffer := s :: ! out_buffer);
-            
+
             (* handling error messages *)
-            fun put_message { message = msg1, hard, location : PolyML.location, 
+            fun put_message { message = msg1, hard, location : PolyML.location,
                               context } =
                 let val line_width = 76; in
                    (put (if hard then "Error: " else "Warning: ");
                     PolyML.prettyPrint (put, line_width) msg1;
-                    (case context of NONE => () 
+                    (case context of NONE => ()
                      | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
-                     put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: " 
+                     put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: "
                           ^ location_url ^ "\n"))
                 end;
 
-            val compile_params = 
+            val compile_params =
               [(* keep track of line numbers *)
                PolyML.Compiler.CPLineNo (fn () => ! current_line),
 
-               (* the following catches any output during 
+               (* the following catches any output during
                   compilation/evaluation and store it in the put stream. *)
                PolyML.Compiler.CPOutStream put,
-                      (* the following handles error messages specially 
-                  to say where they come from in the error message into 
+                      (* the following handles error messages specially
+                  to say where they come from in the error message into
                   the put stream. *)
                PolyML.Compiler.CPErrorMessageProc put_message
               ]
 
-            val (worked,_) = 
-              (true, while not (List.null (! in_buffer)) do 
+            val (worked,_) =
+              (true, while not (List.null (! in_buffer)) do
                      PolyML.compiler (get, compile_params) ())
               handle exn => (* something went wrong... *)
                (false, (put ("Exception - " ^ General.exnMessage exn ^ " raised"); ()
@@ -126,18 +126,20 @@ structure PolyMLext (*: POLYMLEXT*)
 (*            else TextIO.print (output())*)
             send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
         end;
-    
+
     fun test() = print "not good\n";
-         
+
     fun loop () =
         let
+            val _ = print "waiting for input...\n";
             val code = recv();
+            val _ = print "got the input\n";
         in
             evaluate "foo" code;
             loop()
         end
 
-    fun main () = 
+    fun main () =
         let
             val port = case CommandLine.arguments() of
                     nil => raise Error "port of the server not provided"
@@ -151,8 +153,9 @@ structure PolyMLext (*: POLYMLEXT*)
             closeSock(client_sock);
             OS.Process.exit OS.Process.success
         end
-        
+
 end;
 
 use "js.ml";
 open Js;
+
