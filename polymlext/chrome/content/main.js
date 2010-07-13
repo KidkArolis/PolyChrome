@@ -5,20 +5,20 @@ var PolyMLext = (function ()
     var polyPages = [];
 
     var lookForPolyML = function(doc) {
-        //currently we're not looking for <script type="application/x-polyml">
-        //but for an element with id "code"
-        var code = doc.getElementById('code');
+        var code;
+        var scripts = doc.getElementsByTagName("script");
+        if (scripts!=null) {
+            for (var i=0, len=scripts.length; i<len; i++) {
+                if (scripts[i].getAttribute("type")=="application/x-polyml") {
+                    code = scripts[i].innerHTML;
+                    break;
+                }
+            }
+        }
         if (code!=null) {
             console.log("Found PolyML code on page: " + doc.location.href);
-            var poly = createPolyInstance(doc, code.innerHTML);
+            var poly = createPolyInstance(doc, code);
             polyPages.push({"document": doc, "poly":poly});
-            /*
-            for (var i=0; i<polyPages.length; i++) {
-                console.log(polyPages[i].poly.Server.port());
-            }
-            */
-            //polyPages[polyPages.length-1].poly = poly;
-            //poly = null;
             //add event listener for page unload
             doc.defaultView.addEventListener("unload",
                 onPageUnload, true);
@@ -52,7 +52,7 @@ var PolyMLext = (function ()
         }
         console.log("Pages that are still active: ");
         for (var i=0, len=polyPages.length; i<len; ++i) {
-            console.log(polyPages[i].poly.Server.port());
+            console.log(polyPages[i].poly.server.port());
         }
     }
 

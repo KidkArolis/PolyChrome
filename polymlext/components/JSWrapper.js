@@ -2,12 +2,13 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+var console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+
 JSWrapper.prototype = (function() {
 
     var _document;
-    var console;
     var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    var Server;
+    var server;
 
     var listeners = {};
     var elements = [];
@@ -45,7 +46,6 @@ JSWrapper.prototype = (function() {
                             this.elements.push(elem);
                             response = (this.elements.length-1)+"";
                         }
-                        console.log(response);
                         break;
                     case "innerHTML":
                         var elem = this.elements[request.eid];
@@ -69,22 +69,14 @@ JSWrapper.prototype = (function() {
                 break;
             //add event listener
             case 4:
-                /*
-                f = function(e) {
-                    //console.log('gotta call ' + request.f);
-                    //var serializer = new ONEGEEK.GSerializer();
-                    //var xml = serializer.serialize(e, 'Event');
-                    //Server.send(e.originalTarget.toString());
-                    Server.send(request.f);
-                }
-                */
-                var hash = request.elem + request.eventType + request.f;
+                var hash = request.eid + request.eventType + request.f;
                 var self = this;
+                var elem = this.elements[request.eid];
                 this.listeners[hash] = function(e) {
-                    self.Server.send(request.f);
+                    self.server.send(request.f);
                 }
-                document.getElementById(request.elem).addEventListener(request.eventType, this.listeners[hash], false);
-                response = "done";
+                elem.addEventListener(request.eventType, this.listeners[hash], false);
+//                response = "done";
                 break;
             //remove event listener
             case 5:
@@ -95,37 +87,28 @@ JSWrapper.prototype = (function() {
                 break;
             //onMouseMove
             case 6:
-                /*
-                f = function(e) {
-                    //console.log('gotta call ' + request.f);
-                    //var serializer = new ONEGEEK.GSerializer();
-                    //var xml = serializer.serialize(e, 'Event');
-                    //Server.send(e.originalTarget.toString());
-                    Server.send(request.f);
-                }
-                */
                 var hash = request.elem + request.f;
+                var self = this;
                 this.listeners[hash] = function(e) {
-                    this.Server.send(request.f + "("+e.clientX+","+e.clientY+")");
+                    self.server.send(request.f + "("+e.clientX+","+e.clientY+")");
                 }
                 document.getElementById(request.elem).addEventListener("mousemove", this.listeners[hash], false);
                 response = "done";
                 break;
             default:
-                console.log("unexpected request from Poly", "error");
+                console.log("Unexpected request from Poly", "error");
         }
         return response;
     }
     var init = function(doc, s) {
         this._document = doc;
-        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        this.Server = s;
+        this.server = s;
     }
 
     return {
         init: init,
         process : process,
-        Server : Server,
+        server : server,
         listeners : listeners,
         _document : _document,
         elements : elements

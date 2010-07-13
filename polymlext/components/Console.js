@@ -93,8 +93,8 @@ Console.prototype = (function() {
                          "console", "chrome,resizable=no", null);
         win.onload = setReady;
 
-        consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                            .getService(Components.interfaces.nsIConsoleService);
+        /*consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                            .getService(Components.interfaces.nsIConsoleService);*/
     }
 
     return {
@@ -107,7 +107,6 @@ Console.prototype = (function() {
 // turning Console Class into an XPCOM component
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function Console() {
-    this.init();
     this.wrappedJSObject = this;
 }
 prototype2 = {

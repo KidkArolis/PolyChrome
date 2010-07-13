@@ -24,16 +24,16 @@ struct
         end
 
     datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout;
-    fun addEventListener e (et:eventType) f =
+    fun addEventListener (e:elem) et f =
         let
-            val _ = PolyMLext.send("{\"type\":4, \"elem\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":4, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in
-            PolyMLext.recv()
+            ()
         end
 
-    fun removeEventListener e (et:eventType) f =
+    fun removeEventListener (e:elem) et f =
         let
-            val _ = PolyMLext.send("{\"type\":5, \"elem\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":5, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in
             PolyMLext.recv()
         end
