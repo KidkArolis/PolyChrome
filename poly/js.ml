@@ -1,5 +1,5 @@
 (*
-signature JS = 
+signature JS =
   sig
     (* dom *)
     eqtype elem
@@ -8,82 +8,90 @@ signature JS =
     val innerHTML       : elem -> string
   end
 *)
-  
+
 structure Js =
 struct
-    (*
-    type elem = string
-    (*val document = doc;*)
+    type elem = string;
+    type doc = string;
 
-    fun getElementById (id:string) : elem option =
-        NONE;
-             
-    fun innerHTML (e:elem) =
-        let
-            val _ = PolyMLext.send("a = document.getElementById(\""^e^"\").innerHTML");
-        in
-            PolyMLext.recv()
-        end
-    *)
-    
-    (*helpers*)
-    fun implode list = foldr op^ "" list;
-    
-    type elem = string * string list
-    
+    val document = "document":doc;
+
     fun eval code =
         let
             val _ = PolyMLext.send("{\"type\":2, \"code\":\""^(PolyMLext.escape_quotes(code))^"\"}")
         in
             PolyMLext.recv()
         end
-        
-    fun exec ((id, operations):elem) =
-        let
-            val _ = PolyMLext.send("{\"type\":3, \"id\":\""^id^"\", \"operations\":\""^(implode(operations))^"\"}");
-        in
-            PolyMLext.recv()
-        end;
 
-    fun addEventListener elem eventType f =
+    datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout;
+    fun addEventListener e (et:eventType) f =
         let
-            val _ = PolyMLext.send("{\"type\":4, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":4, \"elem\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in
             PolyMLext.recv()
         end
-        
-    fun removeEventListener elem eventType f =
+
+    fun removeEventListener e (et:eventType) f =
         let
-            val _ = PolyMLext.send("{\"type\":5, \"elem\":\""^elem^"\", \"eventType\":\""^eventType^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":5, \"elem\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in
             PolyMLext.recv()
         end
-        
-    fun onMouseMove elem f =
+
+    fun onMouseMove e f =
         let
-            val _ = PolyMLext.send("{\"type\":6, \"elem\":\""^elem^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":6, \"elem\":\""^e^"\", \"f\":\""^f^"\"}");
         in
             PolyMLext.recv()
         end
-        
-    fun getElementById id = (id, []):elem;    
-    fun parentNode ((id, operations):elem) = (id, operations@["parentNode."]):elem;
-    fun firstChild ((id, operations):elem) = (id, operations@["firstChild."]):elem;
-    
-    fun innerHTML ((id, operations):elem) (newValue:string option) = 
+
+    fun documentElement (d:doc) = "document":elem;
+
+    fun getElementById (d:doc) (id:string) =
         let
-            val operations = operations@["innerHTML"];
-            val _ = PolyMLext.send("{\"type\":3, \"id\":\""^id^"\", \"operations\":\""^(implode(operations))^"\"}");
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"getElementById\",\"id\":\""^id^"\"}");
+            val response = PolyMLext.recv();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in
+            result
+        end
+
+    fun innerHTML (e:elem) (newValue:string option) =
+        let
+            val setNewValue = case newValue of NONE => "false" | SOME s => "true";
+            val newValue = case newValue of NONE => "" | SOME s => s;
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\",\"setNewValue\":"^setNewValue^",\"newValue\":\""^newValue^"\"}");
         in
             PolyMLext.recv()
-        end;
-        
-    fun innerHTMLexample (newValue:string option) =
+        end
+
+    fun clearMemory () =
         let
-            val operations = case newValue of NONE => "innerHTML" | SOME s => "innerHTML = '"^s^"'"
+             val _ = PolyMLext.send("{\"type\":3,\"op\":\"clearMemory\"}");
         in
-            print (operations^"\n")
-        end;
+            PolyMLext.recv()
+        end
+
+
+
+
+(*    fun parentNode ((id, operations):elem) = (id, operations@["parentNode."]):elem;*)
+(*    fun firstChild ((id, operations):elem) = (id, operations@["firstChild."]):elem;*)
+
+(*    fun innerHTML ((id, operations):elem) (newValue:string option) =*)
+(*        let*)
+(*            val operations = operations@["innerHTML"];*)
+(*            val _ = PolyMLext.send("{\"type\":3, \"id\":\""^id^"\", \"operations\":\""^(implode(operations))^"\"}");*)
+(*        in*)
+(*            PolyMLext.recv()*)
+(*        end;*)
+
+(*    fun innerHTMLexample (newValue:string option) =*)
+(*        let*)
+(*            val operations = case newValue of NONE => "innerHTML" | SOME s => "innerHTML = '"^s^"'"*)
+(*        in*)
+(*            print (operations^"\n")*)
+(*        end;*)
 
 (*  val getElementById  : doc -> string -> elem option*)
 (*  val parent          : elem -> elem option*)
@@ -102,7 +110,7 @@ struct
 (*  val removeChild     : elem -> elem -> unit*)
 (*  val replaceChild    : elem -> elem -> elem -> unit*)
 (*  val setStyle        : elem -> string * string -> unit*)
-        
+
 (*val onMouseMove         : doc -> (int*int -> unit) -> unit*)
 
 
@@ -128,4 +136,23 @@ struct
 (*    val abort            : req -> unit*)
 (*  end *)
 
+    (*
+    type elem = string
+    (*val document = doc;*)
+
+    fun getElementById (id:string) : elem option =
+        NONE;
+
+    fun innerHTML (e:elem) =
+        let
+            val _ = PolyMLext.send("a = document.getElementById(\""^e^"\").innerHTML");
+        in
+            PolyMLext.recv()
+        end
+    *)
+
+    (*helpers*)
+(*    fun implode list = foldr op^ "" list;*)
+
 end;
+

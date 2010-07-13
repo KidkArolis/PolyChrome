@@ -6,14 +6,21 @@ Console.prototype = (function() {
     var win;
     var initialized = false;
     var ready = false;
-    
+
+    var tm = Cc["@mozilla.org/thread-manager;1"].getService();
+
     var consoleService;
-    
+
     var _log = function(m, level, location) {
+
+        if (!tm.isMainThread) {
+            dump("NOT THE MAIN THREAD :(")
+        }
+
         if (initialized&&ready) {
             var newline = "\n";
-            var prefix = "INFO: ";  
-            var textbox = win.document.getElementById(location); 
+            var prefix = "INFO: ";
+            var textbox = win.document.getElementById(location);
             switch (level) {
                 case "empty":
                     prefix = ""
@@ -32,7 +39,7 @@ Console.prototype = (function() {
             var ti = win.document.getAnonymousNodes(textbox)[0].childNodes[0];
             ti.scrollTop = ti.scrollHeight;
         } else if (initialized&&!ready) {
-            // Now it is time to create the timer...  
+            // Now it is time to create the timer...
             var timer = Components.classes["@mozilla.org/timer;1"]
                .createInstance(Components.interfaces.nsITimer);
             // ... and to initialize it, we want to call event.notify() ...
@@ -47,37 +54,37 @@ Console.prototype = (function() {
             _log(m, level, location);
         }
     }
-    
+
     var log2 = function(m, level) {
         consoleService.logStringMessage("PolyMLext: " + m);
     }
-    
+
     var poly2 = function(m, level) {
         consoleService.logStringMessage("Poly Output:\n" + m);
     }
-    
+
     var log = function(m, level) {
         _log(m, level, 'debug');
     }
-    
+
     var poly = function(m, level) {
         _log(m, "empty", 'polyml');
     }
-    
+
     var close = function() {
         win.close();
     }
-    
+
     var clearConsole = function() {
         win.document.getElementById("debug").value = "";
         win.document.getElementById("polyml").value = "";
     }
-    
+
     var setReady = function() {
         ready = true;
         win.document.getElementById("clear").addEventListener("click", clearConsole, false);
     }
-        
+
     var init = function() {
         initialized = true;
         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
@@ -89,7 +96,7 @@ Console.prototype = (function() {
         consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);
     }
-    
+
     return {
         init: init,
         log : log,
@@ -117,3 +124,4 @@ var components = [Console];
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule(components);
 }
+

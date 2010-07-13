@@ -10,6 +10,7 @@ JSWrapper.prototype = (function() {
     var Server;
 
     var listeners = {};
+    var elements = [];
 
     var process = function(req) {
         //var document = window.content.document;
@@ -35,10 +36,35 @@ JSWrapper.prototype = (function() {
                 break;
             //one of js functions
             case 3:
-                var cmd = "document.getElementById('" + request.id + "')." + request.operations;
-                response = eval(cmd);
-                if (response==""||response==null) {
-                    response = "done";
+                switch (request.op) {
+                    case "getElementById":
+                        var elem = document.getElementById(request.id);
+                        if (elem==null) {
+                            response = "null";
+                        } else {
+                            this.elements.push(elem);
+                            response = (this.elements.length-1)+"";
+                        }
+                        console.log(response);
+                        break;
+                    case "innerHTML":
+                        var elem = this.elements[request.eid];
+                        if (elem) {
+                            if (request.setNewValue) {
+                                elem.innerHTML = request.newValue;
+                                response = "done";
+                            } else {
+                                response = elem.innerHTML;
+                            }
+                        } else {
+                            response = "exception";
+                        }
+                        break;
+                    case "clearMemory":
+                        this.elements = [];
+                        response = "done";
+                        break;
+
                 }
                 break;
             //add event listener
@@ -101,7 +127,8 @@ JSWrapper.prototype = (function() {
         process : process,
         Server : Server,
         listeners : listeners,
-        _document : _document
+        _document : _document,
+        elements : elements
     }
 }());
 

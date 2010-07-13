@@ -131,9 +131,9 @@ structure PolyMLext (*: POLYMLEXT*)
 
     fun loop () =
         let
-            val _ = print "waiting for input...\n";
+(*            val _ = print "waiting for input...\n";*)
             val code = recv();
-            val _ = print "got the input\n";
+(*            val _ = print "got the input\n";*)
         in
             evaluate "foo" code;
             loop()

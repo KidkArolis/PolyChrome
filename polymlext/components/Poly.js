@@ -4,13 +4,6 @@ const Cr = Components.results;
 
 const RUN_POLY_MANUALLY = false;
 
-Poly.prototype = function() {return { methods, variables} }()
-
-
-var myClass = function(){};
-
-
-
 Poly.prototype = (function() {
 
     var Server;
@@ -128,7 +121,7 @@ Poly.prototype = (function() {
                     while (sin.available()) {
                       request = request + sin.read(512);
                     }
-//                    console.log('Received: ' + request);
+                    //console.log('Received: ' + request);
                     //perform the requested action
                     var response = wrapper.process(request);
                     if (response!="") {
@@ -218,9 +211,6 @@ function Poly() {
     this.init();
     this.wrappedJSObject = this;
 }
-Poly.prototype =
-var a = new Poly();
-
 prototype2 = {
   classDescription: "Javascript XPCOM Component that communicates to PolyML",
   classID:          Components.ID("{29d11222-bb8e-41ee-a80d-909bdaf4620d}"),

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Hello PolyML</title>
+
+<!--
+<script type="application/x-polyml">
+	fun f () = print "Hello PolyML\n";
+	f();
+	//debugging?
+</script>
+-->
+
+<style type= "text/css">
+    body, html {
+        padding:0;
+        margin:0;
+        font-family: verdana, sans;
+        font-size:12px;
+    }
+    pre {
+        margin:0;
+    }
+    #code {
+        padding:20px;
+        background-color:#eee;
+        border-bottom:1px solid #ccc;
+    }
+    #body { padding:20px; }
+</style>
+
+</head>
+<body>
+
+<div id="body">
+    <p id="abc">123</p>
+    <input id="button" type="button" value="add one" />
+    <p id="abc2">0</p>
+    <input id="button2" type="button" value="subtract one" />
+
+    <hr />
+    <input id="remove1" type="button" value="remove first listener" />
+    <input id="remove2" type="button" value="remove second listener" />
+</div>
+
+<script2>
+var e = document.getElementById("abc");
+var text = e.innerHTML;
+document.getElementById("abc2").innerHTML = text;
+e.innerHTML = "newValue";
+</script2>
+
+<pre id="code">
+val e = getElementById document "abc";
+val text = (innerHTML (valOf e) NONE);
+innerHTML (valOf (getElementById document "abc2")) (SOME text);
+clearMemory();
+innerHTML (valOf e) (SOME "newValue");
+</pre>
+</body>
+</html>
+

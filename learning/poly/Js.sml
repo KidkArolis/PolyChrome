@@ -1,4 +1,4 @@
-signature JS = 
+signature JS =
 sig
   (* dom *)
   eqtype doc eqtype elem
@@ -21,8 +21,11 @@ sig
   val removeChild     : elem -> elem -> unit
   val replaceChild    : elem -> elem -> elem -> unit
 
+  <div>[[[]<a>inner html</a>]]]</div>
+  <input value="here" randomattr="aa"/>
+
   (* events *)
-  datatype eventType = onclick | onchange | onkeypress 
+  datatype eventType = onclick | onchange | onkeypress
                      | onkeyup | onmouseover | onmouseout
   val installEventHandler : elem -> eventType -> (unit -> bool) -> unit
   val getEventHandler     : elem -> eventType -> (unit -> bool) option
@@ -51,14 +54,14 @@ sig
     val onStateChange    : req -> (unit -> unit) -> unit
     val response         : req -> string option
     val abort            : req -> unit
-  end 
+  end
 
   val random             : unit -> real
 (*
-  val rpc : 'a T -> 'b T -> {url: string, method: string} 
+  val rpc : 'a T -> 'b T -> {url: string, method: string}
 	    -> 'a -> 'b
 
-  val rpcAsync : 'a T -> 'b T -> {url: string, method: string} 
+  val rpcAsync : 'a T -> 'b T -> {url: string, method: string}
 	    -> ('b -> unit) -> 'a -> unit
 *)
 end
@@ -76,9 +79,9 @@ end
   [random()] returns a random real in the interval [0.0,1.0[.
 *)
 
-structure JsSecret :> sig 
-  include JS 
-  val fromDoc : doc -> foreignptr 
+structure JsSecret :> sig
+  include JS
+  val fromDoc : doc -> foreignptr
 end =
 struct
 
@@ -131,7 +134,7 @@ fun innerHTML (e:elem) (s:string) : unit =
 
 (* events *)
 datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout
-                     
+
 fun installEventHandler (e: elem) (et: eventType) (f: unit -> bool) : unit =
     let val arg1 = ("e", J.fptr)
         val arg2 = ("f", J.==>(J.unit,J.bool))
@@ -144,10 +147,10 @@ fun installEventHandler (e: elem) (et: eventType) (f: unit -> bool) : unit =
             | onmouseover => "e.onmouseover = f;"
             | onmouseout  => "e.onmouseout = f;"
     in
-      J.exec2 {stmt=stmt, arg1=arg1, 
-               arg2=arg2, res=J.unit} (e,f)                      
+      J.exec2 {stmt=stmt, arg1=arg1,
+               arg2=arg2, res=J.unit} (e,f)
     end
-    
+
 fun getEventHandler (e: elem) (et: eventType) : (unit -> bool) option =
     NONE
 
@@ -155,31 +158,31 @@ fun getEventHandler (e: elem) (et: eventType) : (unit -> bool) option =
 fun onMouseMove (d: doc) (f : int*int->unit) : unit =
     J.exec2 {stmt="return d.onmousemove = function(ev) { f([ev.pageX,ev.pageY]); };",
              arg1=("d",J.fptr), arg2=("f",J.===>(J.int,J.int,J.unit)), res=J.unit} (d,f)
-    
+
 
 type intervalId = foreignptr
 fun setInterval (i: int) (f: unit -> unit) : intervalId =
     let val arg1 = ("i", J.int)
         val arg2 = ("f", J.==>(J.unit,J.unit))
     in
-      J.exec2 {stmt="return setInterval(f,i);", 
+      J.exec2 {stmt="return setInterval(f,i);",
                arg1=arg1, arg2=arg2,
                res=J.fptr} (i,f)
     end
-    
+
 fun clearInterval (id: intervalId) : unit =
     let val arg1 = ("id", J.fptr)
     in
-      J.exec1 {stmt="return clearInterval(id);", 
+      J.exec1 {stmt="return clearInterval(id);",
                arg1=arg1, res=J.unit} id
-    end    
+    end
 
 type timeoutId = foreignptr
 fun setTimeout (i: int) (f: unit -> unit) : timeoutId =
     let val arg1 = ("i", J.int)
         val arg2 = ("f", J.==>(J.unit,J.unit))
     in
-      J.exec2 {stmt="return setTimeout(f,i);", 
+      J.exec2 {stmt="return setTimeout(f,i);",
                arg1=arg1, arg2=arg2,
                res=J.fptr} (i,f)
     end
@@ -187,7 +190,7 @@ fun setTimeout (i: int) (f: unit -> unit) : timeoutId =
 fun clearTimeout (id: timeoutId) : unit =
     let val arg1 = ("id", J.fptr)
     in
-      J.exec1 {stmt="return d.clearTimeout(id);", 
+      J.exec1 {stmt="return d.clearTimeout(id);",
                arg1=arg1, res=J.unit} id
     end
 
@@ -232,7 +235,7 @@ fun removeChild (e : elem) (a: elem) : unit =
 
 fun replaceChild (e : elem) (a: elem) (old: elem) : unit =
     J.exec3 {stmt="return e.replaceChild(a,old);",
-             arg1=("e",J.fptr), arg2=("a",J.fptr), arg3=("old",J.fptr), 
+             arg1=("e",J.fptr), arg2=("a",J.fptr), arg3=("old",J.fptr),
              res=J.unit} (e,a,old)
 
 fun setStyle (e: elem) (s:string,v:string) : unit =
@@ -251,11 +254,11 @@ structure XMLHttpRequest =
           J.exec4 {stmt="return r.open(m,u,a);",
                    arg1=("r",J.fptr),arg2=("m",J.string),arg3=("u",J.string),
                    arg4=("a",J.bool),res=J.unit} (r,method,url,async)
-      
+
       fun send (r:req) (SOME s) : unit =
           J.exec2 {stmt="return r.send(s);",
                    arg1=("r",J.fptr),arg2=("s",J.string),res=J.unit} (r,s)
-        | send r NONE = 
+        | send r NONE =
           J.exec1 {stmt="return r.send(null);",
                    arg1=("r",J.fptr),res=J.unit} r
 
@@ -295,3 +298,4 @@ fun random() : real =
 end
 
 structure Js : JS = JsSecret
+
