@@ -2,8 +2,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-
 JSWrapper.prototype = (function() {
 
     var _document;
@@ -13,6 +11,8 @@ JSWrapper.prototype = (function() {
     var listeners = {};
     var elements = [];
 
+    var console;
+
     var process = function(req) {
         //var document = window.content.document;
         var document = this._document;
@@ -21,7 +21,7 @@ JSWrapper.prototype = (function() {
             var request = nativeJSON.decode(req);
         } catch (e) {
             console.log("Could not decode JSON. Reason: " + e, "error");
-            return response;
+            return "";
         }
         switch (request.type) {
             //output
@@ -30,9 +30,12 @@ JSWrapper.prototype = (function() {
                 break;
             //code to evaluate
             case 2:
+                //console.log(document.defaultView.content.document.defaultView.content.document.location.href);
+                //response = document.defaultView.eval.call(document.defaultView, request.code);
+                //console.log("EVALS RESPONSE: " + response);
                 response = eval(request.code);
                 if (response==""||response==null) {
-                    response = "done";
+                    response = "";
                 }
                 break;
             //one of js functions
@@ -50,8 +53,8 @@ JSWrapper.prototype = (function() {
                     case "innerHTML":
                         var elem = this.elements[request.eid];
                         if (elem) {
-                            if (request.setNewValue) {
-                                elem.innerHTML = request.newValue;
+                            if (request.html) {
+                                elem.innerHTML = request.html;
                                 response = "done";
                             } else {
                                 response = elem.innerHTML;
@@ -62,38 +65,38 @@ JSWrapper.prototype = (function() {
                         break;
                     case "clearMemory":
                         this.elements = [];
-                        response = "done";
                         break;
 
                 }
                 break;
             //add event listener
             case 4:
+                //TODO not a good hash, shouldn't depend on eid, but on the
+                //object referred
                 var hash = request.eid + request.eventType + request.f;
                 var self = this;
                 var elem = this.elements[request.eid];
-                this.listeners[hash] = function(e) {
-                    self.server.send(request.f);
+                if (!this.listeners[hash]) {
+                    this.listeners[hash] = function(e) {
+                        self.server.send(request.f);
+                    }
+                    elem.addEventListener(request.eventType, this.listeners[hash], false);
                 }
-                elem.addEventListener(request.eventType, this.listeners[hash], false);
-//                response = "done";
                 break;
             //remove event listener
             case 5:
-                var hash = request.elem + request.eventType + request.f;
+                var hash = request.eid + request.eventType + request.f;
                 document.getElementById(request.elem).removeEventListener(request.eventType, this.listeners[hash], false);
                 delete this.listeners[hash];
-                response = "done";
                 break;
             //onMouseMove
             case 6:
                 var hash = request.elem + request.f;
                 var self = this;
                 this.listeners[hash] = function(e) {
-                    self.server.send(request.f + "("+e.clientX+","+e.clientY+")");
+                    self.server.send(request.f + "("+e.clientX+","+e.clientY+");");
                 }
                 document.getElementById(request.elem).addEventListener("mousemove", this.listeners[hash], false);
-                response = "done";
                 break;
             default:
                 console.log("Unexpected request from Poly", "error");
@@ -103,6 +106,7 @@ JSWrapper.prototype = (function() {
     var init = function(doc, s) {
         this._document = doc;
         this.server = s;
+        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
     }
 
     return {

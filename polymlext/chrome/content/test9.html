@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Hello PolyML</title>
+
+<script type="text/javascript">
+var globalVar = 555;
+</script>
+<script type="application/x-polyml">
+eval "console.log('not good')";
+eval "globalVar";
+</script>
+
+<style type= "text/css">
+    body, html { padding:0; margin:0; font-family: verdana, sans; font-size:12px; padding:20px; }
+</style>
+
+</head>
+<body>
+
+<div id="body">
+    testing eval
+</div>
+
+</body>
+</html>
+

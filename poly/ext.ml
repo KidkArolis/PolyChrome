@@ -1,15 +1,8 @@
-(*signature POLYMLEXT =*)
-(*sig*)
-(*  val main: 'a * string list -> 'b*)
-(*  val send: string -> string*)
-(*  val recv: unit -> string*)
-(*  val test: unit -> unit*)
-(*end;*)
-
 structure PolyMLext (*: POLYMLEXT*)
 = struct
 
     val gsock = ref (NONE : Socket.active INetSock.stream_sock option)
+    val esock = ref (NONE : Socket.active INetSock.stream_sock option)
 
     exception Error of string
 
@@ -17,12 +10,10 @@ structure PolyMLext (*: POLYMLEXT*)
 
     fun escape_quotes s = implode (foldr op@ [] (map (fn #"\"" => [#"\\", #"\""] | x => [x]) (explode s)));
 
-    fun mkSock (port) =
+    fun makeSocket (port) =
         let
             val client = INetSock.TCP.socket()
-            val me = case NetHostDB.getByName "localhost" of
-	                    NONE => raise Error ""
-	                  | SOME en => en;
+            val me = valOf (NetHostDB.getByName "localhost");
             val localhost = NetHostDB.addr me;
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
@@ -30,26 +21,18 @@ structure PolyMLext (*: POLYMLEXT*)
             client
         end
 
-    fun send (str) =
-        let
-            val outv = Word8VectorSlice.full
-                (Byte.stringToBytes str)
-(*            val bytes_sent = Socket.sendVec(the gsock, outv);*)
-        in
-(*            PolyML.print ("Sent " ^ (Int.toString bytes_sent) *)
-(*                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))*)
-            Socket.sendVec(the gsock, outv)
-        end
-
     fun recv () =
         Byte.bytesToString(Socket.recvVec(the gsock, 1024))
 
-    fun recv2 (s,n) =
+    (**
+    fun recv_better () =
         let
+            val n = valOf (Int.fromString (Byte.bytesToString(Socket.recvVec(the gsock, 10))));
+            val _ = print (Int.toString n);
             fun loop(0) = []
               | loop(n) =
                 let
-                    val data = Byte.bytesToString(Socket.recvVec(s,n))
+                    val data = Byte.bytesToString(Socket.recvVec(the gsock, n))
                     val len = String.size data
                 in
                     if len = 0 then []
@@ -57,6 +40,33 @@ structure PolyMLext (*: POLYMLEXT*)
                 end
         in
             String.concat (loop n)
+        end
+    *)
+
+    fun recv2 () =
+        Byte.bytesToString(Socket.recvVec(the esock, 1024))
+
+    fun send2 (str) =
+        let
+            val outv = Word8VectorSlice.full (Byte.stringToBytes str)
+(*            val bytes_sent = Socket.sendVec(the gsock, outv);*)
+(*            val _ = PolyML.print ("Sent " ^ (Int.toString bytes_sent) *)
+(*                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))*)
+        in
+            Socket.sendVec(the gsock, outv)
+        end
+
+    fun send (str) =
+        let
+            val len = Int.toString (String.size str);
+            fun expand (str, 10) = str | expand (str, x) = expand (str^" ", x+1);
+            val lenStr = expand (len, String.size len);
+(*            val _ = print(lenStr^"\n");*)
+(*            val _ = print(str^"\n");*)
+            val _ = send2(lenStr);
+            val _ = send2(str);
+        in
+            ()
         end
 
     fun closeSock s =
@@ -127,13 +137,9 @@ structure PolyMLext (*: POLYMLEXT*)
             send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
         end;
 
-    fun test() = print "not good\n";
-
     fun loop () =
         let
-(*            val _ = print "waiting for input...\n";*)
             val code = recv();
-(*            val _ = print "got the input\n";*)
         in
             evaluate "foo" code;
             loop()
@@ -141,16 +147,20 @@ structure PolyMLext (*: POLYMLEXT*)
 
     fun main () =
         let
-            val port = case CommandLine.arguments() of
-                    nil => raise Error "port of the server not provided"
-                  | n::_ => valOf (Int.fromString n)
-            val client_sock = mkSock(port);
-            val _ = (gsock := SOME client_sock);
+            val (serverPort, eventSocketPort)  = case CommandLine.arguments() of
+                  [n,m] => (valOf (Int.fromString n), valOf (Int.fromString m))
+                  | x => raise Error "ports not provided"
+            val clientSocket = makeSocket(serverPort);
+            val eventSocket = makeSocket(eventSocketPort);
+            val _ = (gsock := SOME clientSocket);
+            val _ = (esock := SOME eventSocket);
+
         in
             PolyML.fullGC();
             map PolyML.Compiler.forgetStructure["PolyMLext"];
             loop();
-            closeSock(client_sock);
+            closeSock(clientSocket);
+            closeSock(eventSocket);
             OS.Process.exit OS.Process.success
         end
 

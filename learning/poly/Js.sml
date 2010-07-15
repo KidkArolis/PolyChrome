@@ -21,9 +21,6 @@ sig
   val removeChild     : elem -> elem -> unit
   val replaceChild    : elem -> elem -> elem -> unit
 
-  <div>[[[]<a>inner html</a>]]]</div>
-  <input value="here" randomattr="aa"/>
-
   (* events *)
   datatype eventType = onclick | onchange | onkeypress
                      | onkeyup | onmouseover | onmouseout

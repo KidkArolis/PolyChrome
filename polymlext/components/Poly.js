@@ -2,22 +2,17 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-
-function Server() {
+function Socket1() {
     this.init();
 }
-Server.prototype = (function() {
+Socket1.prototype = (function() {
     var input;
     var output;
-    var serverSocket;
-
-    var processRequest;
-
+    var socket;
     var parent;
-
-    //private and shared
-    var tm = Cc["@mozilla.org/thread-manager;1"].getService();
+    var timer;
+    var console; //private and shared
+    var tm; //private and shared
 
     var onInputStreamReady = function(input) {
         try {
@@ -25,36 +20,53 @@ Server.prototype = (function() {
                         .createInstance(Ci.nsIScriptableInputStream);
             sin.init(input);
             sin.available();
-            var request = '';
-            while (sin.available()) {
-              request += sin.read(512);
+            var len = parseInt(sin.read(10));
+            var request = sin.read(len);
+            //TODO: is smth with smaller chunks better?
+            //while (sin.available()) { request += sin.read(512); }
+            try {
+                this.parent.processRequest(request);
+            } catch (e) {
+                console.log('Could not process the request. Reason: '+e, 'error');
             }
-            this.parent.processRequest(request);
-            //wait for another request
             this.input.asyncWait(this,0,0,tm.mainThread);
         } catch (e) {
-            console.log('Could not process the request. Reason: '+e, 'error');
+            //TODO
+            //the sockets have already been closed
+            //but for some reason this throws exception on closing the page :-/
         }
     }
 
     var onSocketAccepted = function(serverSocket, clientSocket) {
-//        console.log("Accepted connection on "+clientSocket.host+":"+clientSocket.port);
-        this.input = clientSocket.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
-        this.output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+        this.input = clientSocket.openInputStream(0, 0, 0).
+                        QueryInterface(Ci.nsIAsyncInputStream);
+        this.output = clientSocket.
+                        openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
         this.input.asyncWait(this,0,0,tm.mainThread);
     }
+
     var onStopListening = function() {}
 
     var send = function(data) {
-        var n = this.output.write(data, data.length);
-        console.log("Sent "+n+" bytes: " + data);
+        if (this.ready()) {
+            var nbytes = this.output.write(data, data.length);
+            //console.log(data, "SENT");
+        } else {
+            this.timer = Components.classes["@mozilla.org/timer;1"]
+                   .createInstance(Components.interfaces.nsITimer);
+            var self = this;
+            this.timer.initWithCallback(
+            { notify: function() { self.send(data); } },
+            5,
+            Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        }
     }
 
     var destroy = function() {
-//        console.log("Closing the socket " + this.serverSocket.port + ".");
+        this.timer.cancel();
         this.input.close();
         this.output.close();
-        this.serverSocket.close();
+        this.socket.close();
     }
 
     var ready = function() {
@@ -62,48 +74,119 @@ Server.prototype = (function() {
     }
 
     var init = function () {
-        this.serverSocket = Cc["@mozilla.org/network/server-socket;1"].
+        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        tm = Cc["@mozilla.org/thread-manager;1"].getService();
+        this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
-        this.serverSocket.init(-1, true, 5);
-        this.serverSocket.asyncListen(this);
-//        console.log("Created a server socket on port " + serverSocket.port);
+        this.socket.init(-1, true, 5);
+        this.socket.asyncListen(this);
     }
 
     var port = function() {
-        return this.serverSocket.port;
+        return this.socket.port;
     }
 
     return {
         //fields
         input : input,
         output : output,
-        serverSocket : serverSocket,
+        socket : socket,
         parent : parent,
+        timer : timer,
+        console : console,
+        tm : tm,
         //methods
         init : init,
         send : send,
         ready : ready,
         destroy : destroy,
-        port : port,
         onInputStreamReady : onInputStreamReady,
         onSocketAccepted : onSocketAccepted,
         onStopListening : onStopListening
     }
 }())
 
-Poly.prototype = (function() {
-
-    //public
-    var server;
-    var process;
-    var wrapper;
-    var _document;
+function Socket2() {
+    this.init();
+}
+Socket2.prototype = (function() {
+    var output;
+    var socket;
+    var parent;
     var timer;
+    var console; //private and shared
+
+    var send = function(data) {
+        if (this.ready()) {
+            var nbytes = this.output.write(data, data.length);
+            //console.log(data, "SENT");
+        } else {
+            this.timer = Components.classes["@mozilla.org/timer;1"]
+                   .createInstance(Components.interfaces.nsITimer);
+            var self = this;
+            this.timer.initWithCallback(
+            { notify: function() { self.send(data); } },
+            5,
+            Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        }
+    }
+
+    var onSocketAccepted = function(serverSocket, clientSocket) {
+        this.output = clientSocket.
+                        openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+    }
+
+    var onStopListening = function() {}
+
+    var destroy = function() {
+        this.timer.cancel();
+        this.socket.close();
+        this.output.close();
+    }
+
+    var ready = function() {
+        return this.output!=null;
+    }
+
+    var init = function () {
+        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        this.socket = Cc["@mozilla.org/network/server-socket;1"].
+                createInstance(Ci.nsIServerSocket);
+        this.socket.init(-1, true, 5);
+        this.socket.asyncListen(this);
+    }
+
+    var port = function() {
+        return this.socket.port;
+    }
+
+    return {
+        //fields
+        output : output,
+        socket : socket,
+        timer : timer,
+        console : console,
+        //methods
+        init : init,
+        send : send,
+        ready : ready,
+        destroy : destroy,
+        onSocketAccepted : onSocketAccepted,
+        onStopListening : onStopListening
+    }
+}())
+
+Poly.prototype = (function() {
+    var socket1;
+    var socket2;
+    var process;
+    var jswrapper;
+    var _document;
+    var console; //private and shared
 
     var getProfilePath = function() {
         var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                 .getService(Components.interfaces.nsIProperties);
-
         var path = escape(fileLocator.get("ProfD", Components.interfaces.nsIFile).path.replace(/\\/g, "/")) + "/";
         if (path.indexOf("/") != 0) {
             path = '/' + path;
@@ -128,7 +211,7 @@ Poly.prototype = (function() {
 	    return output;
     }
 
-    var startPoly = function (port) {
+    var startPoly = function () {
         //figure out the path of poly executable
         var binpath = readFile(getProfilePath()+'extensions/polymlext@ed.ac.uk');
         binpath = binpath.substring(0, binpath.length-1) + '/poly/PolyMLext';
@@ -137,65 +220,54 @@ Poly.prototype = (function() {
         file.initWithPath(binpath);
         this.process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         this.process.init(file);
-        var args = [port];
+        var args = [this.socket1.socket.port, this.socket2.socket.port];
         this.process.run(false, args, args.length);
-    }
-
-    var processCode = function(doc, code) {
-        this._document = doc;
-        this.wrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
-                        createInstance().wrappedJSObject;
-        this.wrapper.init(this._document, this.server);
-
-        if (this.server.ready()) {
-            this.server.send(code);
-        } else {
-            this.timer = Components.classes["@mozilla.org/timer;1"]
-                   .createInstance(Components.interfaces.nsITimer);
-            var self = this;
-            this.timer.initWithCallback(
-            { notify: function() { self.processCode(self._document, code); } },
-            5,
-            Components.interfaces.nsITimer.TYPE_ONE_SHOT
-            );
-        }
     }
 
     var destroy = function() {
 //        console.log("Destroying this instance of Poly.")
-        this.timer.cancel();
-        this.server.destroy();
+        this.socket1.destroy();
         this.process.kill();
     }
 
     var processRequest = function(request) {
-        console.log("Received request:\n" + request);
-        var response = this.wrapper.process(request);
+        console.log(request, "RECV");
+        var response = this.jswrapper.process(request);
         if (response!="") {
-            this.server.send(response);
+            this.socket2.send(response);
         }
     }
 
-    var init = function() {
-        this.server = new Server();
-        this.server.parent = this;
-        this.startPoly(this.server.port());
+    var sendCode = function(code) {
+        this.socket1.send(code);
+    }
+
+    var init = function(doc) {
+        this._document = doc;
+        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        this.socket1 = new Socket1();
+        this.socket1.parent = this; //needed for passing down requests
+        this.socket2 = new Socket2();
+        this.startPoly();
+        this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
+                            createInstance().wrappedJSObject;
+        this.jswrapper.init(this._document, this.socket1);
     }
 
     return {
         //fields
-        server : server,
+        socket1 : socket1,
+        socket2 : socket2,
         _document : _document,
         process : process,
-        wrapper : wrapper,
-        timer : timer,
+        jswrapper : jswrapper,
 
         //methods
         init : init,
         startPoly : startPoly,
-        processCode : processCode,
         processRequest : processRequest,
         destroy : destroy,
+        sendCode : sendCode
     }
 }())
 
@@ -204,7 +276,6 @@ Poly.prototype = (function() {
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function Poly() {
     this.wrappedJSObject = this;
-    this.init();
 }
 prototype2 = {
   classDescription: "Javascript XPCOM Component that communicates to PolyML",

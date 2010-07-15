@@ -2,6 +2,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+//A lot of variables in this case are not exposed to the outside,
+//which means they are shared between instances of Console,
+//but that's ok, because Console should be used as a service (one instance)
 Console.prototype = (function() {
     var win;
     var initialized = false;
@@ -9,49 +12,16 @@ Console.prototype = (function() {
 
     var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
-    var consoleService;
-
     var _log = function(m, level, location) {
-
-        if (!tm.isMainThread) {
-            dump("NOT THE MAIN THREAD :(")
-        }
-
+        //just trying to catch such error
+        if (!tm.isMainThread) dump("NOT THE MAIN THREAD :(")
         if (initialized&&ready) {
-            var newline = "\n";
-            var prefix = "INFO: ";
+            var newline = location=="polyml" ? "" : "\n";
+            var prefix = level==null ? "INFO: " : (level=="" ? "" : level+": ");
             var textbox = win.document.getElementById(location);
-            switch (level) {
-                case "empty":
-                    prefix = ""
-                    break;
-                case "error":
-                    prefix = "ERORR: "
-                    break;
-                case "warning":
-                    prefix = "WARNING: "
-                    break;
-            }
-            if (location=="polyml") {
-                newline = "";
-            }
             textbox.value += prefix + m + newline;
             var ti = win.document.getAnonymousNodes(textbox)[0].childNodes[0];
             ti.scrollTop = ti.scrollHeight;
-        } else if (initialized&&!ready) {
-            // Now it is time to create the timer...
-            var timer = Components.classes["@mozilla.org/timer;1"]
-               .createInstance(Components.interfaces.nsITimer);
-            // ... and to initialize it, we want to call event.notify() ...
-            // ... one time after exactly ten second.
-            timer.initWithCallback(
-                { notify: function() { _log(m, level, location); } },
-                10,
-                Components.interfaces.nsITimer.TYPE_ONE_SHOT
-            );
-        } else {
-            init();
-            _log(m, level, location);
         }
     }
 
@@ -68,11 +38,7 @@ Console.prototype = (function() {
     }
 
     var poly = function(m, level) {
-        _log(m, "empty", 'polyml');
-    }
-
-    var close = function() {
-        win.close();
+        _log(m, "", 'polyml');
     }
 
     var clearConsole = function() {
@@ -93,7 +59,7 @@ Console.prototype = (function() {
                          "console", "chrome,resizable=no", null);
         win.onload = setReady;
 
-        /*consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+        /*this.consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);*/
     }
 
@@ -108,6 +74,7 @@ Console.prototype = (function() {
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 function Console() {
     this.wrappedJSObject = this;
+    this.init();
 }
 prototype2 = {
   classDescription: "A special Console for PolyML extension",

@@ -17,8 +17,11 @@ fun applyOperation operation =
     in
         clearMemory()
     end;
-addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op+)";
-addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-)";
+clearMemory();
+addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op+);";
+clearMemory();
+addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op+);";
+addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
 </script>
 
 <style type= "text/css">

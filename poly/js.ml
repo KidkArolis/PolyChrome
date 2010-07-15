@@ -1,13 +1,6 @@
-(*
-signature JS =
-  sig
-    (* dom *)
-    eqtype elem
-    (*val document        : doc*)
-(*    val getElementById  : doc -> string -> elem option*)
-    val innerHTML       : elem -> string
-  end
-*)
+(*signature JS =*)
+(*sig*)
+(*end*)
 
 structure Js =
 struct
@@ -16,143 +9,107 @@ struct
 
     val document = "document":doc;
 
-    fun eval code =
-        let
+    (* execute arbitrary javascript code  *)
+    fun eval code = let
             val _ = PolyMLext.send("{\"type\":2, \"code\":\""^(PolyMLext.escape_quotes(code))^"\"}")
-        in
-            PolyMLext.recv()
-        end
+        in PolyMLext.recv2() end
 
-    datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout;
-    fun addEventListener (e:elem) et f =
-        let
-            val _ = PolyMLext.send("{\"type\":4, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
-        in
-            ()
-        end
-
-    fun removeEventListener (e:elem) et f =
-        let
-            val _ = PolyMLext.send("{\"type\":5, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
-        in
-            PolyMLext.recv()
-        end
-
-    fun onMouseMove e f =
-        let
-            val _ = PolyMLext.send("{\"type\":6, \"elem\":\""^e^"\", \"f\":\""^f^"\"}");
-        in
-            PolyMLext.recv()
-        end
-
+    (* element manipulation *)
     fun documentElement (d:doc) = "document":elem;
 
-    fun getElementById (d:doc) (id:string) =
-        let
+    fun getElementById (d:doc) (id:string) = let
             val _ = PolyMLext.send("{\"type\":3, \"op\":\"getElementById\",\"id\":\""^id^"\"}");
-            val response = PolyMLext.recv();
+            val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
-        in
-            result
-        end
+        in result end
 
-    fun innerHTML (e:elem) (newValue:string option) =
-        let
+    fun parent (e:elem) = let
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"parent\"}");
+            val response = PolyMLext.recv2();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in result end
+    fun firstChild (e:elem) = let
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"firstChild\"}");
+            val response = PolyMLext.recv2();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in result end
+    fun lastChild (e:elem) = let
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"lastChild\"}");
+            val response = PolyMLext.recv2();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in result end
+    fun nextSibling (e:elem) = let
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"nextSibling\"}");
+            val response = PolyMLext.recv2();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in result end
+    fun previousSibling (e:elem) = let
+            val _ = PolyMLext.send("{\"type\":3, \"op\":\"previousSibling\"}");
+            val response = PolyMLext.recv2();
+            val result = case response of "null" => NONE | x => SOME (x:elem);
+        in result end
+    fun innerHTML (e:elem) (html:string option) = let
+            val req = case html of
+                NONE   => "{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\"}"
+              | SOME h => "{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\",\"html\":\""^h^"\"}"
+            val _ = PolyMLext.send(req);
+(*            val _ = PolyMLext.send("{\"type\":2,\"code\":\"console.log('waiting for innerhtml')\"}");*)
+        in PolyMLext.recv2() end
+    fun value (e:elem) (newValue:string option) = let
             val setNewValue = case newValue of NONE => "false" | SOME s => "true";
             val newValue = case newValue of NONE => "" | SOME s => s;
-            val _ = PolyMLext.send("{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\",\"setNewValue\":"^setNewValue^",\"newValue\":\""^newValue^"\"}");
-        in
-            PolyMLext.recv()
-        end
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"value\",\"eid\":\""^e^"\",\"setNewValue\":"^setNewValue^",\"newValue\":\""^newValue^"\"}");
+        in PolyMLext.recv2() end
+    fun getAttribute (e:elem) (attribute:string)= let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"getAttribute\",\"eid\":\""^e^"\",\"attribute\":"^attribute^"}");
+        in PolyMLext.recv2() end
+    fun setAttribute (e:elem) (attribute:string) (value:string) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"setAttribute\",\"eid\":\""^e^"\",\"attribute\":"^attribute^",\"value\":\""^value^"\"}");
+        in () end
+    fun removeAttribute (e:elem) (attribute:string) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"removeAttribute\",\"eid\":\""^e^"\",\"attribute\":"^attribute^"}");
+        in () end
+    fun createElement (t:string) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"createElement\",\"type\":"^t^"}");
+        in PolyMLext.recv2():elem end
+    fun createTextNode (text:string) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"createTextNode\",\"text\":"^text^"}");
+        in PolyMLext.recv2():elem end
+(*    fun createFragment  : unit -> elem*)
+    fun appendChild (parent:elem) (child:elem) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"appendChild\",\"pid\":"^parent^",\"cid\":"^child^"}");
+        in () end
+    fun removeChild (parent:elem) (child:elem) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"removeChild\",\"pid\":"^parent^",\"cid\":"^child^"}");
+        in () end
+    fun replaceChild (parent:elem) (child_from:elem) (child_to:elem) = let
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"replaceChild\",\"pid\":"^parent^",\"cid_from\":"^child_from^",\"cid_to\":"^child_to^"}");
+        in () end
+    fun style (e:elem) (attribute:string) (value:string option) = let
+            val setValue = case value of NONE => "false" | SOME s => "true";
+            val value = case value of NONE => "" | SOME s => s;
+            val _ = PolyMLext.send("{\"type\":3,\"op\":\"style\",\"eid\":\""^e^"\",\"setValue\":"^setValue^",\"value\":\""^value^"\"}");
+        in PolyMLext.recv2() end
 
-    fun clearMemory () =
-        let
-             val _ = PolyMLext.send("{\"type\":3,\"op\":\"clearMemory\"}");
-        in
-            PolyMLext.recv()
-        end
+    (* events *)
+    datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout;
+    fun addEventListener (e:elem) et f = let
+            val _ = PolyMLext.send("{\"type\":4, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+        in () end
+    fun removeEventListener (e:elem) et f = let
+            val _ = PolyMLext.send("{\"type\":5, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+        in () end
+    fun onMouseMove e f = let
+            val _ = PolyMLext.send("{\"type\":6, \"elem\":\""^e^"\", \"f\":\""^f^"\"}");
+        in () end
 
-
-
-
-(*    fun parentNode ((id, operations):elem) = (id, operations@["parentNode."]):elem;*)
-(*    fun firstChild ((id, operations):elem) = (id, operations@["firstChild."]):elem;*)
-
-(*    fun innerHTML ((id, operations):elem) (newValue:string option) =*)
-(*        let*)
-(*            val operations = operations@["innerHTML"];*)
-(*            val _ = PolyMLext.send("{\"type\":3, \"id\":\""^id^"\", \"operations\":\""^(implode(operations))^"\"}");*)
-(*        in*)
-(*            PolyMLext.recv()*)
-(*        end;*)
-
-(*    fun innerHTMLexample (newValue:string option) =*)
-(*        let*)
-(*            val operations = case newValue of NONE => "innerHTML" | SOME s => "innerHTML = '"^s^"'"*)
-(*        in*)
-(*            print (operations^"\n")*)
-(*        end;*)
-
-(*  val getElementById  : doc -> string -> elem option*)
-(*  val parent          : elem -> elem option*)
-(*  val firstChild      : elem -> elem option*)
-(*  val lastChild       : elem -> elem option*)
-(*  val nextSibling     : elem -> elem option*)
-(*  val previousSibling : elem -> elem option*)
-(*  val innerHTML       : elem -> string -> unit*)
-(*  val value           : elem -> string*)
-(*  val setAttribute    : elem -> string -> string -> unit*)
-(*  val removeAttribute : elem -> string -> unit*)
-(*  val createElement   : string -> elem*)
-(*  val createTextNode  : string -> elem*)
-(*  val createFragment  : unit -> elem*)
-(*  val appendChild     : elem -> elem -> unit*)
-(*  val removeChild     : elem -> elem -> unit*)
-(*  val replaceChild    : elem -> elem -> elem -> unit*)
-(*  val setStyle        : elem -> string * string -> unit*)
-
-(*val onMouseMove         : doc -> (int*int -> unit) -> unit*)
-
-
-(*what about these*)
-(*  type intervalId*)
-(*  val setInterval     : int -> (unit -> unit) -> intervalId*)
-(*  val clearInterval   : intervalId -> unit*)
-
-(*  type timeoutId*)
-(*  val setTimeout      : int -> (unit -> unit) -> timeoutId*)
-(*  val clearTimeout    : timeoutId -> unit*)
-
-(*  structure XMLHttpRequest : sig*)
-(*    type req*)
-(*    val new              : unit -> req*)
-(*    val openn            : req -> {method: string, url: string, async: bool} -> unit*)
-(*    val setRequestHeader : req -> string * string -> unit*)
-(*    val send             : req -> string option -> unit*)
-(*    val state            : req -> int        (* 0,1,2,3,4 *)*)
-(*    val status           : req -> int option (* 200, 404, ... *)*)
-(*    val onStateChange    : req -> (unit -> unit) -> unit*)
-(*    val response         : req -> string option*)
-(*    val abort            : req -> unit*)
-(*  end *)
-
-    (*
-    type elem = string
-    (*val document = doc;*)
-
-    fun getElementById (id:string) : elem option =
-        NONE;
-
-    fun innerHTML (e:elem) =
-        let
-            val _ = PolyMLext.send("a = document.getElementById(\""^e^"\").innerHTML");
-        in
-            PolyMLext.recv()
-        end
+    (*Memory management*)
+    (**
+    TODO:
+    fun clearElement (e:elem)
     *)
-
-    (*helpers*)
-(*    fun implode list = foldr op^ "" list;*)
-
+    fun clearMemory () = let
+             val _ = PolyMLext.send("{\"type\":3,\"op\":\"clearMemory\"}");
+        in () end
 end;
 
