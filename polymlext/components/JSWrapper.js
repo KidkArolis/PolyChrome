@@ -26,7 +26,7 @@ JSWrapper.prototype = (function() {
         switch (request.type) {
             //output
             case 1:
-                console.poly(request.output);
+                console.log(request.output, "poly");
                 break;
             //code to evaluate
             case 2:

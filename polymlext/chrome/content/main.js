@@ -9,16 +9,12 @@ var PolyMLext = (function ()
         if (scripts==null) return;
         for (var i=0, len=scripts.length; i<len; i++) {
             if (scripts[i].getAttribute("type")=="application/x-polyml") {
-                if (poly==null) {
-                    console.log("Found PolyML code on page: " + doc.location.href);
-                    var poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
-                    poly.init(doc);
-                    polyPages.push({"document": doc, "poly":poly});
-                    //add event listener for page unload
-                    doc.defaultView.addEventListener("unload", onPageUnload, true);
-                }
-                var code = scripts[i].innerHTML;
-                poly.sendCode(code);
+                console.log("Found PolyML code on page: " + doc.location.href);
+                var poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
+                poly.init(doc);
+                polyPages.push({"document": doc, "poly":poly});
+                //add event listener for page unload
+                doc.defaultView.addEventListener("unload", onPageUnload, true);
             }
         }
     }

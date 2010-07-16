@@ -10,7 +10,6 @@ Socket1.prototype = (function() {
     var output;
     var socket;
     var parent;
-    var timer;
     var console; //private and shared
     var tm; //private and shared
 
@@ -38,39 +37,27 @@ Socket1.prototype = (function() {
     }
 
     var onSocketAccepted = function(serverSocket, clientSocket) {
+        console.log("accepted");
         this.input = clientSocket.openInputStream(0, 0, 0).
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
         this.input.asyncWait(this,0,0,tm.mainThread);
+        this.parent.extractCode();
     }
 
     var onStopListening = function() {}
 
+    //can't call send before the socket was accepted
     var send = function(data) {
-        if (this.ready()) {
-            var nbytes = this.output.write(data, data.length);
-            //console.log(data, "SENT");
-        } else {
-            this.timer = Components.classes["@mozilla.org/timer;1"]
-                   .createInstance(Components.interfaces.nsITimer);
-            var self = this;
-            this.timer.initWithCallback(
-            { notify: function() { self.send(data); } },
-            5,
-            Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-        }
+        var nbytes = this.output.write(data, data.length);
+        //console.log(data, "SENT");
     }
 
     var destroy = function() {
-        this.timer.cancel();
         this.input.close();
         this.output.close();
         this.socket.close();
-    }
-
-    var ready = function() {
-        return this.output!=null;
     }
 
     var init = function () {
@@ -92,13 +79,11 @@ Socket1.prototype = (function() {
         output : output,
         socket : socket,
         parent : parent,
-        timer : timer,
         console : console,
         tm : tm,
         //methods
         init : init,
         send : send,
-        ready : ready,
         destroy : destroy,
         onInputStreamReady : onInputStreamReady,
         onSocketAccepted : onSocketAccepted,
@@ -113,22 +98,15 @@ Socket2.prototype = (function() {
     var output;
     var socket;
     var parent;
-    var timer;
     var console; //private and shared
 
+    //can't call send before the socket was accepted
+    //though here we could assume that by the time this is called
+    //it is already accepted, because this socket is only used when
+    //js function is executed, which means both sockets were already accepted
     var send = function(data) {
-        if (this.ready()) {
-            var nbytes = this.output.write(data, data.length);
-            //console.log(data, "SENT");
-        } else {
-            this.timer = Components.classes["@mozilla.org/timer;1"]
-                   .createInstance(Components.interfaces.nsITimer);
-            var self = this;
-            this.timer.initWithCallback(
-            { notify: function() { self.send(data); } },
-            5,
-            Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-        }
+        var nbytes = this.output.write(data, data.length);
+        //console.log(data, "SENT");
     }
 
     var onSocketAccepted = function(serverSocket, clientSocket) {
@@ -139,13 +117,8 @@ Socket2.prototype = (function() {
     var onStopListening = function() {}
 
     var destroy = function() {
-        this.timer.cancel();
         this.socket.close();
         this.output.close();
-    }
-
-    var ready = function() {
-        return this.output!=null;
     }
 
     var init = function () {
@@ -164,12 +137,10 @@ Socket2.prototype = (function() {
         //fields
         output : output,
         socket : socket,
-        timer : timer,
         console : console,
         //methods
         init : init,
         send : send,
-        ready : ready,
         destroy : destroy,
         onSocketAccepted : onSocketAccepted,
         onStopListening : onStopListening
@@ -238,8 +209,15 @@ Poly.prototype = (function() {
         }
     }
 
-    var sendCode = function(code) {
-        this.socket1.send(code);
+    var extractCode = function() {
+        var scripts = this._document.getElementsByTagName("script");
+        if (scripts==null) return;
+        for (var i=0, len=scripts.length; i<len; i++) {
+            if (scripts[i].getAttribute("type")=="application/x-polyml") {
+                var code = scripts[i].innerHTML;
+                this.socket1.send(code);
+            }
+        }
     }
 
     var init = function(doc) {
@@ -267,7 +245,7 @@ Poly.prototype = (function() {
         startPoly : startPoly,
         processRequest : processRequest,
         destroy : destroy,
-        sendCode : sendCode
+        extractCode : extractCode
     }
 }())
 

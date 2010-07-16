@@ -7,21 +7,25 @@ const Cr = Components.results;
 //but that's ok, because Console should be used as a service (one instance)
 Console.prototype = (function() {
     var win;
-    var initialized = false;
     var ready = false;
+    var buffer = [];
 
     var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
-    var _log = function(m, level, location) {
+    var log = function(m, level) {
         //just trying to catch such error
         if (!tm.isMainThread) dump("NOT THE MAIN THREAD :(")
-        if (initialized&&ready) {
+        if (ready) {
+            //TODO clean this up
+            var location = level=="poly" ? "polyml" : "debug";
             var newline = location=="polyml" ? "" : "\n";
-            var prefix = level==null ? "INFO: " : (level=="" ? "" : level+": ");
+            var prefix = location=="polyml" ? "" : (level==null ? "INFO :" : level+": ");
             var textbox = win.document.getElementById(location);
             textbox.value += prefix + m + newline;
             var ti = win.document.getAnonymousNodes(textbox)[0].childNodes[0];
             ti.scrollTop = ti.scrollHeight;
+        } else {
+            buffer.push({m:m, level:level});
         }
     }
 
@@ -29,35 +33,31 @@ Console.prototype = (function() {
         consoleService.logStringMessage("PolyMLext: " + m);
     }
 
-    var poly2 = function(m, level) {
-        consoleService.logStringMessage("Poly Output:\n" + m);
-    }
-
-    var log = function(m, level) {
-        _log(m, level, 'debug');
-    }
-
-    var poly = function(m, level) {
-        _log(m, "", 'polyml');
-    }
-
     var clearConsole = function() {
         win.document.getElementById("debug").value = "";
         win.document.getElementById("polyml").value = "";
     }
 
-    var setReady = function() {
+    var flushBuffer = function() {
+        for (var i=0, len=buffer.length; i<len; i++) {
+            var msg = buffer[i];
+            log(msg.m, msg.level);
+        }
+        buffer = [];
+    }
+
+    var onReady = function() {
         ready = true;
         win.document.getElementById("clear").addEventListener("click", clearConsole, false);
+        flushBuffer();
     }
 
     var init = function() {
-        initialized = true;
         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                     .getService(Components.interfaces.nsIWindowWatcher);
         win = ww.openWindow(null, "chrome://polymlext/content/console.xul",
                          "console", "chrome,resizable=no", null);
-        win.onload = setReady;
+        win.onload = function() { onReady(); };
 
         /*this.consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);*/
@@ -65,8 +65,7 @@ Console.prototype = (function() {
 
     return {
         init: init,
-        log : log,
-        poly : poly
+        log : log
     }
 }());
 
