@@ -2,14 +2,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-function Socket1() {
-    this.init();
+function Socket1(eventTarget) {
+    this.init(eventTarget);
 }
 Socket1.prototype = (function() {
     var input;
     var output;
     var socket;
-    var parent;
+    var eventTarget;
     var console; //private and shared
     var tm; //private and shared
 
@@ -24,7 +24,7 @@ Socket1.prototype = (function() {
             //TODO: is smth with smaller chunks better?
             //while (sin.available()) { request += sin.read(512); }
             try {
-                this.parent.processRequest(request);
+                this.eventTarget.onRequest(request);
             } catch (e) {
                 console.log('Could not process the request. Reason: '+e, 'error');
             }
@@ -37,13 +37,12 @@ Socket1.prototype = (function() {
     }
 
     var onSocketAccepted = function(serverSocket, clientSocket) {
-        console.log("accepted");
         this.input = clientSocket.openInputStream(0, 0, 0).
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
         this.input.asyncWait(this,0,0,tm.mainThread);
-        this.parent.extractCode();
+        this.eventTarget.onReady();
     }
 
     var onStopListening = function() {}
@@ -60,7 +59,8 @@ Socket1.prototype = (function() {
         this.socket.close();
     }
 
-    var init = function () {
+    var init = function(eventTarget) {
+        this.eventTarget = eventTarget;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
@@ -78,7 +78,7 @@ Socket1.prototype = (function() {
         input : input,
         output : output,
         socket : socket,
-        parent : parent,
+        eventTarget : eventTarget,
         console : console,
         tm : tm,
         //methods
@@ -87,7 +87,8 @@ Socket1.prototype = (function() {
         destroy : destroy,
         onInputStreamReady : onInputStreamReady,
         onSocketAccepted : onSocketAccepted,
-        onStopListening : onStopListening
+        onStopListening : onStopListening,
+        port : port
     }
 }())
 
@@ -97,7 +98,6 @@ function Socket2() {
 Socket2.prototype = (function() {
     var output;
     var socket;
-    var parent;
     var console; //private and shared
 
     //can't call send before the socket was accepted
@@ -143,7 +143,8 @@ Socket2.prototype = (function() {
         send : send,
         destroy : destroy,
         onSocketAccepted : onSocketAccepted,
-        onStopListening : onStopListening
+        onStopListening : onStopListening,
+        port : port
     }
 }())
 
@@ -191,25 +192,24 @@ Poly.prototype = (function() {
         file.initWithPath(binpath);
         this.process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         this.process.init(file);
-        var args = [this.socket1.socket.port, this.socket2.socket.port];
+        var args = [this.socket1.port(), this.socket2.port()];
         this.process.run(false, args, args.length);
     }
 
     var destroy = function() {
-//        console.log("Destroying this instance of Poly.")
         this.socket1.destroy();
         this.process.kill();
     }
 
-    var processRequest = function(request) {
-        console.log(request, "RECV");
+    var onRequest = function(request) {
+//        console.log(request, "RECV");
         var response = this.jswrapper.process(request);
         if (response!="") {
             this.socket2.send(response);
         }
     }
 
-    var extractCode = function() {
+    var onReady = function() {
         var scripts = this._document.getElementsByTagName("script");
         if (scripts==null) return;
         for (var i=0, len=scripts.length; i<len; i++) {
@@ -223,8 +223,7 @@ Poly.prototype = (function() {
     var init = function(doc) {
         this._document = doc;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        this.socket1 = new Socket1();
-        this.socket1.parent = this; //needed for passing down requests
+        this.socket1 = new Socket1(this);
         this.socket2 = new Socket2();
         this.startPoly();
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
@@ -243,9 +242,9 @@ Poly.prototype = (function() {
         //methods
         init : init,
         startPoly : startPoly,
-        processRequest : processRequest,
+        onRequest : onRequest,
         destroy : destroy,
-        extractCode : extractCode
+        onReady : onReady
     }
 }())
 
