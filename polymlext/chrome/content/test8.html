@@ -12,16 +12,19 @@ fun applyOperation operation =
     let
         val e = valOf (getElementById document "abc");
         val current_value = innerHTML e NONE;
-        val new_value = operation((s2i current_value),1);
+        val new_value = operation((s2i current_value), 1);
         val _ = innerHTML e (SOME (i2s new_value));
     in
         clearMemory()
     end;
-clearMemory();
-addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op+);";
-clearMemory();
-addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op+);";
+
+fun a (current_value) = if (current_value="remove first listener") then ("add first listener") else ("remove first listener");
+
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
+addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1();";
+clearMemory();
 </script>
 
 <style type= "text/css">
@@ -39,7 +42,7 @@ addEventListener (valOf (getElementById document "button2")) "click" "applyOpera
 
 <div id="body">
     <p id="abc">0</p>
-    <input id="button" type="button" value="add one" />
+    <input id="button1" type="button" value="add one" />
     <input id="button2" type="button" value="subtract one" />
 
     <hr />

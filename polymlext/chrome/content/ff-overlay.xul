@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<overlay id="PolyMLext-statusbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="main.js" />
+
+  <popupset id="mainPopupSet">
+		<menupopup id="polymlext-popup" position="after_end">
+		  <menuitem id="polymlext-enableConsole-button" label="Enable console" tooltiptext="If console is disabled no information will be logged"/>
+		  <menuitem id="polymlext-showConsole-button" label="Show console" tooltiptext="If console is hidden, the logged information can still be seen once the console is unhidden."/>
+		</menupopup>
+	</popupset>
+
+	<statusbar id="status-bar">
+		<statusbarpanel id="polyml-statusbar-icon" class="statusbarpanel-iconic" tooltiptext="PolyML extension is active" src="chrome://polymlext/skin/polyml_16x16t.png" popup="polymlext-popup" />
+	</statusbar>
+</overlay>
+

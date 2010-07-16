@@ -2,18 +2,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+//global variable to be used by anyone in this component, it is initialized
+//in the Poly.init()
+var console;
+
 function Socket1(eventTarget) {
     this.init(eventTarget);
 }
-Socket1.prototype = (function() {
-    var input;
-    var output;
-    var socket;
-    var eventTarget;
-    var console; //private and shared
-    var tm; //private and shared
-
-    var onInputStreamReady = function(input) {
+Socket1.prototype = {
+    onInputStreamReady : function(input) {
         try {
             var sin = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
@@ -28,188 +25,125 @@ Socket1.prototype = (function() {
             } catch (e) {
                 console.log('Could not process the request. Reason: '+e, 'error');
             }
-            this.input.asyncWait(this,0,0,tm.mainThread);
+            this.input.asyncWait(this,0,0,this.tm.mainThread);
         } catch (e) {
             //TODO
             //the sockets have already been closed
             //but for some reason this throws exception on closing the page :-/
         }
-    }
+    },
 
-    var onSocketAccepted = function(serverSocket, clientSocket) {
+    onSocketAccepted : function(serverSocket, clientSocket) {
+        console.log("Socket accepted on port "+serverSocket.port);
         this.input = clientSocket.openInputStream(0, 0, 0).
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-        this.input.asyncWait(this,0,0,tm.mainThread);
+        this.input.asyncWait(this,0,0,this.tm.mainThread);
         this.eventTarget.onReady();
-    }
+    },
 
-    var onStopListening = function() {}
+    onStopListening : function() {},
 
     //can't call send before the socket was accepted
-    var send = function(data) {
+    send : function(data) {
         var nbytes = this.output.write(data, data.length);
-        //console.log(data, "SENT");
-    }
+//        console.log(data, "SENT");
+    },
 
-    var destroy = function() {
-        this.input.close();
-        this.output.close();
-        this.socket.close();
-    }
+    port : function() {
+        return this.socket.port;
+    },
 
-    var init = function(eventTarget) {
+    init : function(eventTarget) {
+        this.input = null;
+        this.output = null;
         this.eventTarget = eventTarget;
-        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        tm = Cc["@mozilla.org/thread-manager;1"].getService();
+        this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
         this.socket.init(-1, true, 5);
         this.socket.asyncListen(this);
-    }
+    },
 
-    var port = function() {
-        return this.socket.port;
+    destroy : function() {
+        if (this.input&&this.input.close) {
+            this.output.close();
+        }
+        if (this.output&&this.output.close) {
+            this.output.close();
+        }
+        if (this.socket&&this.socket.close) {
+            this.socket.close();
+        }
     }
-
-    return {
-        //fields
-        input : input,
-        output : output,
-        socket : socket,
-        eventTarget : eventTarget,
-        console : console,
-        tm : tm,
-        //methods
-        init : init,
-        send : send,
-        destroy : destroy,
-        onInputStreamReady : onInputStreamReady,
-        onSocketAccepted : onSocketAccepted,
-        onStopListening : onStopListening,
-        port : port
-    }
-}())
+}
 
 function Socket2() {
     this.init();
 }
-Socket2.prototype = (function() {
-    var output;
-    var socket;
-    var console; //private and shared
-
+Socket2.prototype = {
     //can't call send before the socket was accepted
     //though here we could assume that by the time this is called
     //it is already accepted, because this socket is only used when
     //js function is executed, which means both sockets were already accepted
-    var send = function(data) {
+    send : function(data) {
         var nbytes = this.output.write(data, data.length);
-        //console.log(data, "SENT");
-    }
+    },
 
-    var onSocketAccepted = function(serverSocket, clientSocket) {
+    onSocketAccepted : function(serverSocket, clientSocket) {
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-    }
+    },
 
-    var onStopListening = function() {}
+    onStopListening : function() {},
 
-    var destroy = function() {
-        this.socket.close();
-        this.output.close();
-    }
+    port : function() {
+        return this.socket.port;
+    },
 
-    var init = function () {
-        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+    init : function () {
+        this.output = null;
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
         this.socket.init(-1, true, 5);
         this.socket.asyncListen(this);
-    }
+    },
 
-    var port = function() {
-        return this.socket.port;
-    }
-
-    return {
-        //fields
-        output : output,
-        socket : socket,
-        console : console,
-        //methods
-        init : init,
-        send : send,
-        destroy : destroy,
-        onSocketAccepted : onSocketAccepted,
-        onStopListening : onStopListening,
-        port : port
-    }
-}())
-
-Poly.prototype = (function() {
-    var socket1;
-    var socket2;
-    var process;
-    var jswrapper;
-    var _document;
-    var console; //private and shared
-
-    var getProfilePath = function() {
-        var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                .getService(Components.interfaces.nsIProperties);
-        var path = escape(fileLocator.get("ProfD", Components.interfaces.nsIFile).path.replace(/\\/g, "/")) + "/";
-        if (path.indexOf("/") != 0) {
-            path = '/' + path;
+    destroy : function() {
+        if (this.output&&this.output.close) {
+            this.output.close();
         }
-        return path;
-    };
-
-    var readFile = function(filename) {
-	    var file = Cc["@mozilla.org/file/local;1"]
-		    .createInstance(Ci.nsILocalFile);
-	    file.initWithPath(filename);
-	    if ( file.exists() == false ) {
-		    console.log("File does not exist", "error");
-	    }
-	    var is = Cc["@mozilla.org/network/file-input-stream;1"]
-		    .createInstance( Ci.nsIFileInputStream );
-	    is.init( file,0x01, 00004, null);
-	    var sis = Cc["@mozilla.org/scriptableinputstream;1"]
-		    .createInstance( Ci.nsIScriptableInputStream );
-	    sis.init( is );
-	    var output = sis.read( sis.available() );
-	    return output;
+        if (this.socket&&this.socket.close) {
+            this.socket.close();
+        }
     }
+}
 
-    var startPoly = function () {
+Poly.prototype = {
+    startPoly : function () {
         //figure out the path of poly executable
         var binpath = readFile(getProfilePath()+'extensions/polymlext@ed.ac.uk');
         binpath = binpath.substring(0, binpath.length-1) + '/poly/PolyMLext';
         //run it
-        var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-        file.initWithPath(binpath);
-        this.process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-        this.process.init(file);
         var args = [this.socket1.port(), this.socket2.port()];
-        this.process.run(false, args, args.length);
-    }
+        this.process = startProcess(binpath, args);
+    },
 
-    var destroy = function() {
+    destroy : function() {
         this.socket1.destroy();
+        this.socket2.destroy();
         this.process.kill();
-    }
+    },
 
-    var onRequest = function(request) {
-//        console.log(request, "RECV");
+    onRequest : function(request) {
         var response = this.jswrapper.process(request);
         if (response!="") {
             this.socket2.send(response);
         }
-    }
+    },
 
-    var onReady = function() {
+    onReady : function() {
         var scripts = this._document.getElementsByTagName("script");
         if (scripts==null) return;
         for (var i=0, len=scripts.length; i<len; i++) {
@@ -218,9 +152,11 @@ Poly.prototype = (function() {
                 this.socket1.send(code);
             }
         }
-    }
+    },
 
-    var init = function(doc) {
+    init : function(doc) {
+        Components.utils.import("resource://polymlext/utils.jsm");
+        this.process = null;
         this._document = doc;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         this.socket1 = new Socket1(this);
@@ -229,24 +165,9 @@ Poly.prototype = (function() {
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                             createInstance().wrappedJSObject;
         this.jswrapper.init(this._document, this.socket1);
+        this.jswrapper.instance = this.socket1.port();
     }
-
-    return {
-        //fields
-        socket1 : socket1,
-        socket2 : socket2,
-        _document : _document,
-        process : process,
-        jswrapper : jswrapper,
-
-        //methods
-        init : init,
-        startPoly : startPoly,
-        onRequest : onRequest,
-        destroy : destroy,
-        onReady : onReady
-    }
-}())
+}
 
 
 // turning Poly Class into an XPCOM component

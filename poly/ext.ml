@@ -44,7 +44,7 @@ structure PolyMLext (*: POLYMLEXT*)
     *)
 
     fun recv2 () =
-        Byte.bytesToString(Socket.recvVec(the esock, 1024))
+        Byte.bytesToString(Socket.recvVec(the esock, 4096))
 
     fun send2 (str) =
         let
@@ -132,9 +132,9 @@ structure PolyMLext (*: POLYMLEXT*)
               (* finally, print out any messages in the output buffer *)
             val output_string = output();
         in
-(*            if worked then TextIO.print (output())*)
-(*            else TextIO.print (output())*)
-            send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
+            if worked then send("{\"type\":0, \"output\":\""^(escape_quotes output_string)^"\"}")
+            else send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
+
         end;
 
     fun loop () =

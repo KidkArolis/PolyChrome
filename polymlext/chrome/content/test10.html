@@ -5,20 +5,8 @@
 <title>Hello PolyML</title>
 
 <script type="application/x-polyml">
-(*print (OS.FileSys.getDir());*)
-fun s2i s = valOf (Int.fromString s);
-fun i2s i = Int.toString i;
-fun applyOperation operation =
-    let
-        val e = valOf (getElementById document "abc");
-        val current_value = innerHTML e NONE;
-        val new_value = operation((s2i current_value),1);
-        val _ = innerHTML e (SOME (i2s new_value));
-    in
-        ()
-    end;
-addEventListener (valOf (getElementById document "button")) "click" "applyOperation(op-);";
-addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op+);";
+fun a (current_value) = let val new_value = if (current_value="remove first listener") then ("add first listener") else ("remove first listener"); in new_value end;
+a("abc");
 </script>
 
 <style type= "text/css">

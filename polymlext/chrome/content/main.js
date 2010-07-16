@@ -48,6 +48,8 @@ var PolyMLext = (function ()
 
     var init = function () {
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        console.setupButtons(document.getElementById("polymlext-enableConsole-button"),
+            document.getElementById("polymlext-showConsole-button"));
         bindLoadUnload();
     }
 
@@ -57,5 +59,5 @@ var PolyMLext = (function ()
 
 }());
 
-PolyMLext.init();
+window.addEventListener("load", PolyMLext.init, false)
 

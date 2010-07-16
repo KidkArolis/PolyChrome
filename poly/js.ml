@@ -50,15 +50,16 @@ struct
         in result end
     fun innerHTML (e:elem) (html:string option) = let
             val req = case html of
-                NONE   => "{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\"}"
-              | SOME h => "{\"type\":3,\"op\":\"innerHTML\",\"eid\":\""^e^"\",\"html\":\""^h^"\"}"
+                NONE   => "{\"type\":3,\"op\":\"innerHTML\",\"arg1\":\""^e^"\"}"
+              | SOME h => "{\"type\":3,\"op\":\"innerHTML\",\"arg1\":\""^e^"\",\"arg2\":\""^h^"\"}"
             val _ = PolyMLext.send(req);
 (*            val _ = PolyMLext.send("{\"type\":2,\"code\":\"console.log('waiting for innerhtml')\"}");*)
         in PolyMLext.recv2() end
-    fun value (e:elem) (newValue:string option) = let
-            val setNewValue = case newValue of NONE => "false" | SOME s => "true";
-            val newValue = case newValue of NONE => "" | SOME s => s;
-            val _ = PolyMLext.send("{\"type\":3,\"op\":\"value\",\"eid\":\""^e^"\",\"setNewValue\":"^setNewValue^",\"newValue\":\""^newValue^"\"}");
+    fun value (e:elem) (value:string option) = let
+            val req = case value of
+                NONE   => "{\"type\":3,\"op\":\"value\",\"arg1\":\""^e^"\"}"
+              | SOME s => "{\"type\":3,\"op\":\"value\",\"arg1\":\""^e^"\",\"arg2\":\""^s^"\"}";
+            val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
     fun getAttribute (e:elem) (attribute:string)= let
             val _ = PolyMLext.send("{\"type\":3,\"op\":\"getAttribute\",\"eid\":\""^e^"\",\"attribute\":"^attribute^"}");
@@ -94,13 +95,13 @@ struct
     (* events *)
     datatype eventType = onclick | onchange | onkeypress | onkeyup | onmouseover | onmouseout;
     fun addEventListener (e:elem) et f = let
-            val _ = PolyMLext.send("{\"type\":4, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":4, \"op\":\"addEventListener\", \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in () end
     fun removeEventListener (e:elem) et f = let
-            val _ = PolyMLext.send("{\"type\":5, \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":4, \"op\":\"removeEventListener\", \"eid\":\""^e^"\", \"eventType\":\""^et^"\", \"f\":\""^f^"\"}");
         in () end
     fun onMouseMove e f = let
-            val _ = PolyMLext.send("{\"type\":6, \"elem\":\""^e^"\", \"f\":\""^f^"\"}");
+            val _ = PolyMLext.send("{\"type\":4, \"op\":\"onMouseMove\", \"elem\":\""^e^"\", \"f\":\""^f^"\"}");
         in () end
 
     (*Memory management*)
