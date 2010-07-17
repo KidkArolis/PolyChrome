@@ -9,7 +9,7 @@ var PolyMLext = (function ()
         if (scripts==null) return;
         for (var i=0, len=scripts.length; i<len; i++) {
             if (scripts[i].getAttribute("type")=="application/x-polyml") {
-                console.log("Found PolyML code on page: " + doc.location.href);
+                console.log("Found PolyML code on: " + doc.location.href);
                 var poly = Cc["@ed.ac.uk/poly;1"].createInstance().wrappedJSObject;
                 poly.init(doc);
                 polyPages.push({"document": doc, "poly":poly});
@@ -28,7 +28,7 @@ var PolyMLext = (function ()
 
     var onPageUnload = function(aEvent) {
         var doc = aEvent.originalTarget;
-        console.log("Page unloaded:" + doc.location.href);
+//        console.log("Page unloaded:" + doc.location.href);
         for (var i=0, len=polyPages.length; i<len; ++i){
             if (polyPages[i].document == doc) {
                 polyPages[i].poly.destroy();

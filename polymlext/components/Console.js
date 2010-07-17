@@ -22,11 +22,11 @@ Console.prototype = (function() {
     var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
     var log = function(m, level) {
-        if (level=="poly-error") {
-            scriptError.init(m, "aSourceName", "aSourceLine", "aLineNumber",
-                           "aColumnNumber", 0, "aCategory");
-            consoleService.logMessage(scriptError);
-        }
+//        if (level=="poly-error") {
+//            scriptError.init(m, "aSourceName", "aSourceLine", "aLineNumber",
+//                           "aColumnNumber", 0, "aCategory");
+//            consoleService.logMessage(scriptError);
+//        }
         if (enable) {
             if (show) {
                 if (level=="poly"||level=="poly-error") {

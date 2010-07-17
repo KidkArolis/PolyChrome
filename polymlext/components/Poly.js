@@ -32,7 +32,7 @@ Socket1.prototype = {
                 try {
                     this.eventTarget.onRequest(request);
                 } catch (e) {
-                    console.log('Could not process the request. Reason: '+e, 'error');
+                    console.log('Could not process the request. Line: '+e.lineNumber+'. File: '+e.fileName+' Reason: '+e, 'error');
                 }
             }
             this.input.asyncWait(this,0,10,this.tm.mainThread);
@@ -44,7 +44,6 @@ Socket1.prototype = {
     },
 
     onSocketAccepted : function(serverSocket, clientSocket) {
-        console.log("Socket accepted on port "+serverSocket.port);
         this.input = clientSocket.openInputStream(0, 0, 0).
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
@@ -58,7 +57,6 @@ Socket1.prototype = {
     //can't call send before the socket was accepted
     send : function(data) {
         var nbytes = this.output.write(data, data.length);
-//        console.log(data, "SENT");
     },
 
     port : function() {

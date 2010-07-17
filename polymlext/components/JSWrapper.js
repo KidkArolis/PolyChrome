@@ -32,16 +32,16 @@ JSWrapper.prototype = {
                 //console.log(document.defaultView.content.document.defaultView.content.document.location.href);
                 //response = document.defaultView.eval.call(document.defaultView, request.code);
                 //console.log("EVALS RESPONSE: " + response);
-                response = eval(request.code);
+                response = eval(request.arg1);
                 if (response==""||response==null) {
                     response = "";
                 }
                 break;
 
             case 3: //one of js functions
-                switch (request.op) {
+                switch (request.arg1) {
                     case "getElementById":
-                        var elem = document.getElementById(request.id);
+                        var elem = document.getElementById(request.arg2);
                         if (elem==null) {
                             response = "null";
                         } else {
@@ -50,10 +50,10 @@ JSWrapper.prototype = {
                         }
                         break;
                     case "innerHTML":
-                        var elem = this.elements[request.arg1];
-                        if (elem) {
-                            if (request.arg2) {
-                                elem.innerHTML = request.arg2;
+                        var elem = this.elements[request.arg2];
+                        if (elem&&elem.innerHTML) {
+                            if (request.arg3) {
+                                elem.innerHTML = request.arg3;
                                 response = "done";
                             } else {
                                 response = elem.innerHTML;
@@ -63,15 +63,17 @@ JSWrapper.prototype = {
                         }
                         break;
                     case "value":
-                        var elem = this.elements[request.arg1];
-                        if (elem) {
-                            if (request.arg2) {
-                                elem.value = request.arg2;
+                        var elem = this.elements[request.arg2];
+                        if (elem&&elem.value) {
+                            if (request.arg3) {
+                                elem.value = request.arg3;
                                 response = "done";
                             } else {
                                 response = elem.value;
                             }
                         } else {
+                            //TODO: must send things to Poly in packets, so we
+                            //can indicate exceptions..
                             response = "exception";
                         }
                         break;
@@ -82,14 +84,17 @@ JSWrapper.prototype = {
                 break;
 
             case 4: //events
-                switch (request.op) {
+                switch (request.arg1) {
                     case "addEventListener":
-                        var elem = this.elements[request.eid];
+                        var elem = this.elements[request.arg2];
                         var found = false;
-                        var l = [request.eventType, request.f];
+                        var l = [request.arg3, request.arg4];
                         if (typeof(this.listeners[elem])!="undefined") {
                             for (var i=0, len=this.listeners[elem].length; i<len; i++) {
-                                found = (this.listeners[elem][i][0]==l[0]&&this.listeners[elem][i][1]==l[1]);
+                                if (this.listeners[elem][i]!=null) {
+                                    found = (this.listeners[elem][i][0]==l[0]
+                                            &&this.listeners[elem][i][1]==l[1]);
+                                }
                                 if (found) break;
                             }
                         } else {
@@ -97,56 +102,49 @@ JSWrapper.prototype = {
                         }
                         if (!found) {
                             var self = this;
-                            var f = function(e) {
-                                self.server.send(request.f);
+                            var f = function(event) {
+                                var f = request.arg4;
+                                var matches = f.match(/{[^}]+}/g);
+                                try {
+                                    for (i=0, len=matches.length; i<len; i++) {
+                                        //cut off the { } from end and beginning
+                                        var c = matches[i].substring(1, matches[i].length-1);
+                                        var r = eval(c);
+                                        f = f.replace(matches[i], r);
+                                    }
+                                } catch (e) {
+                                    //if something will go wrong we'll just send
+                                    //the string as it was, we could also alternatively
+                                    //send an exception. TODO: think about that =)
+                                }
+                                self.server.send(f);
                             }
                             l.push(f)
                             this.listeners[elem].push(l);
                             var n = this.listeners[elem].length-1;
-                            elem.addEventListener(request.eventType, this.listeners[elem][n][2], false);
+                            elem.addEventListener(request.arg3, this.listeners[elem][n][2], false);
                         }
-
-                        //TODO not a good hash, shouldn't depend on eid, but on the
-                        //object referred
-                        /*
-                        var self = this;
-                        var elem = this.elements[request.eid];
-                        var l = {"elem":elem, "eventType":request.eventType, "f":request.f};
-                        var found = false;
-                        for (var i=0, len=this.listeners.length; i<len; i++) {
-                            if (this.listeners==l) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            this.listeners.push(l);
-                        }
-                        if (!this.listeners[hash]) {
-                            this.listeners[hash] = function(e) {
-                                self.server.send(request.f);
-                            }
-                            elem.addEventListener(request.eventType, this.listeners[hash], false);
-                        }
-                        */
                         break;
                     case "removeEventListener":
-                        var elem = this.elements[request.eid];
+                        var elem = this.elements[request.arg2];
 
                         var found = false;
-                        var l = [request.eventType, request.f];
+                        var l = [request.arg3, request.arg4];
                         var i;
                         if (typeof(this.listeners[elem])!="undefined") {
                             for (i=0, len=this.listeners[elem].length; i<len; i++) {
-                                found = (this.listeners[elem][i][0]==l[0]&&this.listeners[elem][i][1]==l[1]);
+                                if (this.listeners[elem][i]!=null) {
+                                    found = (this.listeners[elem][i][0]==l[0]
+                                            &&this.listeners[elem][i][1]==l[1]);
+                                }
                                 if (found) break;
                             }
                         }
                         if (found) {
-                            elem.removeEventListener(request.eventType, this.listeners[elem][i][2], false);
+                            elem.removeEventListener(request.arg3, this.listeners[elem][i][2], false);
                             //delete this.listeners[hash];
                             //TODO: we should completely remove listeners instead of just nullifying
-                            this.listeners[elem][i][2] = null;
+                            this.listeners[elem][i] = null;
                         }
 
                         break;

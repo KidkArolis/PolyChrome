@@ -20,10 +20,30 @@ fun applyOperation operation =
 
 fun removeToggle1 () =
     let
-      val e = valOf (getElementById document "abc");
-      fun a (s) = if (s="remove first listener") then ("add first listener") else ("remove first listener");
-      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);") else (addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);");
+      val e = valOf (getElementById document "remove1");
+      fun a (s) = if (s="remove first listener") then ("add first listener")
+                  else ("remove first listener");
+      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);")
+                  else (addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);");
+      val current_value = value e NONE;
+      val new_value = a (current_value);
+      val _ = value e (SOME new_value);
+      val _ = b(current_value);
+    in
+      clearMemory()
+    end;
 
+fun removeToggle2 () =
+    let
+      val e = valOf (getElementById document "remove2");
+      fun a (s) = if (s="remove second listener") then ("add second listener")
+                  else ("remove second listener");
+      fun b (s) = if (s="remove second listener") then (removeEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);")
+                  else (addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);");
+      val current_value = value e NONE;
+      val new_value = a (current_value);
+      val _ = value e (SOME new_value);
+      val _ = b(current_value);
     in
       clearMemory()
     end;
@@ -32,8 +52,11 @@ addEventListener (valOf (getElementById document "button1")) "click" "applyOpera
 removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
-addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1();";
+addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1()";
+addEventListener (valOf (getElementById document "remove2")) "click" "removeToggle2()";
+
 clearMemory();
 </script>
 
