@@ -134,8 +134,18 @@ struct
     TODO:
     fun clearElement (e:elem)
     *)
-    fun clearMemory () = let
-            val _ = PolyMLext.send(json ["3", "clearMemory"]);
+    fun clearMemory (ns:string option) = let
+            val req = case ns of
+                        NONE => json ["3", "clearMemory"]
+                      | SOME s => json ["3", "clearMemory", s];
+            val _ = PolyMLext.send(req);
+        in () end
+
+    fun switchNamespace (ns:string option) = let
+            val req = case ns of
+                        NONE => json ["3", "switchNamespace"]
+                      | SOME s => json ["3", "switchNamespace", s];
+            val _ = PolyMLext.send(req);
         in () end
 end;
 

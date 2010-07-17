@@ -8,14 +8,17 @@
 (*print (OS.FileSys.getDir());*)
 fun s2i s = valOf (Int.fromString s);
 fun i2s i = Int.toString i;
+val e = valOf (getElementById document "abc");
+
 fun applyOperation operation =
     let
-        val e = valOf (getElementById document "abc");
+        val _ = switchNamespace(NONE);
         val current_value = innerHTML e NONE;
         val new_value = operation((s2i current_value), 1);
         val _ = innerHTML e (SOME (i2s new_value));
+        val _ = switchNamespace(SOME "temp");
     in
-        clearMemory()
+        clearMemory(SOME "temp")
     end;
 
 fun removeToggle1 () =
@@ -30,7 +33,7 @@ fun removeToggle1 () =
       val _ = value e (SOME new_value);
       val _ = b(current_value);
     in
-      clearMemory()
+      clearMemory(SOME "temp")
     end;
 
 fun removeToggle2 () =
@@ -45,9 +48,10 @@ fun removeToggle2 () =
       val _ = value e (SOME new_value);
       val _ = b(current_value);
     in
-      clearMemory()
+      clearMemory(SOME "temp")
     end;
 
+switchNamespace(SOME "temp");
 addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
@@ -56,8 +60,7 @@ addEventListener (valOf (getElementById document "button1")) "click" "applyOpera
 addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
 addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1()";
 addEventListener (valOf (getElementById document "remove2")) "click" "removeToggle2()";
-
-clearMemory();
+clearMemory(SOME "temp");
 </script>
 
 <style type= "text/css">
