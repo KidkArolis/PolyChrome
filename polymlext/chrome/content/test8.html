@@ -18,9 +18,19 @@ fun applyOperation operation =
         clearMemory()
     end;
 
-fun a (current_value) = if (current_value="remove first listener") then ("add first listener") else ("remove first listener");
+fun removeToggle1 () =
+    let
+      val e = valOf (getElementById document "abc");
+      fun a (s) = if (s="remove first listener") then ("add first listener") else ("remove first listener");
+      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);") else (addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);");
+
+    in
+      clearMemory()
+    end;
 
 addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
+removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
+removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
 addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
 addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1();";

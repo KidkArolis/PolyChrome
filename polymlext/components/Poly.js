@@ -15,17 +15,27 @@ Socket1.prototype = {
             var sin = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
             sin.init(input);
-            sin.available();
-            var len = parseInt(sin.read(10));
-            var request = sin.read(len);
+            var av = 0;
+            try {
+                av = sin.available();
+            } catch(e) {}
+
+//            console.log(av, "AVAILABLE");
+
+            //console.log(request, "REQUEST");
             //TODO: is smth with smaller chunks better?
             //while (sin.available()) { request += sin.read(512); }
-            try {
-                this.eventTarget.onRequest(request);
-            } catch (e) {
-                console.log('Could not process the request. Reason: '+e, 'error');
+            while (sin.available() > 0) {
+                var len = parseInt(sin.read(10));
+                var request = sin.read(len);
+//                console.log(request, "REQUEST");
+                try {
+                    this.eventTarget.onRequest(request);
+                } catch (e) {
+                    console.log('Could not process the request. Reason: '+e, 'error');
+                }
             }
-            this.input.asyncWait(this,0,0,this.tm.mainThread);
+            this.input.asyncWait(this,0,10,this.tm.mainThread);
         } catch (e) {
             //TODO
             //the sockets have already been closed
@@ -39,7 +49,7 @@ Socket1.prototype = {
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-        this.input.asyncWait(this,0,0,this.tm.mainThread);
+        this.input.asyncWait(this,0,10,this.tm.mainThread);
         this.eventTarget.onReady();
     },
 

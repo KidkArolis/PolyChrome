@@ -63,8 +63,7 @@ structure PolyMLext (*: POLYMLEXT*)
             val lenStr = expand (len, String.size len);
 (*            val _ = print(lenStr^"\n");*)
 (*            val _ = print(str^"\n");*)
-            val _ = send2(lenStr);
-            val _ = send2(str);
+            val _ = send2(lenStr^str);
         in
             ()
         end
@@ -140,6 +139,7 @@ structure PolyMLext (*: POLYMLEXT*)
     fun loop () =
         let
             val code = recv();
+            val _ = print code;
         in
             evaluate "foo" code;
             loop()
