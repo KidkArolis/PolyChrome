@@ -35,32 +35,32 @@ struct
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
-    fun parent (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "parent"]);
+    fun parentNode (e:elem) = let
+            val _ = PolyMLext.send(json ["3", "parentNode", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun firstChild (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "firstChild"]);
+            val _ = PolyMLext.send(json ["3", "firstChild", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun lastChild (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "lastChild"]);
+            val _ = PolyMLext.send(json ["3", "lastChild", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun nextSibling (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "nextSibling"]);
+            val _ = PolyMLext.send(json ["3", "nextSibling", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun previousSibling (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "previousSibling"]);
+            val _ = PolyMLext.send(json ["3", "previousSibling", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
@@ -127,9 +127,6 @@ struct
         in () end
     fun removeEventListener (e:elem) et f = let
             val _ = PolyMLext.send(json ["4", "removeEventListener", e, et, f]);
-        in () end
-    fun onMouseMove e f = let
-            val _ = ()
         in () end
 
     (*Memory management*)

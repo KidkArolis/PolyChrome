@@ -42,15 +42,30 @@ JSWrapper.prototype = {
                 switch (request.arg1) {
                     case "getElementById":
                         var elem = document.getElementById(request.arg2);
-                        if (elem==null) {
-                            response = "null";
-                        } else {
-                            this.elements.push(elem);
-                            response = (this.elements.length-1)+"";
-                        }
+                        response = this.addElement(elem);
+                        break;
+                    case "parentNode":
+                        var elem = this.getElement(request.arg2);
+                        response = this.addElement(elem.parentNode);
+                        break;
+                    case "firstChild":
+                        var elem = this.getElement(request.arg2);
+                        response = this.addElement(elem.firstChild);
+                        break;
+                    case "lastChild":
+                        var elem = this.getElement(request.arg2);
+                        response = this.addElement(elem.lastChild);
+                        break;
+                    case "nextSibling":
+                        var elem = this.getElement(request.arg2);
+                        response = this.addElement(elem.nextSibling);
+                        break;
+                    case "previousSibling":
+                        var elem = this.getElement(request.arg2);
+                        response = this.addElement(elem.previousSibling);
                         break;
                     case "innerHTML":
-                        var elem = this.elements[request.arg2];
+                        var elem = this.getElement(request.arg2);
                         if (elem&&elem.innerHTML) {
                             if (request.arg3) {
                                 elem.innerHTML = request.arg3;
@@ -63,7 +78,7 @@ JSWrapper.prototype = {
                         }
                         break;
                     case "value":
-                        var elem = this.elements[request.arg2];
+                        var elem = this.getElement(request.arg2);
                         if (elem&&elem.value) {
                             if (request.arg3) {
                                 elem.value = request.arg3;
@@ -77,6 +92,51 @@ JSWrapper.prototype = {
                             response = "exception";
                         }
                         break;
+                    case "getAttribute":
+                        var elem = this.getElement(request.arg2);
+                        response = elem.getAttribute(request.arg3);
+                        break;
+                    case "setAttribute":
+                        var elem = this.getElement(request.arg2);
+                        response = elem.setAttribute(request.arg3, request.arg4);
+                        break;
+                    case "removeAttribute":
+                        var elem = this.getElement(request.arg2);
+                        response = elem.removeAttribute(request.arg3);
+                        break;
+                    case "createElement":
+                        var elem = document.createElement(request.arg2);
+                        response = this.addElement(elem);
+                        break;
+                    case "createTextNode":
+                        var elem = document.createTextNode(request.arg2);
+                        response = this.addElement(elem);
+                        break;
+                    case "appendChild":
+                        var parent = this.getElement(request.arg2);
+                        var child = this.getElement(request.arg3);
+                        parent.appendChild(child);
+                        break;
+                    case "removeChild":
+                        var parent = this.getElement(request.arg2);
+                        var child = this.getElement(request.arg3);
+                        parent.removeChild(child);
+                        break;
+                    case "replaceChild":
+                        var parent = this.getElement(request.arg2);
+                        var child_from = this.getElement(request.arg3);
+                        var child_to = this.getElement(request.arg4);
+                        parent.replaceChild(child_from, child_to);
+                        break;
+                    case "style":
+                        var eleme = this.getElement(request.arg2);
+                        if (request.arg4) {
+                            elem.style[request.arg3] = request.arg4;
+                            response = "done";
+                        } else {
+                            response = elem.style[request.arg3];
+                        }
+                        break;
                     case "clearMemory":
                         this.elements = [];
                         break;
@@ -86,7 +146,7 @@ JSWrapper.prototype = {
             case 4: //events
                 switch (request.arg1) {
                     case "addEventListener":
-                        var elem = this.elements[request.arg2];
+                        var elem = this.getElement(request.arg2);
                         var found = false;
                         var l = [request.arg3, request.arg4];
                         if (typeof(this.listeners[elem])!="undefined") {
@@ -126,7 +186,7 @@ JSWrapper.prototype = {
                         }
                         break;
                     case "removeEventListener":
-                        var elem = this.elements[request.arg2];
+                        var elem = this.getElement(request.arg2);
 
                         var found = false;
                         var l = [request.arg3, request.arg4];
@@ -148,14 +208,6 @@ JSWrapper.prototype = {
                         }
 
                         break;
-                    case "onMouseMove":
-                        var hash = request.elem + request.f;
-                        var self = this;
-                        this.listeners[hash] = function(e) {
-                            self.server.send(request.f + "("+e.clientX+","+e.clientY+");");
-                        }
-                        document.getElementById(request.elem).addEventListener("mousemove", this.listeners[hash], false);
-                        break;
                 }
                 break;
 
@@ -163,6 +215,19 @@ JSWrapper.prototype = {
                 console.log("Unexpected request from Poly", "error");
         }
         return response;
+    },
+
+    addElement : function(elem) {
+        if (elem==null) {
+            return "null";
+        } else {
+            this.elements.push(elem);
+            return (this.elements.length-1)+"";
+        }
+    },
+
+    getElement : function(id) {
+        return this.elements[id];
     },
 
     init : function(doc, s) {
