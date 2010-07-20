@@ -133,7 +133,6 @@ structure PolyMLext (*: POLYMLEXT*)
         in
             if worked then send("{\"type\":0, \"output\":\""^(escape_quotes output_string)^"\"}")
             else send("{\"type\":1, \"output\":\""^(escape_quotes output_string)^"\"}")
-
         end;
 
     fun loop () =
@@ -154,7 +153,7 @@ structure PolyMLext (*: POLYMLEXT*)
 
         in
             PolyML.fullGC();
-            map PolyML.Compiler.forgetStructure["PolyMLext"];
+(*            map PolyML.Compiler.forgetStructure["PolyMLext"];*)
             loop();
             closeSock (the socket1);
             closeSock (the socket2);
@@ -162,6 +161,8 @@ structure PolyMLext (*: POLYMLEXT*)
         end
 
 end;
+
+val temp = ref ([]:string list);
 
 use "js.ml";
 open Js;

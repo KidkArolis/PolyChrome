@@ -131,11 +131,11 @@ Socket2.prototype = {
 Poly.prototype = {
     startPoly : function () {
         //figure out the path of poly executable
-        var binpath = readFile(getProfilePath()+'extensions/polymlext@ed.ac.uk');
+        var binpath = Utils.readFile(Utils.getProfilePath()+'extensions/polymlext@ed.ac.uk');
         binpath = binpath.substring(0, binpath.length-1) + '/poly/PolyMLext';
         //run it
         var args = [this.socket1.port(), this.socket2.port()];
-        this.process = startProcess(binpath, args);
+        this.process = Utils.startProcess(binpath, args);
     },
 
     destroy : function() {
@@ -163,7 +163,7 @@ Poly.prototype = {
     },
 
     init : function(doc) {
-        Components.utils.import("resource://polymlext/utils.jsm");
+        Components.utils.import("resource://polymlext/Utils.jsm");
         this.process = null;
         this._document = doc;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;

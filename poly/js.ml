@@ -5,14 +5,23 @@
 structure Js =
 struct
     (*helpers*)
-    fun json [t, a1]
+    fun json2 [t, a1]
             = "{\"type\":"^t^", \"arg1\":\""^a1^"\"}"
-      | json [t, a1, a2]
+      | json2 [t, a1, a2]
             = "{\"type\":"^t^", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\"}"
-      | json [t, a1, a2, a3]
+      | json2 [t, a1, a2, a3]
             = "{\"type\":"^t^", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\"}"
-      | json [t, a1, a2, a3, a4]
-            = "{\"type\":"^t^", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\"}"
+      | json2 [t, a1, a2, a3, a4]
+            = "{\"type\":"^t^", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\"}";
+
+    fun json [w,a1]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\"}"
+      | json [w, a1, a2]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\"}"
+      | json [w, a1, a2, a3]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\"}"
+      | json [w, a1, a2, a3, a4]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\"}";
 
     (*DOM*)
     type elem = string;
@@ -23,110 +32,116 @@ struct
     (* execute arbitrary javascript code  *)
     fun eval code = let
             val code = PolyMLext.escape_quotes(code);
-            val _ = PolyMLext.send(json ["2", code])
+            val _ = PolyMLext.send(json2 ["2", code])
         in PolyMLext.recv2() end
 
     (* element manipulation *)
     fun documentElement (d:doc) = "document":elem;
 
     fun getElementById (d:doc) (id:string) = let
-            val _ = PolyMLext.send(json ["3", "getElementById", id]);
+            val _ = PolyMLext.send(json2 ["3", "getElementById", id]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
+    fun childNodes (e:elem) = let
+            val _ = PolyMLext.send(json2 ["3", "childNodes", e]);
+            val response = PolyMLext.recv2();
+            val _ = PolyMLext.evaluate "eval" ("val _ = (temp:="^response^");");
+        in !temp end
+
     fun parentNode (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "parentNode", e]);
+            val _ = PolyMLext.send(json2 ["3", "parentNode", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun firstChild (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "firstChild", e]);
+            val _ = PolyMLext.send(json2 ["3", "firstChild", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun lastChild (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "lastChild", e]);
+            val _ = PolyMLext.send(json2 ["3", "lastChild", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun nextSibling (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "nextSibling", e]);
+            val _ = PolyMLext.send(json2 ["3", "nextSibling", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun previousSibling (e:elem) = let
-            val _ = PolyMLext.send(json ["3", "previousSibling", e]);
+            val _ = PolyMLext.send(json2 ["3", "previousSibling", e]);
             val response = PolyMLext.recv2();
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
     fun innerHTML (e:elem) (html:string option) = let
             val req = case html of
-                NONE   => json ["3", "innerHTML", e]
-              | SOME s => json ["3", "innerHTML", e, s];
+                NONE   => json2 ["3", "innerHTML", e]
+              | SOME s => json2 ["3", "innerHTML", e, s];
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
 
     fun value (e:elem) (value:string option) = let
             val req = case value of
-                NONE   => json ["3", "value", e]
-              | SOME s => json ["3", "value", e, s];
+                NONE   => json2 ["3", "value", e]
+              | SOME s => json2 ["3", "value", e, s];
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
 
     fun getAttribute (e:elem) (attribute:string)= let
-            val _ = PolyMLext.send(json ["3", "getAttribute", e, attribute]);
+            val _ = PolyMLext.send(json2 ["3", "getAttribute", e, attribute]);
         in PolyMLext.recv2() end
 
     fun setAttribute (e:elem) (attribute:string) (value:string) = let
-            val _ = PolyMLext.send(json ["3", "setAttribute", e, attribute, value]);
+            val _ = PolyMLext.send(json2 ["3", "setAttribute", e, attribute, value]);
         in () end
 
     fun removeAttribute (e:elem) (attribute:string) = let
-            val _ = PolyMLext.send(json ["3", "removeAttribute", e, attribute]);
+            val _ = PolyMLext.send(json2 ["3", "removeAttribute", e, attribute]);
         in () end
 
     fun createElement (t:string) = let
-            val _ = PolyMLext.send(json ["3", "createElement", t]);
+            val _ = PolyMLext.send(json2 ["3", "createElement", t]);
         in PolyMLext.recv2():elem end
 
     fun createTextNode (text:string) = let
-            val _ = PolyMLext.send(json ["3", "createTextNode", text]);
+            val _ = PolyMLext.send(json2 ["3", "createTextNode", text]);
         in PolyMLext.recv2():elem end
 
     (*fun createFragment  : unit -> elem*)
 
     fun appendChild (parent:elem) (child:elem) = let
-            val _ = PolyMLext.send(json ["3", "appendChild", parent, child]);
+            val _ = PolyMLext.send(json2 ["3", "appendChild", parent, child]);
         in () end
 
     fun removeChild (parent:elem) (child:elem) = let
-            val _ = PolyMLext.send(json ["3", "removeChild", parent, child]);
+            val _ = PolyMLext.send(json2 ["3", "removeChild", parent, child]);
         in () end
 
     fun replaceChild (parent:elem) (child_from:elem) (child_to:elem) = let
-            val _ = PolyMLext.send(json ["3", "replaceChild", parent, child_from, child_to]);
+            val _ = PolyMLext.send(json2 ["3", "replaceChild", parent, child_from, child_to]);
         in () end
 
     fun style (e:elem) (attribute:string) (value:string option) = let
             val req = case value of
-                        NONE => json ["3", "style", attribute]
-                      | SOME s => json ["3", "style", attribute, s];
+                        NONE => json2 ["3", "style", e, attribute]
+                      | SOME s => json2 ["3", "style", e, attribute, s];
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
 
     (* events *)
     datatype eventType = click | change | keypress | keyup | mouseover | mouseout | mousemove;
     fun addEventListener (e:elem) et f = let
-            val _ = PolyMLext.send(json ["4", "addEventListener", e, et, f]);
+            val _ = PolyMLext.send(json2 ["4", "addEventListener", e, et, f]);
         in () end
     fun removeEventListener (e:elem) et f = let
-            val _ = PolyMLext.send(json ["4", "removeEventListener", e, et, f]);
+            val _ = PolyMLext.send(json2 ["4", "removeEventListener", e, et, f]);
         in () end
 
     (*Memory management*)
@@ -136,15 +151,15 @@ struct
     *)
     fun clearMemory (ns:string option) = let
             val req = case ns of
-                        NONE => json ["3", "clearMemory"]
-                      | SOME s => json ["3", "clearMemory", s];
+                        NONE => json2 ["3", "clearMemory"]
+                      | SOME s => json2 ["3", "clearMemory", s];
             val _ = PolyMLext.send(req);
         in () end
 
     fun switchNamespace (ns:string option) = let
             val req = case ns of
-                        NONE => json ["3", "switchNamespace"]
-                      | SOME s => json ["3", "switchNamespace", s];
+                        NONE => json2 ["3", "switchNamespace"]
+                      | SOME s => json2 ["3", "switchNamespace", s];
             val _ = PolyMLext.send(req);
         in () end
 end;

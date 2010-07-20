@@ -49,7 +49,6 @@ Memory.prototype = {
 
 JSWrapper.prototype = {
     process : function(req) {
-        //var document = window.content.document;
         var document = this._document;
         var response = "";
         try {
@@ -86,6 +85,15 @@ JSWrapper.prototype = {
                     case "getElementById":
                         var elem = document.getElementById(request.arg2);
                         response = this.Memory.addElement(elem);
+                        break;
+                    case "childNodes":
+                        var elem = this.Memory.getElement(request.arg2);
+                        var elems = elem.childNodes;
+                        response = "[";
+                        for (var i=0, len=elems.length; i<len; i++) {
+                            response += "\""+this.Memory.addElement(elems[i])+"\",";
+                        }
+                        response = response.substr(0, response.length-1)+"]";
                         break;
                     case "parentNode":
                         var elem = this.Memory.getElement(request.arg2);
@@ -172,7 +180,7 @@ JSWrapper.prototype = {
                         parent.replaceChild(child_from, child_to);
                         break;
                     case "style":
-                        var eleme = this.Memory.getElement(request.arg2);
+                        var elem = this.Memory.getElement(request.arg2);
                         if (request.arg4) {
                             elem.style[request.arg3] = request.arg4;
                             response = "done";
@@ -216,7 +224,7 @@ JSWrapper.prototype = {
                             var self = this;
                             var f = function(event) {
                                 var f = request.arg4;
-                                var matches = f.match(/{[^}]+}/g);
+                                var matches = f.match(/{.*?}/g);
                                 try {
                                     for (i=0, len=matches.length; i<len; i++) {
                                         //cut off the { } from end and beginning
@@ -263,6 +271,10 @@ JSWrapper.prototype = {
                         break;
                 }
                 break;
+            case 5: //custom wrappers
+                var unsafeWin = document.defaultView.wrappedJSObject;
+                var response = unsafeWin[request.wrapper].processRequest(request, this.Memory);
+                break;
 
             default:
                 console.log("Unexpected request from Poly", "error");
@@ -270,7 +282,10 @@ JSWrapper.prototype = {
         return response;
     },
 
-
+    wrapperListener: function(event) {
+        console.log(event, "LISTENED");
+        console.log(event.foo, "LISTENED");
+    },
 
     init : function(doc, s) {
         this._document = doc;
@@ -279,6 +294,7 @@ JSWrapper.prototype = {
         this.nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON),
         this.listeners = {};
         this.Memory = new Memory;
+        this._document.addEventListener("PolyMLextWrapperEvent", this.wrapperListener, false, true);
     }
 }
 

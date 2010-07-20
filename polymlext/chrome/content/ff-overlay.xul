@@ -7,6 +7,8 @@
 		<menupopup id="polymlext-popup" position="after_end">
 		  <menuitem id="polymlext-enableConsole-button" label="Enable console" tooltiptext="If console is disabled no information will be logged"/>
 		  <menuitem id="polymlext-showConsole-button" label="Show console" tooltiptext="If console is hidden, the logged information can still be seen once the console is unhidden."/>
+		  <menuseparator/>
+		  <menuitem id="polymlext-demos-button" label="Demos" tooltiptext="Demonstrations of using PolyMLext."/>
 		</menupopup>
 	</popupset>
 
