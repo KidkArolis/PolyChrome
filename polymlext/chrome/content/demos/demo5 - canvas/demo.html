@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>jQuery Wrapper demo</title>
+<script type="text/javascript" src="CanvasWrapper.js"></script>
+<script type="application/x-polyml">
+(*this could be an external file when thats going to be possible*)
+structure Canvas =
+struct
+    fun getContext (e:elem) (c:string) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "getContext", e, c]);
+        in PolyMLext.recv2():elem end;
+
+    fun beginPath (e:elem) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "beginPath", e]);
+        in () end;
+
+    fun fillStyle (e:elem) (s:string) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "fillStyle", e, s]);
+        in () end;
+
+    fun strokeStyle (e:elem) (s:string) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "strokeStyle", e, s]);
+        in () end;
+
+    fun lineWidth (e:elem) (w:real) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "lineWidth", e, (Real.toString w)]);
+        in () end;
+
+    fun moveTo (e:elem) (x) (y) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "moveTo", e, (Int.toString x), (Int.toString y)]);
+        in () end;
+
+    fun lineTo (e:elem) (x) (y) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "lineTo", e, (Int.toString x), (Int.toString y)]);
+        in () end;
+
+    fun stroke (e:elem) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "stroke", e]);
+        in () end;
+
+    fun arc (e:elem) (x) (y) (radius) (startAngle) (endAngle) (clockwise) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "arc", e, (Int.toString x), (Int.toString y), (Real.toString radius), (Real.toString startAngle), (Real.toString endAngle), clockwise]);
+        in () end;
+
+    fun fill (e:elem) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "fill", e]);
+        in () end;
+
+    fun fillRect (e:elem) (x) (y) (w) (h) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "fillRect", e, (Int.toString x), (Int.toString y), (Int.toString w), (Int.toString h)]);
+        in () end;
+
+    fun canvasWidth (e:elem) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "canvasWidth", e]);
+        in (valOf (Int.fromString (PolyMLext.recv2()))) end;
+
+    fun canvasHeight (e:elem) = let
+            val _ = PolyMLext.send(json ["CanvasWrapper", "canvasHeight", e]);
+        in (valOf (Int.fromString (PolyMLext.recv2()))) end;
+end
+
+(*Random numbers*)
+exception RANDOM;
+fun rmod x y = x - y * Real.realFloor (x / y);
+local
+ val a = 16807.0;
+ val m = 2147483647.0;
+ val random_seed = ref 1.0;
+in
+fun random () =
+ let val r = rmod (a * ! random_seed) m
+ in (random_seed := r; r) end;
+fun set_random_seed x = (random_seed := x);
+end;
+fun random_range l h =
+ if h < l orelse l < 0 then raise RANDOM
+ else l + Real.floor (rmod (random ()) (real (h - l + 1)));
+set_random_seed(Time.toReal (Time.now()));
+
+(* *)
+fun fold_nat f i a =
+   if i <= 0 then a else fold_nat f (i - 1) (f i a);
+
+(*this is the actual Canvas demo*)
+val RADIUS = 1.0;
+val RADIUS_SCALE = 120.0;
+val QUANTITY = 20;
+
+val mouseX = ref (0:int);
+val mouseY = ref (0:int);
+
+val canvas = valOf (getElementById document "world");
+val context = Canvas.getContext canvas "2d";
+datatype particle =
+  Particle of {
+    id: int,
+    position: int * int, (* x and y *)
+    shift: int * int, (* x and y *)
+    size: real,
+    angle: real,
+    speed: real,
+    targetSize: real,
+    fillColor: string, (* html # colour: .eg. #000000 is black *)
+    orbit : real
+  };
+
+fun randomColour () = fold_nat (fn x => fn s => s ^ (Int.toString(random_range 0 9))) 4 "#CF";
+
+fun newParticle (x) =
+ Particle {
+   id = x,
+   position = (!mouseX, !mouseY),
+   shift = (!mouseX, !mouseY),
+   size = 5.0,
+   angle = 0.0,
+   speed = 0.01 + (Real.fromInt (random_range 0 10)) * 0.004,
+   targetSize = 5.0,
+   fillColor = (randomColour()),
+   orbit = RADIUS*0.5 + (RADIUS*0.05*(Real.fromInt (random_range 0 10)))
+ }
+
+val particles = ref (fold_nat (fn x => fn l => newParticle(x) :: l) QUANTITY []);
+
+fun mouseMoveHandler (x, y) = let
+    val _ = (mouseX := x);
+    val _ = (mouseY := y);
+  in () end;
+
+addEventListener canvas "mousemove"
+  "mouseMoveHandler({event.clientX}, {event.clientY});";
+
+fun drawAndUpdateParticle (p:particle) =
+  let
+    val Particle {
+      id = id,
+      position = (posx,posy),
+      shift = (shiftx,shifty),
+      size = size,
+      angle = angle,
+      speed = speed,
+      targetSize = targetSize,
+      fillColor = fillColor,
+      orbit = orbit
+    } = p;
+    
+    val angle_new = angle + speed;
+
+    val shiftx_new = shiftx + round(Real.fromInt(((!mouseX) - shiftx)) * (speed));
+    val shifty_new = shifty + round(Real.fromInt(((!mouseY) - shifty)) * (speed));
+
+    val posx_new = shiftx_new + round(Math.cos(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
+    val posy_new = shifty_new + round(Math.sin(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
+    
+    (*val size_new = size + (targetSize - size) * 0.05;*)
+
+    val _ = Canvas.beginPath context;
+    val _ = Canvas.fillStyle context fillColor;
+    val _ = Canvas.strokeStyle context fillColor;
+    val _ = Canvas.lineWidth context size;
+    val _ = Canvas.moveTo context posx posy;
+    val _ = Canvas.lineTo context posx_new posy_new;
+    val _ = Canvas.stroke context;
+    val _ = Canvas.arc context posx_new posy_new (size/2.0) 0.0 6.28 "true";
+    val _ = Canvas.fill context;
+  in
+    Particle {
+      id = id,
+      position = (posx_new,posy_new),
+      shift = (shiftx_new,shifty_new),
+      size = size,
+      angle = angle_new,
+      speed = speed,
+      targetSize = targetSize,
+      fillColor = fillColor,
+      orbit = orbit
+    }
+  end;
+
+fun loop () =
+  let
+    val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
+    val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
+
+    val new_particles = map drawAndUpdateParticle (!particles);
+    val _ = (particles := new_particles);
+  in
+    ()
+  end;
+
+setInterval "loop();" (round(1000.0/30.0));
+loop();
+</script>
+
+<style type= "text/css">
+    body, html {
+        padding:0;
+        margin:0;
+        font-family: verdana, sans;
+        font-size:12px;
+    }
+    #description {
+        text-align:left;
+    }
+</style>
+
+</head>
+<body>
+
+<canvas id="world" width="900" height="600" style="position: absolute; border:1px solid #eee; ">Your browser does not support the Canvas element.</canvas>
+
+</body>
+</html>

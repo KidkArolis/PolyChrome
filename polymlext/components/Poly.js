@@ -173,6 +173,7 @@ Poly.prototype = {
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                             createInstance().wrappedJSObject;
         this.jswrapper.init(this._document, this.socket1);
+        //TODO: what is this??
         this.jswrapper.instance = this.socket1.port();
     }
 }

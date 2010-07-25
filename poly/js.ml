@@ -21,7 +21,15 @@ struct
       | json [w, a1, a2, a3]
             = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\"}"
       | json [w, a1, a2, a3, a4]
-            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\"}";
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\"}"
+      | json [w, a1, a2, a3, a4, a5]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\", \"arg5\":\""^a5^"\"}"
+      | json [w, a1, a2, a3, a4, a5, a6]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\", \"arg5\":\""^a5^"\", \"arg6\":\""^a6^"\"}"
+      | json [w, a1, a2, a3, a4, a5, a6, a7]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\", \"arg5\":\""^a5^"\", \"arg6\":\""^a6^"\", \"arg7\":\""^a7^"\"}"
+      | json [w, a1, a2, a3, a4, a5, a6, a7, a8]
+            = "{\"type\":5, \"wrapper\":\""^w^"\", \"arg1\":\""^a1^"\", \"arg2\":\""^a2^"\", \"arg3\":\""^a3^"\", \"arg4\":\""^a4^"\", \"arg5\":\""^a5^"\", \"arg6\":\""^a6^"\", \"arg7\":\""^a7^"\", \"arg8\":\""^a8^"\"}";
 
     (*DOM*)
     type elem = string;
@@ -142,6 +150,10 @@ struct
         in () end
     fun removeEventListener (e:elem) et f = let
             val _ = PolyMLext.send(json2 ["4", "removeEventListener", e, et, f]);
+        in () end
+    (*timers*)
+    fun setInterval (f:string) (time:int) = let
+            val _ = PolyMLext.send(json2 ["4", "setInterval", f, (Int.toString time)]);
         in () end
 
     (*Memory management*)

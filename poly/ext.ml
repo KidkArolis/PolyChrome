@@ -23,7 +23,7 @@ structure PolyMLext (*: POLYMLEXT*)
         end
 
     fun recv () =
-        Byte.bytesToString(Socket.recvVec(the socket1, 4096))
+        Byte.bytesToString(Socket.recvVec(the socket1, 12096))
 
     (**
     fun recv_better () =
@@ -45,7 +45,7 @@ structure PolyMLext (*: POLYMLEXT*)
     *)
 
     fun recv2 () =
-        Byte.bytesToString(Socket.recvVec(the socket2, 4096))
+        Byte.bytesToString(Socket.recvVec(the socket2, 12096))
 
     fun send2 (str) =
         let

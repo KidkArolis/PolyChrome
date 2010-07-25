@@ -238,7 +238,7 @@ JSWrapper.prototype = {
                                     //the string as it was, we could also alternatively
                                     //send an exception. TODO: think about that =)
                                 }
-                                self.server.send(f);
+                                self.socket1.send(f);
                             }
                             l.push(f)
                             this.listeners[elem].push(l);
@@ -269,6 +269,16 @@ JSWrapper.prototype = {
                         }
 
                         break;
+                    case "setInterval":
+                        var self = this;
+                        var f = function() {
+                            self.socket1.send(request.arg2);
+                        }
+                        this.timers.push(f)
+                        var n = this.timers.length-1;
+                        console.log(parseInt(request.arg3));
+                        document.defaultView.wrappedJSObject.setInterval(this.timers[n], parseInt(request.arg3));
+                        break;
                 }
                 break;
             case 5: //custom wrappers
@@ -289,10 +299,11 @@ JSWrapper.prototype = {
 
     init : function(doc, s) {
         this._document = doc;
-        this.server = s;
+        this.socket1 = s;
         console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
         this.nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON),
         this.listeners = {};
+        this.timers = [];
         this.Memory = new Memory;
         this._document.addEventListener("PolyMLextWrapperEvent", this.wrapperListener, false, true);
     }
