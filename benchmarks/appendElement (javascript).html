@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Hello PolyML</title>
+</head>
+<body>
+  <pre>Tests are running...</pre> 
+  <div id="main"></div>
+  
+  <script type="text/javascript">
+      var count = 100000;
+   
+     function testAppend(div) {
+       for (var i = 0; i < count; i += 1) {
+         var add = document.createElement('div');
+         div.appendChild(add);
+       }
+     }
+     
+     var div = document.getElementById('main');
+   
+     var start = new Date();
+     testAppend(div);
+     var end = new Date();
+     var appendTime = end - start;
+     
+     var p = document.getElementsByTagName('pre')[0];
+     p.firstChild.data = 'Append: ' + appendTime + 'ms\n';
+  </script>
+  
+</body>
+</html>
+

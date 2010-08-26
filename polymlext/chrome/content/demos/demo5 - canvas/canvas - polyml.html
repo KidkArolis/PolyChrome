@@ -2,7 +2,13 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>jQuery Wrapper demo</title>
+<title>PolyML Canvas demo: PolyML version</title>
+</head>
+<body>
+
+<canvas id="world" width="900" height="600" style="border:1px solid #eee;">Your browser does not support the Canvas element.</canvas>
+<div id="fps" style="position:absolute; background-color:black; color:white; top:9px; padding:2px; font-family:courier; font-weight:bold;"></div>
+
 <script type="text/javascript" src="CanvasWrapper.js"></script>
 <script type="application/x-polyml">
 (*this could be an external file when thats going to be possible*)
@@ -61,6 +67,7 @@ struct
         in (valOf (Int.fromString (PolyMLext.recv2()))) end;
 end
 
+
 (*Random numbers*)
 exception RANDOM;
 fun rmod x y = x - y * Real.realFloor (x / y);
@@ -79,17 +86,26 @@ fun random_range l h =
  else l + Real.floor (rmod (random ()) (real (h - l + 1)));
 set_random_seed(Time.toReal (Time.now()));
 
-(* *)
+
+(*helpers*)
 fun fold_nat f i a =
    if i <= 0 then a else fold_nat f (i - 1) (f i a);
 
-(*this is the actual Canvas demo*)
+(********************************)
+(*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 20;
+val QUANTITY = 40;
 
 val mouseX = ref (0:int);
 val mouseY = ref (0:int);
+
+val drawInterval = 33;
+val frameCount = ref (0:int);
+val fps = ref (0:int);
+val maxfps = round(1000.0 / Real.fromInt(drawInterval));
+val lastTime = ref (Time.now():Time.time);
+val fpsDisplay = valOf (getElementById document "fps");
 
 val canvas = valOf (getElementById document "world");
 val context = Canvas.getContext canvas "2d";
@@ -129,7 +145,7 @@ fun mouseMoveHandler (x, y) = let
   in () end;
 
 addEventListener canvas "mousemove"
-  "mouseMoveHandler({event.clientX}, {event.clientY});";
+  "mouseMoveHandler({clientX}, {clientY});";
 
 fun drawAndUpdateParticle (p:particle) =
   let
@@ -153,7 +169,9 @@ fun drawAndUpdateParticle (p:particle) =
     val posx_new = shiftx_new + round(Math.cos(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
     val posy_new = shifty_new + round(Math.sin(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
     
-    (*val size_new = size + (targetSize - size) * 0.05;*)
+    val size_new = size + (targetSize - size) * 0.05;
+    
+    val targetSize_new = if (round(targetSize))=(round(size_new)) then Real.fromInt((1+(random_range 1 7))) else targetSize;
 
     val _ = Canvas.beginPath context;
     val _ = Canvas.fillStyle context fillColor;
@@ -169,10 +187,10 @@ fun drawAndUpdateParticle (p:particle) =
       id = id,
       position = (posx_new,posy_new),
       shift = (shiftx_new,shifty_new),
-      size = size,
+      size = size_new,
       angle = angle_new,
       speed = speed,
-      targetSize = targetSize,
+      targetSize = targetSize_new,
       fillColor = fillColor,
       orbit = orbit
     }
@@ -180,35 +198,27 @@ fun drawAndUpdateParticle (p:particle) =
 
 fun loop () =
   let
+    val nowTime = Time.now();
+    val diffTime = (Time.toMilliseconds nowTime)-(Time.toMilliseconds (!lastTime));
+    val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
+  
     val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
     val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
 
     val new_particles = map drawAndUpdateParticle (!particles);
     val _ = (particles := new_particles);
+    
+    (*update fps display*)
+    val _ = innerHTML fpsDisplay (SOME ((Int.toString (!fps)) ^ "fps"));
+    
+    val _ = (frameCount := !frameCount+1);
   in
     ()
   end;
 
-setInterval "loop();" (round(1000.0/30.0));
+setInterval "loop();" drawInterval;
 loop();
 </script>
-
-<style type= "text/css">
-    body, html {
-        padding:0;
-        margin:0;
-        font-family: verdana, sans;
-        font-size:12px;
-    }
-    #description {
-        text-align:left;
-    }
-</style>
-
-</head>
-<body>
-
-<canvas id="world" width="900" height="600" style="position: absolute; border:1px solid #eee; ">Your browser does not support the Canvas element.</canvas>
 
 </body>
 </html>

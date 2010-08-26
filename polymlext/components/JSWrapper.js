@@ -8,6 +8,7 @@ function Memory() {
     this.init();
 }
 Memory.prototype = {
+    //should be renamed to addReference
     addElement : function(elem) {
         if (elem==null) {
             return "null";
@@ -16,11 +17,15 @@ Memory.prototype = {
             return (this.elements[this.currentNamespace].length-1)+"";
         }
     },
-
+    //should be renamed to getReference
     getElement : function(n) {
         return this.elements[this.currentNamespace][n];
     },
-
+    removeReference : function(n) {
+        //TODO: this is not good, because if reference from the middle of
+        //array is removed then the identifiers will not work anymore
+        this.elements[this.currentNamespace].splice(n,1);
+    },
     clearMemory : function(ns) {
         if (ns==null) {
             this.init();
@@ -29,7 +34,6 @@ Memory.prototype = {
             this.currentNamespace = "main";
         }
     },
-
     switchNamespace : function(ns) {
         if (ns==null) {
             this.currentNamespace = "main";
@@ -40,7 +44,6 @@ Memory.prototype = {
             }
         }
     },
-
     init : function() {
         this.elements = {"main":[]};
         this.currentNamespace = "main";
@@ -70,14 +73,14 @@ JSWrapper.prototype = {
                 console.log(request.output, "poly-error");
                 break;
 
-            case 2: //code to evaluate
-                //console.log(document.defaultView.content.document.defaultView.content.document.location.href);
+            case 2: //code to evaluate //NOT USED FOR SECURITY REASONS. perhaps evalInSandbox could be used..
                 //response = document.defaultView.eval.call(document.defaultView, request.code);
-                //console.log("EVALS RESPONSE: " + response);
+                /*
                 response = eval(request.arg1);
                 if (response==""||response==null) {
                     response = "";
                 }
+                */
                 break;
 
             case 3: //one of js functions
@@ -85,6 +88,14 @@ JSWrapper.prototype = {
                     case "getElementById":
                         var elem = document.getElementById(request.arg2);
                         response = this.Memory.addElement(elem);
+                        break;
+                    case "getElementsByTagName":
+                        var elems = document.getElementsByTagName(request.arg2);
+                        response = "[";
+                        for (var i=0, len=elems.length; i<len; i++) {
+                            response += "\""+this.Memory.addElement(elems[i])+"\",";
+                        }
+                        response = response.substr(0, response.length-1)+"]";
                         break;
                     case "childNodes":
                         var elem = this.Memory.getElement(request.arg2);
@@ -117,7 +128,7 @@ JSWrapper.prototype = {
                         break;
                     case "innerHTML":
                         var elem = this.Memory.getElement(request.arg2);
-                        if (elem&&elem.innerHTML) {
+                        if (elem&&elem.innerHTML!=null) {
                             if (request.arg3) {
                                 elem.innerHTML = request.arg3;
                                 response = "done";
@@ -130,7 +141,7 @@ JSWrapper.prototype = {
                         break;
                     case "value":
                         var elem = this.Memory.getElement(request.arg2);
-                        if (elem&&elem.value) {
+                        if (elem&&elem.value!=null) {
                             if (request.arg3) {
                                 elem.value = request.arg3;
                                 response = "done";
@@ -175,9 +186,9 @@ JSWrapper.prototype = {
                         break;
                     case "replaceChild":
                         var parent = this.Memory.getElement(request.arg2);
-                        var child_from = this.Memory.getElement(request.arg3);
-                        var child_to = this.Memory.getElement(request.arg4);
-                        parent.replaceChild(child_from, child_to);
+                        var child_new = this.Memory.getElement(request.arg3);                   
+                        var child_old = this.Memory.getElement(request.arg4);
+                        parent.replaceChild(child_new, child_old);
                         break;
                     case "style":
                         var elem = this.Memory.getElement(request.arg2);
@@ -200,9 +211,12 @@ JSWrapper.prototype = {
                         }
                         this.Memory.switchNamespace(request.arg2);
                         break;
+                    case "removeReference":
+                        this.Memory.removeReference(request.arg2);
+                        break;
                 }
                 break;
-
+e
             case 4: //events
                 switch (request.arg1) {
                     case "addEventListener":
@@ -229,8 +243,8 @@ JSWrapper.prototype = {
                                     for (i=0, len=matches.length; i<len; i++) {
                                         //cut off the { } from end and beginning
                                         var c = matches[i].substring(1, matches[i].length-1);
-                                        //TODO: instead of eval use e.g. event[matches[i]]()
-                                        var r = eval(c);
+                                        //only attributes of the event can be accessed, but not functions :-/
+                                        var r = event[c];
                                         f = f.replace(matches[i], r);
                                     }
                                 } catch (e) {
@@ -282,6 +296,7 @@ JSWrapper.prototype = {
                 }
                 break;
             case 5: //custom wrappers
+            
                 var unsafeWin = document.defaultView.wrappedJSObject;
                 var response = unsafeWin[request.wrapper].processRequest(request, this.Memory);
                 break;

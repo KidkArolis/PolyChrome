@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Hello PolyML</title>
+</head>
+<body>
+  <pre>Tests are running...</pre> 
+  <div id="main"></div>
+  
+  <script type="application/x-polyml">
+    val count = 100000;
+    fun testAppend d 0 = ()
+      | testAppend d c = let
+        val add = createElement "div";
+        val _ = appendChild d add;
+      in
+        testAppend d (c-1)
+      end
+      
+    val d = valOf (getElementById document "main");
+
+    val s = Time.now();
+    testAppend d count;
+    val e = Time.now();
+    val appendTime = e - s;
+
+    val [p] = getElementsByTagName document "pre";
+    innerHTML p (SOME ("Append: "^(Time.toString appendTime)^"s"));
+  </script>
+  
+</body>
+</html>
+

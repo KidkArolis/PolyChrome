@@ -1,0 +1,30 @@
+(*setup the html*)
+open Js;
+val html = documentElement document;
+val body = valOf (nextSibling (valOf (firstChild html)));
+val d = createElement "div";
+setAttribute d "id" "main";
+appendChild body d;
+val p = createElement "pre";
+setAttribute p "id" "pre";
+appendChild body p;
+
+
+(*Actual test*)
+val count = 10000;
+fun testAppend d 0 = ()
+  | testAppend d c = let
+    val add = createElement "div";
+    val _ = appendChild d add;
+  in
+    testAppend d (c-1)
+  end
+  
+val d = valOf (getElementById document "main");
+
+val s = Time.now();
+testAppend d count;
+val e = Time.now();
+
+val p = valOf (getElementById document "pre");
+innerHTML p ("Append: "^(Time.toString e)^" - "^(Time.toString s)^"s");

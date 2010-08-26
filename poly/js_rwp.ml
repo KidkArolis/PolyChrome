@@ -2,7 +2,7 @@
 (*sig*)
 (*end*)
 
-structure Js =
+structure Js2 =
 struct
     (*helpers*)
     fun json2 [t, a1]
@@ -94,17 +94,22 @@ struct
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
+    (**
     fun innerHTML (e:elem) (html:string option) = let
             val req = case html of
                 NONE   => json2 ["3", "innerHTML", e]
               | SOME s => json2 ["3", "innerHTML", e, s];
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
+    **)
+    fun innerHTML (e:elem) (html:string) = let
+            val req = json2 ["3", "innerHTML", e, html];
+            val _ = PolyMLext.send(req);
+            val _ = PolyMLext.recv2();
+        in () end
 
-    fun value (e:elem) (value:string option) = let
-            val req = case value of
-                NONE   => json2 ["3", "value", e]
-              | SOME s => json2 ["3", "value", e, s];
+    fun value (e:elem) = let
+            val req = json2 ["3", "value", e];
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
 
@@ -138,16 +143,15 @@ struct
             val _ = PolyMLext.send(json2 ["3", "removeChild", parent, child]);
         in () end
 
-    fun replaceChild (parent:elem) (child_new:elem) (child_old:elem) = let
-            val _ = PolyMLext.send(json2 ["3", "replaceChild", parent, child_new, child_old]);
+    fun replaceChild (parent:elem) (child_from:elem) (child_to:elem) = let
+            val _ = PolyMLext.send(json2 ["3", "replaceChild", parent, child_from, child_to]);
         in () end
 
-    fun style (e:elem) (attribute:string) (value:string option) = let
-            val req = case value of
-                        NONE => json2 ["3", "style", e, attribute]
-                      | SOME s => json2 ["3", "style", e, attribute, s];
+    fun style (e:elem) (attribute:string, value:string) = let
+            val req = json2 ["3", "style", e, attribute, value];
             val _ = PolyMLext.send(req);
-        in PolyMLext.recv2() end
+            val _ = PolyMLext.recv2();
+        in () end
 
     (* events *)
     datatype eventType = click | change | keypress | keyup | mouseover | mouseout | mousemove;
@@ -162,6 +166,12 @@ struct
             val _ = PolyMLext.send(json2 ["4", "setInterval", f, (Int.toString time)]);
         in () end
 
+    (*override print to add text to the html document*)
+    fun print (txt:string) = let
+        val [body] = getElementsByTagName document "body";
+        val _ = innerHTML body txt;
+    in () end
+
     (*Memory management*)
     (**
     TODO:
@@ -171,11 +181,6 @@ struct
             val req = case ns of
                         NONE => json2 ["3", "clearMemory"]
                       | SOME s => json2 ["3", "clearMemory", s];
-            val _ = PolyMLext.send(req);
-        in () end
-        
-    fun removeReference (e:elem) = let
-            val req = json2 ["3", "removeReference", e];
             val _ = PolyMLext.send(req);
         in () end
 

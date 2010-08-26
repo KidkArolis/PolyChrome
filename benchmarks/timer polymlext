@@ -1,0 +1,5 @@
+val s = Time.now();
+Main.doit();
+val e = Time.now();
+
+print (Time.toString (e-s)) ^ "\n";

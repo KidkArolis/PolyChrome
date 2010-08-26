@@ -2,12 +2,11 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>PolyML Canvas demo: JavaScript version</title>
+<title>Hello PolyML</title>
 </head>
 <body>
 
-<canvas id="world" width="900" height="600" style="border:1px solid #eee;">Your browser does not support the Canvas element.</canvas>
-<div id="fps" style="position:absolute; background-color:black; color:white; top:9px; padding:2px; font-family:courier; font-weight:bold;"></div>
+<canvas id="world" width="900" height="600" style="position: absolute; left: 153px; top: 97px; ">Your browser does not support the Canvas element.</canvas>
 
 <script type="text/javascript">
     /**
@@ -21,44 +20,39 @@
     var RADIUS = 120;
     var RADIUS_SCALE = 1;
     // The number of particles that are used to generate the trail
-    var QUANTITY = 180;
+    var QUANTITY = 50;
 
     var canvas;
     var context;
     var particles;
 
-    var mouseX = 0;
-    var mouseY = 0;
-        
-    var drawInterval = 33;
-    var frameCount = 0;
-    var fps = 0;
-    var maxfps = 1 / (drawInterval / 1000);
-    var lastTime = new Date();
-    var fpsDisplay = document.getElementById("fps");
+    var mouseX = (window.innerWidth - SCREEN_WIDTH);
+    var mouseY = (window.innerHeight - SCREEN_HEIGHT);
+
+    init();
 
     function init() {
+
         canvas = document.getElementById( 'world' );
+
         if (canvas && canvas.getContext) {
             context = canvas.getContext('2d');
+
             // Register event listeners
             document.addEventListener('mousemove', documentMouseMoveHandler, false);
-            createParticles();
-            setInterval(loop, drawInterval);
-        }
-    }
+            window.addEventListener('resize', windowResizeHandler, false);
 
-    function randomColor() {
-        //fillColor: '#' + (Math.random() * 0x404040 + 0xaaaaaa | 0).toString(16),
-        var color = "#CF";
-        for (var i=0; i<4; i++) {
-            color += Math.floor(Math.random()*9);
+            createParticles();
+
+            windowResizeHandler();
+
+            setInterval( loop, 1000 / 30 );
         }
-        return color;
     }
 
     function createParticles() {
         particles = [];
+
         for (var i = 0; i < QUANTITY; i++) {
             var particle = {
                 position: { x: mouseX, y: mouseY },
@@ -67,26 +61,29 @@
                 angle: 0.0,
                 speed: 0.01+Math.random()*0.04,
                 targetSize: 1,
-                fillColor: randomColor(),
+                fillColor: '#' + (Math.random() * 0x404040 + 0xaaaaaa | 0).toString(16),
                 orbit: RADIUS*.5 + (RADIUS * .5 * Math.random())
             };
+
             particles.push( particle );
         }
     }
 
     function documentMouseMoveHandler(event) {
-        mouseX = event.clientX;
-        mouseY = event.clientY;
+        mouseX = event.clientX - (window.innerWidth - SCREEN_WIDTH) * .5;
+        mouseY = event.clientY - (window.innerHeight - SCREEN_HEIGHT) * .5;
+    }
+
+    function windowResizeHandler() {
+        canvas.width = SCREEN_WIDTH;
+        canvas.height = SCREEN_HEIGHT;
+
+        canvas.style.position = 'absolute';
+        canvas.style.left = (window.innerWidth - SCREEN_WIDTH) * .5 + 'px';
+        canvas.style.top = (window.innerHeight - SCREEN_HEIGHT) * .5 + 'px';
     }
 
     function loop() {
-        var nowTime = new Date();
-        var diffTime = Math.ceil((nowTime.getTime() - lastTime.getTime()));
-        if (diffTime >= 1000) {
-          fps = frameCount;
-          frameCount = 0;
-          lastTime = nowTime;
-        }
 
         // Fade out the lines slowly by drawing a rectangle over the entire canvas
         context.fillStyle = 'rgba(255,255,255,0.05)';
@@ -96,6 +93,7 @@
             var particle = particles[i];
 
             var lp = { x: particle.position.x, y: particle.position.y };
+
 
             // Offset the angle to keep the spin going
             particle.angle += particle.speed;
@@ -107,6 +105,10 @@
             // Apply position
             particle.position.x = particle.shift.x + Math.cos(i + particle.angle) * (particle.orbit*RADIUS_SCALE);
             particle.position.y = particle.shift.y + Math.sin(i + particle.angle) * (particle.orbit*RADIUS_SCALE);
+
+            // Limit to screen bounds
+            particle.position.x = Math.max( Math.min( particle.position.x, SCREEN_WIDTH ), 0 );
+            particle.position.y = Math.max( Math.min( particle.position.y, SCREEN_HEIGHT ), 0 );
 
             particle.size += ( particle.targetSize - particle.size ) * 0.05;
 
@@ -125,14 +127,7 @@
             context.arc(particle.position.x, particle.position.y, particle.size/2, 0, Math.PI*2, true);
             context.fill();
         }
-        
-        //update fps display
-        fpsDisplay.innerHTML = fps + "fps";
-        
-        frameCount++;
     }
-    
-    init();
 </script>
 
 </body>
