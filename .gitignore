@@ -6,3 +6,4 @@ polymlext/poly/*
 *.so
 .project
 .cproject
+.komodoproject
