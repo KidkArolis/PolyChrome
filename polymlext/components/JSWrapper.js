@@ -2,14 +2,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var console;
+var debug;
+
+var document;
 
 function Memory() {
     this.init();
 }
 Memory.prototype = {
-    //should be renamed to addReference
-    addElement : function(elem) {
+    addReference : function(elem) {
         if (elem==null) {
             return "null";
         } else {
@@ -17,8 +18,7 @@ Memory.prototype = {
             return (this.elements[this.currentNamespace].length-1)+"";
         }
     },
-    //should be renamed to getReference
-    getElement : function(n) {
+    getReference : function(n) {
         return this.elements[this.currentNamespace][n];
     },
     removeReference : function(n) {
@@ -51,29 +51,166 @@ Memory.prototype = {
 }
 
 JSWrapper.prototype = {
+    
+    DOMWrappers : {      
+        getElementById : function(request) {
+            var elem = document.getElementById(request.arg2);
+            return this.Memory.addReference(elem);
+        },
+        getElementsByTagName: function(request) {
+            var elems = document.getElementsByTagName(request.arg2);
+            var response = "[";
+            for (var i=0, len=elems.length; i<len; i++) {
+                response += "\""+this.Memory.addReference(elems[i])+"\",";
+            }
+            response = response.substr(0, response.length-1)+"]";
+            return response;
+        },
+        childNodes: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            var elems = elem.childNodes;
+            var response = "[";
+            for (var i=0, len=elems.length; i<len; i++) {
+                response += "\""+this.Memory.addReference(this.elems[i])+"\",";
+            }
+            response = response.substr(0, response.length-1)+"]";
+            return response;
+        },
+        parentNode: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return this.Memory.addReference(elem.parentNode);
+        },
+        firstChild: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return this.Memory.addReference(elem.firstChild);
+        },
+        lastChild: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return this.Memory.addReference(elem.lastChild);
+        },
+        nextSibling: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return this.Memory.addReference(elem.nextSibling);
+        },
+        previousSibling: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return this.Memory.addReference(elem.previousSibling);
+        },
+        innerHTML: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            if (elem&&elem.innerHTML!=null) {
+                if (request.arg3) {
+                    elem.innerHTML = request.arg3;
+                    return "";
+                } else {
+                    return elem.innerHTML;
+                }
+            } else {
+                return "exception";
+            }
+        },
+        value: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            if (elem&&elem.value!=null) {
+                if (request.arg3) {
+                    elem.value = request.arg3;
+                    return "";
+                } else {
+                    return elem.value;
+                }
+            } else {
+                //TODO: must send things to Poly in packets, so we
+                //can indicate exceptions..
+                return "exception";
+            }
+        },
+        getAttribute: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return elem.getAttribute(request.arg3);
+        },
+        setAttribute: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return elem.setAttribute(request.arg3, request.arg4);
+        },
+        removeAttribute: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            return elem.removeAttribute(request.arg3);
+        },
+        createElement: function(request) {
+            var elem = document.createElement(request.arg2);
+            return this.Memory.addReference(elem);
+        },
+        createTextNode: function(request) {
+            var elem = document.createTextNode(request.arg2);
+            return this.Memory.addReference(elem);
+        },
+        appendChild: function(request) {
+            var parent = this.Memory.getReference(request.arg2);
+            var child = this.Memory.getReference(request.arg3);
+            this.parent.appendChild(child);
+        },
+        removeChild: function(request) {
+            var parent = this.Memory.getReference(request.arg2);
+            var child = this.Memory.getReference(request.arg3);
+            this.parent.removeChild(child);
+        },
+        replaceChild: function(request) {
+            var parent = this.Memory.getReference(request.arg2);
+            var child_new = this.Memory.getReference(request.arg3);                   
+            var child_old = this.Memory.getReference(request.arg4);
+            this.parent.replaceChild(child_new, child_old);
+        },
+        style: function(request) {
+            var elem = this.Memory.getReference(request.arg2);
+            if (request.arg4) {
+                elem.style[request.arg3] = request.arg4;
+                return "";
+            } else {
+                return elem.style[request.arg3];
+            }
+        },
+        clearMemory: function(request) {
+            if (!request.arg2) {
+                request.arg2 = null;
+            }
+            this.Memory.clearMemory(request.arg2);
+        },
+        switchNamespace: function(request) {
+            if (!request.arg2) {
+                request.arg2 = null;
+            }
+            this.Memory.switchNamespace(request.arg2);
+        },
+        removeReference: function(request) {
+            this.Memory.removeReference(request.arg2);
+        }
+    },
+
     process : function(req) {
-        var document = this._document;
-        var response = "";
+        //make document accessible in all wrappers
+        document = this._document;
+        var response = null;
         try {
             var request = this.nativeJSON.decode(req);
         } catch (e) {
-            console.log("Could not decode JSON.\nRequest:\n"+req+"\nReason:\n"+e, "error");
+            debug.debug("Could not decode JSON.\nRequest:\n"+req+"\nReason:\n"+e, "error");
             return "";
         }
         if (!request.hasOwnProperty("type")) {
-            console.log("Unexpected request from Poly", "error");
+            debug.debug("Unexpected request from Poly", "error");
             return "";
         }
         switch (request.type) {
             case 0: //output
-                console.log(request.output, "poly");
+                this.console.log(request.output);
                 break;
 
             case 1: //errors
-                console.log(request.output, "poly-error");
+                this.console.log(request.output);
                 break;
 
-            case 2: //code to evaluate //NOT USED FOR SECURITY REASONS. perhaps evalInSandbox could be used..
+            case 2: //code to evaluate
+                //NOT USED FOR SECURITY REASONS. perhaps evalInSandbox could be used..
                 //response = document.defaultView.eval.call(document.defaultView, request.code);
                 /*
                 response = eval(request.arg1);
@@ -83,144 +220,23 @@ JSWrapper.prototype = {
                 */
                 break;
 
-            case 3: //one of js functions
-                switch (request.arg1) {
-                    case "getElementById":
-                        var elem = document.getElementById(request.arg2);
-                        response = this.Memory.addElement(elem);
-                        break;
-                    case "getElementsByTagName":
-                        var elems = document.getElementsByTagName(request.arg2);
-                        response = "[";
-                        for (var i=0, len=elems.length; i<len; i++) {
-                            response += "\""+this.Memory.addElement(elems[i])+"\",";
-                        }
-                        response = response.substr(0, response.length-1)+"]";
-                        break;
-                    case "childNodes":
-                        var elem = this.Memory.getElement(request.arg2);
-                        var elems = elem.childNodes;
-                        response = "[";
-                        for (var i=0, len=elems.length; i<len; i++) {
-                            response += "\""+this.Memory.addElement(elems[i])+"\",";
-                        }
-                        response = response.substr(0, response.length-1)+"]";
-                        break;
-                    case "parentNode":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = this.Memory.addElement(elem.parentNode);
-                        break;
-                    case "firstChild":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = this.Memory.addElement(elem.firstChild);
-                        break;
-                    case "lastChild":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = this.Memory.addElement(elem.lastChild);
-                        break;
-                    case "nextSibling":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = this.Memory.addElement(elem.nextSibling);
-                        break;
-                    case "previousSibling":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = this.Memory.addElement(elem.previousSibling);
-                        break;
-                    case "innerHTML":
-                        var elem = this.Memory.getElement(request.arg2);
-                        if (elem&&elem.innerHTML!=null) {
-                            if (request.arg3) {
-                                elem.innerHTML = request.arg3;
-                                response = "done";
-                            } else {
-                                response = elem.innerHTML;
-                            }
-                        } else {
-                            response = "exception";
-                        }
-                        break;
-                    case "value":
-                        var elem = this.Memory.getElement(request.arg2);
-                        if (elem&&elem.value!=null) {
-                            if (request.arg3) {
-                                elem.value = request.arg3;
-                                response = "done";
-                            } else {
-                                response = elem.value;
-                            }
-                        } else {
-                            //TODO: must send things to Poly in packets, so we
-                            //can indicate exceptions..
-                            response = "exception";
-                        }
-                        break;
-                    case "getAttribute":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = elem.getAttribute(request.arg3);
-                        break;
-                    case "setAttribute":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = elem.setAttribute(request.arg3, request.arg4);
-                        break;
-                    case "removeAttribute":
-                        var elem = this.Memory.getElement(request.arg2);
-                        response = elem.removeAttribute(request.arg3);
-                        break;
-                    case "createElement":
-                        var elem = document.createElement(request.arg2);
-                        response = this.Memory.addElement(elem);
-                        break;
-                    case "createTextNode":
-                        var elem = document.createTextNode(request.arg2);
-                        response = this.Memory.addElement(elem);
-                        break;
-                    case "appendChild":
-                        var parent = this.Memory.getElement(request.arg2);
-                        var child = this.Memory.getElement(request.arg3);
-                        parent.appendChild(child);
-                        break;
-                    case "removeChild":
-                        var parent = this.Memory.getElement(request.arg2);
-                        var child = this.Memory.getElement(request.arg3);
-                        parent.removeChild(child);
-                        break;
-                    case "replaceChild":
-                        var parent = this.Memory.getElement(request.arg2);
-                        var child_new = this.Memory.getElement(request.arg3);                   
-                        var child_old = this.Memory.getElement(request.arg4);
-                        parent.replaceChild(child_new, child_old);
-                        break;
-                    case "style":
-                        var elem = this.Memory.getElement(request.arg2);
-                        if (request.arg4) {
-                            elem.style[request.arg3] = request.arg4;
-                            response = "done";
-                        } else {
-                            response = elem.style[request.arg3];
-                        }
-                        break;
-                    case "clearMemory":
-                        if (!request.arg2) {
-                            request.arg2 = null;
-                        }
-                        this.Memory.clearMemory(request.arg2);
-                        break;
-                    case "switchNamespace":
-                        if (!request.arg2) {
-                            request.arg2 = null;
-                        }
-                        this.Memory.switchNamespace(request.arg2);
-                        break;
-                    case "removeReference":
-                        this.Memory.removeReference(request.arg2);
-                        break;
+            case 3: //DOM function
+                if (this.DOMWrappers[request.arg1] != undefined) {
+                    response = this.DOMWrappers[request.arg1](request);
+                    //if the wrapper does not return anything, set the
+                    //response to null
+                    if (response == undefined) {
+                        response = null;
+                    }
+                } else {
+                    debug.debug("This DOM wrapper is not implemented");
                 }
                 break;
-e
+
             case 4: //events
                 switch (request.arg1) {
                     case "addEventListener":
-                        var elem = this.Memory.getElement(request.arg2);
+                        var elem = this.Memory.getReference(request.arg2);
                         var found = false;
                         var l = [request.arg3, request.arg4];
                         if (typeof(this.listeners[elem])!="undefined") {
@@ -261,7 +277,7 @@ e
                         }
                         break;
                     case "removeEventListener":
-                        var elem = this.Memory.getElement(request.arg2);
+                        var elem = this.Memory.getReference(request.arg2);
 
                         var found = false;
                         var l = [request.arg3, request.arg4];
@@ -290,37 +306,38 @@ e
                         }
                         this.timers.push(f)
                         var n = this.timers.length-1;
-                        console.log(parseInt(request.arg3));
                         document.defaultView.wrappedJSObject.setInterval(this.timers[n], parseInt(request.arg3));
                         break;
                 }
                 break;
             case 5: //custom wrappers
-            
                 var unsafeWin = document.defaultView.wrappedJSObject;
-                var response = unsafeWin[request.wrapper].processRequest(request, this.Memory);
+                response = unsafeWin[request.wrapper]
+                        .processRequest(request, this.Memory);
                 break;
 
             default:
-                console.log("Unexpected request from Poly", "error");
+                debug.debug("Unexpected request from Poly", "ERROR");
         }
-        return response;
+        if (response != null) {
+            return response.toString();
+        } else {
+            return response;
+        }
     },
 
-    wrapperListener: function(event) {
-        console.log(event, "LISTENED");
-        console.log(event.foo, "LISTENED");
-    },
-
-    init : function(doc, s) {
+    init : function(doc, s, c) {
         this._document = doc;
         this.socket1 = s;
-        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
-        this.nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON),
+        this.console = c;
+        debug = Cc["@ed.ac.uk/poly/debug-console;1"]
+                .getService().wrappedJSObject;
+        this.nativeJSON = Cc["@mozilla.org/dom/json;1"]
+                .createInstance(Ci.nsIJSON),
         this.listeners = {};
         this.timers = [];
         this.Memory = new Memory;
-        this._document.addEventListener("PolyMLextWrapperEvent", this.wrapperListener, false, true);
+        this.DOMWrappers.Memory = this.Memory;
     }
 }
 

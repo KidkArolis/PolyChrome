@@ -1,0 +1,33 @@
+#!/bin/bash
+### EDIT THIS!! ##############################################################
+# make sure this is the profile you will be using the extension with
+ff_profile=/home/karolis/.mozilla/firefox/rt8tmtpt.default
+##############################################################################
+
+
+#the directory of the extension
+extension=`dirname $0`
+cd $extension
+extension=`pwd`
+
+#update the extension file and move it to firefox profile
+echo "$extension/polymlext" > polymlext@ed.ac.uk
+cp polymlext@ed.ac.uk $ff_profile/extensions/
+rm polymlext@ed.ac.uk
+
+#remove these files to make firefox reregister the updated components
+if [ -e $ff_profile/xpti.dat ]; then rm "$ff_profile/xpti.dat"; fi
+if [ -e $ff_profile/compreg.dat ]; then rm "$ff_profile/compreg.dat"; fi
+
+#if run is passed as a parameter run firefox
+if [ "$1" == "run" ]; then firefox -jsconsole; fi
+
+#if package is passed as a parameter create the xpi package
+if [ "$1" == "package" ]
+    then
+        rm polymlext.xpi
+        ZIP=`which zip`
+        cd polymlext
+        ${ZIP} -r ../polymlext.xpi *
+        cd ..
+fi

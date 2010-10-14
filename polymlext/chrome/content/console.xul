@@ -1,19 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/style.css" type="text/css"?>
+<?xml-stylesheet href="chrome://polymlext/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://polymlext/skin/style.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://PolyMLext/locale/console.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
-    <label value="PolyML output" />
-    <hbox>
-      <textbox id="polyml" multiline="true" rows="14" cols="80" style="font-family:monospace; font-size:12px;" />
-    </hbox>
-
-    <label value="Extension debug" />
-    <hbox>
-      <textbox id="debug" multiline="true" rows="14" cols="80" style="font-family:monospace; font-size:12px;" />
-    </hbox>
-    <button id="clear" label="Clear" />
-</window>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <vbox id="polymlextConsoleContentBox">
+        <hbox role="toolbar">
+            <hbox flex="12">
+                <label id="polymlextConsoleTitle" value="PolyML Console" />
+            </hbox>
+            <splitter collapsed="true"/>
+            <hbox flex="1">
+               <label id="polymlextConsoleDisableButton" value="Disable"/>
+            </hbox>
+        </hbox>
+        
+        <hbox>
+            <textbox id="polymlLogArea" multiline="true" rows="12" flex="1" readonly="true" />
+        </hbox>
+        
+        <!--
+        <vbox>
+            <iframe src="chrome://polymlext/content/logArea.html" flex="1" height="100%" id="logArea" />
+        </vbox>
+        -->
+        
+        <hbox id="polymlextCommandBox">
+            <label id="polymlextCommandArrow" value=">"/>
+            <textbox id="polymlextCommandLine" flex="1" label="console command line" aria-autocomplete="inline" />
+        </hbox>
+    </vbox>
+</overlay>

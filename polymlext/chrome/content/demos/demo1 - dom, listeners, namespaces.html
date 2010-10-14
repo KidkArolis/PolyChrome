@@ -6,19 +6,23 @@
 
 <script type="application/x-polyml">
 (*print (OS.FileSys.getDir());*)
+
+open DOM;
+
 fun s2i s = valOf (Int.fromString s);
 fun i2s i = Int.toString i;
 val e = valOf (getElementById document "abc");
 
 fun applyOperation operation =
     let
-        val _ = switchNamespace(NONE);
-        val current_value = innerHTML e NONE;
-        val new_value = operation((s2i current_value), 1);
-        val _ = innerHTML e (SOME (i2s new_value));
-        val _ = switchNamespace(SOME "temp");
+        val _ = switchNamespace(NONE)
+        val current_value = innerHTML e NONE
+        val new_value = operation((s2i current_value), 1)
+        val _ = innerHTML e (SOME (i2s new_value))
+        val _ = switchNamespace(SOME "temp")
+        val _ = clearMemory(SOME "temp")
     in
-        clearMemory(SOME "temp")
+        ()
     end;
 
 fun removeToggle1 () =
@@ -26,8 +30,8 @@ fun removeToggle1 () =
       val e = valOf (getElementById document "remove1");
       fun a (s) = if (s="remove first listener") then ("add first listener")
                   else ("remove first listener");
-      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);")
-                  else (addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);");
+      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)")
+                  else (addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)");
       val current_value = value e NONE;
       val new_value = a (current_value);
       val _ = value e (SOME new_value);
@@ -41,8 +45,8 @@ fun removeToggle2 () =
       val e = valOf (getElementById document "remove2");
       fun a (s) = if (s="remove second listener") then ("add second listener")
                   else ("remove second listener");
-      fun b (s) = if (s="remove second listener") then (removeEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);")
-                  else (addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);");
+      fun b (s) = if (s="remove second listener") then (removeEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-)")
+                  else (addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-)");
       val current_value = value e NONE;
       val new_value = a (current_value);
       val _ = value e (SOME new_value);
@@ -52,12 +56,12 @@ fun removeToggle2 () =
     end;
 
 switchNamespace(SOME "temp");
-addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
-removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
-removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
-addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
-addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+);";
-addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-);";
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)";
+removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)";
+removeEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button1")) "click" "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button2")) "click" "applyOperation(op-)";
 addEventListener (valOf (getElementById document "remove1")) "click" "removeToggle1()";
 addEventListener (valOf (getElementById document "remove2")) "click" "removeToggle2()";
 clearMemory(SOME "temp");

@@ -1,7 +1,7 @@
 #!/bin/bash
 ### EDIT THIS!! ################################################################
 # make sure this is the profile you will be using the extension with
-ff_profile=/home/karolis/.mozilla/firefox/umv7jzqu.Dev
+ff_profile=/home/karolis/.mozilla/firefox/rt8tmtpt.default
 ################################################################################
 
 
@@ -14,7 +14,7 @@ extension=`pwd`
 if [ "$1" == "build" ]
 then
 cd poly
-echo "use \"build.ml\";" | poly
+echo "use \"build.sml\";" | poly
 if [ ! -e bin/PolyMLext.o ]; then echo "Error compiling the PolyML program"; exit; fi
 cd bin
 ls
@@ -40,5 +40,5 @@ if [ "$1" == "run" ]
 then
 #NSPR_LOG_MODULES=all:5 firefox
 #NSPR_LOG_MODULES=PolyMLDOMModule:5 firefox
-firefox
+firefox -jsconsole
 fi

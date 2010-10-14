@@ -1,0 +1,57 @@
+#polymlextCommandBox {
+    border-top: 1px solid #CCCCCC;
+    background-color: #FFFFFF;
+    font-size:12px;
+}
+#polymlextCommandArrow {
+    margin: 2px 0 2px 7px;
+    font-family: monospace;
+    color: #FF0000;
+}
+
+#polymlextCommandLine {
+    -moz-appearance: none;
+    margin: 0;
+    padding: 0 4px;
+    height: 0;
+    border: none;
+    font-family: monospace;
+    direction: ltr;
+}
+
+#polymlextCommandLine > .textbox-input-box > .textbox-textarea {
+    overflow: hidden;
+}
+#polymlLogArea {
+	-moz-appearance: none;
+	font-family:monospace;
+	font-size:12px;
+	margin:0;
+	border:none;
+	border-top:1px solid #ccc;
+	background-color: #FFFFFF;
+}
+
+#polymlext-disableConsole-button {
+	width:80px;
+	padding:2px;
+	font-size:10px;
+	float:right;
+}
+
+#polymlextCodeIndicator {
+	font-size:12px;
+	margin-top:5px;
+	font-weight:bold;
+}
+
+#polymlextConsoleTitle {
+	font-size:13px;
+	font-weight:bold;
+}
+
+#polymlextConsoleDisableButton {
+	font-size:13px;
+	text-decoration:underline;
+	text-align:right;
+}

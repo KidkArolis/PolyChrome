@@ -4,42 +4,69 @@ const Cr = Components.results;
 
 //global variable to be used by anyone in this component, it is initialized
 //in the Poly.init()
-var console;
+var debug;
+
+var CHUNK_SIZE = 65536;
+var PREFIX_SIZE = 9;
 
 function Socket1(eventTarget) {
     this.init(eventTarget);
 }
 Socket1.prototype = {
-    onInputStreamReady : function(input) {
-        try {
-            var sin = Cc["@mozilla.org/scriptableinputstream;1"]
-                        .createInstance(Ci.nsIScriptableInputStream);
-            sin.init(input);
-            var av = 0;
+    //how many bytes are still left to read
+    bytesLeft : 0,
+    //how many bytes will we try to read
+    bytesNextChunk : 0,
+    request : "",
+    reading : false,
+    //scriptableInputStream
+    sin : null,
+    counter : 0,
+    
+    onInputStreamReady : function(input) {            
+        if (!this.reading) {
+            this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Ci.nsIScriptableInputStream);
+            this.sin.init(input);
             try {
-                av = sin.available();
-            } catch(e) {}
-
-//            console.log(av, "AVAILABLE");
-
-            //console.log(request, "REQUEST");
-            //TODO: is smth with smaller chunks better?
-            //while (sin.available()) { request += sin.read(512); }
-            while (sin.available() > 0) {
-                var len = parseInt(sin.read(10));
-                var request = sin.read(len);
-//                console.log(request, "REQUEST");
-                try {
-                    this.eventTarget.onRequest(request);
-                } catch (e) {
-                    console.log('Could not process the request. Line: '+e.lineNumber+'. File: '+e.fileName+' Reason: '+e, 'error');
-                }
+                var r = this.sin.read(PREFIX_SIZE);
+            } catch (e) {
+                debug.debug(e, "ERROR");
+                return;
             }
-            this.input.asyncWait(this,0,10,this.tm.mainThread);
-        } catch (e) {
-            //TODO
-            //the sockets have already been closed
-            //but for some reason this throws exception on closing the page :-/
+            this.bytesLeft = parseInt(r);
+            this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
+            this.request = "";
+            this.reading = true;
+            this.input.asyncWait(this,0,this.bytesNextChunk,this.tm.mainThread);
+        } else {
+            try {
+                var chunk = this.sin.read(this.bytesNextChunk);
+            } catch (e) {
+                debug.debug(e, "ERROR");
+                return;
+            }
+            this.request += chunk;
+            this.bytesLeft -= chunk.length;
+            if (this.bytesLeft == 0) {
+                //we're done with reading this request
+                this.eventTarget.onRequest(this.request);
+                //cleanup
+                this.reading = false;
+                this.request = "";
+                this.counter = 0;
+                //wait for the next request
+                this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
+            } else {
+                this.counter++;
+                if (this.counter>100) {
+                    dump("not good 3");
+                }
+                //there is more to read
+                this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
+                //wait for the next chunk
+                this.input.asyncWait(this,0,this.bytesNextChunk,this.tm.mainThread);
+            }
         }
     },
 
@@ -48,7 +75,7 @@ Socket1.prototype = {
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-        this.input.asyncWait(this,0,10,this.tm.mainThread);
+        this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
         this.eventTarget.onReady();
     },
 
@@ -56,7 +83,20 @@ Socket1.prototype = {
 
     //can't call send before the socket was accepted
     send : function(data) {
-        var nbytes = this.output.write(data, data.length);
+        var prefix = (data.length.toString() + Array(PREFIX_SIZE).join(" "))
+                .substring(0, PREFIX_SIZE);
+        var prefixed_data = prefix + data;
+        var pos = 0;
+        var counter = 0;
+        while (pos<prefixed_data.length) {
+            counter++;
+            if (counter>100) {
+                dump("not good 1");
+            }
+            var chunk = prefixed_data.substr(pos, CHUNK_SIZE);
+            var nbytes = this.output.write(chunk, chunk.length);
+            pos += nbytes;
+        }
     },
 
     port : function() {
@@ -66,6 +106,7 @@ Socket1.prototype = {
     init : function(eventTarget) {
         this.input = null;
         this.output = null;
+        //certain events will be fired on this target
         this.eventTarget = eventTarget;
         this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
@@ -92,11 +133,21 @@ function Socket2() {
 }
 Socket2.prototype = {
     //can't call send before the socket was accepted
-    //though here we could assume that by the time this is called
-    //it is already accepted, because this socket is only used when
-    //js function is executed, which means both sockets were already accepted
-    send : function(data) {
-        var nbytes = this.output.write(data, data.length);
+     send : function(data) {
+        var prefix = (data.length.toString() + Array(9).join(" "))
+                .substring(0, 9);
+        var prefixed_data = prefix + data;
+        var pos = 0;
+        var counter = 0;
+        while (pos<prefixed_data.length) {
+            counter++;
+            if (counter>100) {
+                dump("not good 2");
+            }
+            var chunk = prefixed_data.substr(pos, CHUNK_SIZE);
+            var nbytes = this.output.write(chunk, chunk.length);
+            pos += nbytes;
+        }
     },
 
     onSocketAccepted : function(serverSocket, clientSocket) {
@@ -129,11 +180,8 @@ Socket2.prototype = {
 }
 
 Poly.prototype = {
-    startPoly : function () {
-        //figure out the path of poly executable
-        var binpath = Utils.readFile(Utils.getProfilePath()+'extensions/polymlext@ed.ac.uk');
-        binpath = binpath.substring(0, binpath.length-1) + '/poly/PolyMLext';
-        //run it
+    startPoly : function () {        
+        var binpath = Utils.getExtensionPath() + '/poly/bin/polyml';
         var args = [this.socket1.port(), this.socket2.port()];
         this.process = Utils.startProcess(binpath, args);
     },
@@ -146,7 +194,7 @@ Poly.prototype = {
 
     onRequest : function(request) {
         var response = this.jswrapper.process(request);
-        if (response!="") {
+        if (response!=null) {
             this.socket2.send(response);
         }
     },
@@ -162,19 +210,21 @@ Poly.prototype = {
         }
     },
 
-    init : function(doc) {
-        Components.utils.import("resource://polymlext/Utils.jsm");
+    init : function(doc, console) {
+        Components.utils.import("resource://polymlext/Utils.jsm");                
         this.process = null;
         this._document = doc;
-        console = Cc["@ed.ac.uk/poly/console;1"].getService().wrappedJSObject;
+        this.console = Cc["@ed.ac.uk/poly/console;1"]
+                .createInstance().wrappedJSObject;
+        this.console.init(this);
+        debug = Cc["@ed.ac.uk/poly/debug-console;1"]
+                .getService().wrappedJSObject;
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2();
         this.startPoly();
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                             createInstance().wrappedJSObject;
-        this.jswrapper.init(this._document, this.socket1);
-        //TODO: what is this??
-        this.jswrapper.instance = this.socket1.port();
+        this.jswrapper.init(this._document, this.socket1, this.console);
     }
 }
 
@@ -198,4 +248,3 @@ var components = [Poly];
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule(components);
 }
-

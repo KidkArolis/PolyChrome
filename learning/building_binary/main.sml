@@ -4,6 +4,9 @@ structure PolyMLext (*: POLYMLEXT*)
     val socket1 = ref (NONE : Socket.active INetSock.stream_sock option)
     val socket2 = ref (NONE : Socket.active INetSock.stream_sock option)
 
+    val PREFIX_SIZE = 9;
+    val CHUNK_SIZE = 65536;
+
     exception Error of string
 
     fun the (reference) = Option.valOf (!reference)
@@ -14,69 +17,75 @@ structure PolyMLext (*: POLYMLEXT*)
     fun makeSocket (port) =
         let
             val client = INetSock.TCP.socket()
-            val me = valOf (NetHostDB.getByName "localhost");
-            val localhost = NetHostDB.addr me;
+            val me = valOf (NetHostDB.getByName "localhost")
+            val localhost = NetHostDB.addr me
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
         in
             client
         end
-
-    fun recv () =
-        Byte.bytesToString(Socket.recvVec(the socket1, 12096))
-
-    (**
-    fun recv_better () =
+        
+    fun recv_ (socket) =
         let
-            val n = valOf (Int.fromString (Byte.bytesToString(Socket.recvVec(the gsock, 10))));
-            val _ = print (Int.toString n);
-            fun loop(0) = []
-              | loop(n) =
+            val prefix = Byte.bytesToString(
+                    Socket.recvVec(socket, PREFIX_SIZE))
+            val length = valOf (Int.fromString prefix)
+            fun recvLoop (0) = ""
+              | recvLoop (length) =
                 let
-                    val data = Byte.bytesToString(Socket.recvVec(the gsock, n))
-                    val len = String.size data
+                    val len = if (length<CHUNK_SIZE)
+                            then length
+                            else CHUNK_SIZE;
+                    val vectorReceived = Socket.recvVec(socket, len);
+                    val nbytes = Word8Vector.length vectorReceived;
+                    val chunk = Byte.bytesToString(vectorReceived);
                 in
-                    if len = 0 then []
-                    else (data::(loop(n - len)))
+                    chunk ^ recvLoop(length-nbytes)
                 end
+            val data = recvLoop(length)
         in
-            String.concat (loop n)
-        end
-    *)
-
-    fun recv2 () =
-        Byte.bytesToString(Socket.recvVec(the socket2, 12096))
-
-    fun send2 (str) =
-        let
-            val outv = Word8VectorSlice.full (Byte.stringToBytes str)
-(*            val bytes_sent = Socket.sendVec(the gsock, outv);*)
-(*            val _ = PolyML.print ("Sent " ^ (Int.toString bytes_sent) *)
-(*                ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)))*)
-        in
-            Socket.sendVec(the socket1, outv)
+            data
         end
 
-    fun send (str) =
+    fun recv1 () = recv_ (the socket1)
+    fun recv2 () = recv_ (the socket2)
+
+    fun expand (str, 9) = str
+              | expand (str, x) = expand (str^" ", x+1);
+              
+    fun send (data) =
         let
-            val len = Int.toString (String.size str);
-            fun expand (str, 10) = str | expand (str, x) = expand (str^" ", x+1);
-            val lenStr = expand (len, String.size len);
-(*            val _ = print(lenStr^"\n"^str);*)
-            val _ = send2(lenStr^str);
+            val prefix = Int.toString (size data)
+            val prefix = expand (prefix, size prefix)
+            val prefixed_data = prefix^data
+            val length = size prefixed_data
+            fun sendLoop (pos) =
+                let
+                    val len = if ((pos+CHUNK_SIZE) > length)
+                            then length-pos
+                            else CHUNK_SIZE
+                    val chunk = substring (prefixed_data, pos, len)
+                    val outv = Word8VectorSlice.full
+                            (Byte.stringToBytes chunk)
+                    val nbytes = Socket.sendVec(the socket1, outv)
+                in
+                    if pos+nbytes>=length then 0 else sendLoop(pos+nbytes)
+                end
+                
+            val _ = print (Int.toString(length)^"\n");
         in
-            ()
+            sendLoop(0)
         end
 
     fun closeSock s =
         (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
-         Socket.close s);
+         Socket.close s)
 
     fun evaluate location_url txt =
         let
             (* uses input and output buffers for compilation and output message *)
-            val in_buffer = ref (String.explode txt);
-            val out_buffer = ref ([]: string list);
+            val in_buffer = ref (String.explode txt)
+            val out_buffer = ref ([]: string list);;
             val current_line = ref 1;
 
             (* helper function *)
@@ -112,7 +121,7 @@ structure PolyMLext (*: POLYMLEXT*)
               [(* keep track of line numbers *)
                PolyML.Compiler.CPLineNo (fn () => ! current_line),
 
-               (* the following catches any output during
+               (* the following catches any output durin
                   compilation/evaluation and store it in the put stream. *)
                PolyML.Compiler.CPOutStream put,
                       (* the following handles error messages specially
@@ -137,7 +146,7 @@ structure PolyMLext (*: POLYMLEXT*)
 
     fun loop () =
         let
-            val code = recv();
+            val code = recv1();
         in
             evaluate "foo" code;
             loop()
@@ -145,15 +154,15 @@ structure PolyMLext (*: POLYMLEXT*)
 
     fun main () =
         let
-            val (socket1port, socket2port)  = case CommandLine.arguments() of
+            val (socket1port, socket2port) = case CommandLine.arguments() of
                   [n,m] => (valOf (Int.fromString n), valOf (Int.fromString m))
                   | x => raise Error "ports not provided"
             val _ = (socket1 := (SOME (makeSocket socket1port)));
             val _ = (socket2 := (SOME (makeSocket socket2port)));
 
         in
-            PolyML.fullGC();
-(*            map PolyML.Compiler.forgetStructure["PolyMLext"];*)
+            (*PolyML.fullGC();*)
+            (*map PolyML.Compiler.forgetStructure["PolyMLext"];*)
             loop();
             closeSock (the socket1);
             closeSock (the socket2);
@@ -164,7 +173,5 @@ end;
 
 val temp = ref ([]:string list);
 
-use "js.ml";
+use "js.sml";
 open Js;
-use "js_rwp.ml";
-

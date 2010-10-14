@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<overlay id="PolyMLext-statusbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="main.js" />
+<?xul-overlay href="chrome://polymlext/content/console.xul"?>
 
-  <popupset id="mainPopupSet">
+<overlay id="PolyMLext-statusbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<script src="main.js" />
+
+	<popupset id="mainPopupSet">
 		<menupopup id="polymlext-popup" position="after_end">
-		  <menuitem id="polymlext-enableConsole-button" label="Enable console" tooltiptext="If console is disabled no information will be logged"/>
-		  <menuitem id="polymlext-showConsole-button" label="Show console" tooltiptext="If console is hidden, the logged information can still be seen once the console is unhidden."/>
-		  <menuseparator/>
 		  <menuitem id="polymlext-demos-button" label="Demos" tooltiptext="Demonstrations of using PolyMLext."/>
+		  <menuseparator/>
+		  <menuitem label="Settings" />
+		  <menuseparator/>
+		  <menuitem label="Report a problem" />
 		</menupopup>
 	</popupset>
 
 	<statusbar id="status-bar">
-		<statusbarpanel id="polyml-statusbar-icon" class="statusbarpanel-iconic" tooltiptext="PolyML extension is active" src="chrome://polymlext/skin/polyml_16x16t.png" popup="polymlext-popup" />
+		<label hidden="true" id="polymlextCodeIndicator" value="PolyML" tooltiptext="This page contains PolyML code" />
+		<statusbarpanel hidden="false" id="polymlextConsoleButton" class="statusbarpanel-iconic" tooltiptext="PolyML console disabled" src="chrome://polymlext/skin/polyml_16x16_gray.png" context="polymlext-popup" />
 	</statusbar>
+	
+	<vbox id="appcontent">
+        <splitter id="polymlextConsoleContentSplitter" collapsed="true"/>
+        <vbox id="polymlextConsoleContentBox" collapsed="true" persist="height" height="100%"></vbox>
+    </vbox>
 </overlay>
 

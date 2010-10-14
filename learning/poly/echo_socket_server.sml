@@ -34,7 +34,7 @@ fun readLoop active_socket =
       val s = Byte.bytesToString(Socket.recvVec(active_socket,80));
       val _ = PolyML.print s; (* print to output *)
       val outv = Word8VectorSlice.full 
-                   (Byte.stringToBytes "I hear what you're saying.")
+                   (Byte.stringToBytes s)
       val bytes_sent = Socket.sendVec(active_socket,outv);
       val _ = PolyML.print ("Sent " ^ (Int.toString bytes_sent) 
                 ^ " bytes of " ^ (Int.toString (Word8VectorSlice.length outv)));

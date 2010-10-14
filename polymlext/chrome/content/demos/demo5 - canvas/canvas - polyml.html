@@ -11,6 +11,8 @@
 
 <script type="text/javascript" src="CanvasWrapper.js"></script>
 <script type="application/x-polyml">
+open DOM;
+
 (*this could be an external file when thats going to be possible*)
 structure Canvas =
 struct
@@ -95,12 +97,12 @@ fun fold_nat f i a =
 (*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 40;
+val QUANTITY = 4;
 
 val mouseX = ref (0:int);
 val mouseY = ref (0:int);
 
-val drawInterval = 33;
+val drawInterval = 1000;
 val frameCount = ref (0:int);
 val fps = ref (0:int);
 val maxfps = round(1000.0 / Real.fromInt(drawInterval));
@@ -144,8 +146,10 @@ fun mouseMoveHandler (x, y) = let
     val _ = (mouseY := y);
   in () end;
 
+(*
 addEventListener canvas "mousemove"
   "mouseMoveHandler({clientX}, {clientY});";
+*)
 
 fun drawAndUpdateParticle (p:particle) =
   let
@@ -203,7 +207,8 @@ fun loop () =
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
   
     val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
-    val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
+    (*val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);*)
+	val _ = Canvas.fillRect context 0 0 600 600;
 
     val new_particles = map drawAndUpdateParticle (!particles);
     val _ = (particles := new_particles);
@@ -217,7 +222,6 @@ fun loop () =
   end;
 
 setInterval "loop();" drawInterval;
-loop();
 </script>
 
 </body>
