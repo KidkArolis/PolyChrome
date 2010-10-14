@@ -25,7 +25,7 @@ if [ "$1" == "run" ]; then firefox -jsconsole; fi
 #if package is passed as a parameter create the xpi package
 if [ "$1" == "package" ]
     then
-        rm polymlext.xpi
+        if [ -e polymlext.xpi ]; then rm polymlext.xpi; fi
         ZIP=`which zip`
         cd polymlext
         ${ZIP} -r ../polymlext.xpi *

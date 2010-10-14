@@ -1,29 +1,40 @@
 README
 ======
 
-To use the extension
---------------------
+PolyMLext
+---------
+PolyMLext allows you to run PolyML (Standard ML) applications in Firefox
+browser. It also provides an interface for manipulating the DOM as well as
+calling JavaScript functions.
 
- * Edit the path to your firefox profile in the deploy.sh script.
- * Run the deploy.sh script with build option:
-    e.g $ ./deploy.sh build
- * Then run Firefox. You can execute deploy script with run option to do that:
-    e.g. $ ./deploy.sh run
+
+Running the extension
+---------------------
+
+There are two ways to install the extension.
+
+1. Run the deploy script like this:
+
+   #./deploy package
+   
+   This will create polymlext.xpi file that can be opened with firefox.
+   
+2. For development, it's convenient to use another method.
+   * Edit the deploy script and update the path to your firefox profile
+   * You can run firefox by executing
+   
+     # ./deploy run
+   
+     This will also run the error console where JavaScript debug info is
+     printed.
     
-    
-Other tips
-----------
+Demos
+-----
 
- * You should see a red PolyML logo in the status bar of the browser (or check
-    Tools > Add-ons ;)
- * Use "Tools > Error Console" to observe various log info printed out in the
-    extension.
- * To see an example page with PolyML code open:
-    chrome://polymlext/content/test.html
+ * Right click on the PolyML icon in the statusbar of Firefox and then click
+   "Demos".
+   
 
 
-Problems
---------
-
-If building the extension failed, you'll have to dig through the deploy script
-to see what went wrong ;) or let me know at assembla.com/spaces/polymlext/
+==============================
+assembla.com/spaces/polymlext/
