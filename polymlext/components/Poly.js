@@ -6,6 +6,9 @@ const Cr = Components.results;
 //in the Poly.init()
 var debug;
 
+var counterReceived = 0;
+var counterSent = 0;
+
 var CHUNK_SIZE = 65536;
 var PREFIX_SIZE = 9;
 
@@ -21,9 +24,8 @@ Socket1.prototype = {
     reading : false,
     //scriptableInputStream
     sin : null,
-    counter : 0,
     
-    onInputStreamReady : function(input) {            
+    onInputStreamReady : function(input) {
         if (!this.reading) {
             this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
@@ -49,19 +51,16 @@ Socket1.prototype = {
             this.request += chunk;
             this.bytesLeft -= chunk.length;
             if (this.bytesLeft == 0) {
+                //dump("firefox <--- poly : " + ++counterReceived + "\n");
+                //dump(this.request + "\n\n");
                 //we're done with reading this request
                 this.eventTarget.onRequest(this.request);
                 //cleanup
                 this.reading = false;
                 this.request = "";
-                this.counter = 0;
                 //wait for the next request
                 this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
             } else {
-                this.counter++;
-                if (this.counter>100) {
-                    dump("not good 3");
-                }
                 //there is more to read
                 this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
                 //wait for the next chunk
@@ -83,16 +82,14 @@ Socket1.prototype = {
 
     //can't call send before the socket was accepted
     send : function(data) {
+        //dump("firefox ---> poly : " + ++counterSent + "\n");
+        //dump(data + "\n\n");
+        
         var prefix = (data.length.toString() + Array(PREFIX_SIZE).join(" "))
                 .substring(0, PREFIX_SIZE);
         var prefixed_data = prefix + data;
         var pos = 0;
-        var counter = 0;
         while (pos<prefixed_data.length) {
-            counter++;
-            if (counter>100) {
-                dump("not good 1");
-            }
             var chunk = prefixed_data.substr(pos, CHUNK_SIZE);
             var nbytes = this.output.write(chunk, chunk.length);
             pos += nbytes;
@@ -134,16 +131,14 @@ function Socket2() {
 Socket2.prototype = {
     //can't call send before the socket was accepted
      send : function(data) {
+        //dump("firefox ---> poly : " + ++counterSent + "\n");
+        //dump(data + "\n\n");
+        
         var prefix = (data.length.toString() + Array(9).join(" "))
                 .substring(0, 9);
         var prefixed_data = prefix + data;
         var pos = 0;
-        var counter = 0;
         while (pos<prefixed_data.length) {
-            counter++;
-            if (counter>100) {
-                dump("not good 2");
-            }
             var chunk = prefixed_data.substr(pos, CHUNK_SIZE);
             var nbytes = this.output.write(chunk, chunk.length);
             pos += nbytes;
@@ -182,6 +177,8 @@ Socket2.prototype = {
 Poly.prototype = {
     startPoly : function () {        
         var binpath = Utils.getExtensionPath() + '/poly/bin/polyml';
+        debug.debug(this.socket1.port());
+        debug.debug(this.socket2.port());
         var args = [this.socket1.port(), this.socket2.port()];
         this.process = Utils.startProcess(binpath, args);
     },
@@ -190,6 +187,7 @@ Poly.prototype = {
         this.socket1.destroy();
         this.socket2.destroy();
         this.process.kill();
+        this.console.destroy();
     },
 
     onRequest : function(request) {

@@ -47,159 +47,166 @@ Memory.prototype = {
     init : function() {
         this.elements = {"main":[]};
         this.currentNamespace = "main";
+        this.ran = Math.floor(Math.random()*1000);
     }
 }
 
-JSWrapper.prototype = {
-    
-    DOMWrappers : {      
-        getElementById : function(request) {
-            var elem = document.getElementById(request.arg2);
-            return this.Memory.addReference(elem);
-        },
-        getElementsByTagName: function(request) {
-            var elems = document.getElementsByTagName(request.arg2);
-            var response = "[";
-            for (var i=0, len=elems.length; i<len; i++) {
-                response += "\""+this.Memory.addReference(elems[i])+"\",";
-            }
-            response = response.substr(0, response.length-1)+"]";
-            return response;
-        },
-        childNodes: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            var elems = elem.childNodes;
-            var response = "[";
-            for (var i=0, len=elems.length; i<len; i++) {
-                response += "\""+this.Memory.addReference(this.elems[i])+"\",";
-            }
-            response = response.substr(0, response.length-1)+"]";
-            return response;
-        },
-        parentNode: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return this.Memory.addReference(elem.parentNode);
-        },
-        firstChild: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return this.Memory.addReference(elem.firstChild);
-        },
-        lastChild: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return this.Memory.addReference(elem.lastChild);
-        },
-        nextSibling: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return this.Memory.addReference(elem.nextSibling);
-        },
-        previousSibling: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return this.Memory.addReference(elem.previousSibling);
-        },
-        innerHTML: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            if (elem&&elem.innerHTML!=null) {
-                if (request.arg3) {
-                    elem.innerHTML = request.arg3;
-                    return "";
-                } else {
-                    return elem.innerHTML;
-                }
-            } else {
-                return "exception";
-            }
-        },
-        value: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            if (elem&&elem.value!=null) {
-                if (request.arg3) {
-                    elem.value = request.arg3;
-                    return "";
-                } else {
-                    return elem.value;
-                }
-            } else {
-                //TODO: must send things to Poly in packets, so we
-                //can indicate exceptions..
-                return "exception";
-            }
-        },
-        getAttribute: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return elem.getAttribute(request.arg3);
-        },
-        setAttribute: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return elem.setAttribute(request.arg3, request.arg4);
-        },
-        removeAttribute: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            return elem.removeAttribute(request.arg3);
-        },
-        createElement: function(request) {
-            var elem = document.createElement(request.arg2);
-            return this.Memory.addReference(elem);
-        },
-        createTextNode: function(request) {
-            var elem = document.createTextNode(request.arg2);
-            return this.Memory.addReference(elem);
-        },
-        appendChild: function(request) {
-            var parent = this.Memory.getReference(request.arg2);
-            var child = this.Memory.getReference(request.arg3);
-            this.parent.appendChild(child);
-        },
-        removeChild: function(request) {
-            var parent = this.Memory.getReference(request.arg2);
-            var child = this.Memory.getReference(request.arg3);
-            this.parent.removeChild(child);
-        },
-        replaceChild: function(request) {
-            var parent = this.Memory.getReference(request.arg2);
-            var child_new = this.Memory.getReference(request.arg3);                   
-            var child_old = this.Memory.getReference(request.arg4);
-            this.parent.replaceChild(child_new, child_old);
-        },
-        style: function(request) {
-            var elem = this.Memory.getReference(request.arg2);
-            if (request.arg4) {
-                elem.style[request.arg3] = request.arg4;
+function DOMWrappers (memory) {
+    this.Memory = memory;
+}
+DOMWrappers.prototype = {
+    getElementById : function(request) {
+        var elem = document.getElementById(request.arg2);
+        return this.Memory.addReference(elem);
+    },
+    getElementsByTagName: function(request) {
+        var elems = document.getElementsByTagName(request.arg2);
+        var response = "[";
+        for (var i=0, len=elems.length; i<len; i++) {
+            response += "\""+this.Memory.addReference(elems[i])+"\",";
+        }
+        response = response.substr(0, response.length-1)+"]";
+        return response;
+    },
+    childNodes: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        var elems = elem.childNodes;
+        var response = "[";
+        for (var i=0, len=elems.length; i<len; i++) {
+            response += "\""+this.Memory.addReference(this.elems[i])+"\",";
+        }
+        response = response.substr(0, response.length-1)+"]";
+        return response;
+    },
+    parentNode: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return this.Memory.addReference(elem.parentNode);
+    },
+    firstChild: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return this.Memory.addReference(elem.firstChild);
+    },
+    lastChild: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return this.Memory.addReference(elem.lastChild);
+    },
+    nextSibling: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return this.Memory.addReference(elem.nextSibling);
+    },
+    previousSibling: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return this.Memory.addReference(elem.previousSibling);
+    },
+    innerHTML: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        if (elem&&elem.innerHTML!=null) {
+            if (request.arg3) {
+                elem.innerHTML = request.arg3;
                 return "";
             } else {
-                return elem.style[request.arg3];
+                return elem.innerHTML;
             }
-        },
-        clearMemory: function(request) {
-            if (!request.arg2) {
-                request.arg2 = null;
-            }
-            this.Memory.clearMemory(request.arg2);
-        },
-        switchNamespace: function(request) {
-            if (!request.arg2) {
-                request.arg2 = null;
-            }
-            this.Memory.switchNamespace(request.arg2);
-        },
-        removeReference: function(request) {
-            this.Memory.removeReference(request.arg2);
+        } else {
+            return "exception";
         }
     },
+    value: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        if (elem&&elem.value!=null) {
+            if (request.arg3) {
+                elem.value = request.arg3;
+                return "";
+            } else {
+                return elem.value;
+            }
+        } else {
+            //TODO: must send things to Poly in packets, so we
+            //can indicate exceptions..
+            return "exception";
+        }
+    },
+    getAttribute: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return elem.getAttribute(request.arg3);
+    },
+    setAttribute: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return elem.setAttribute(request.arg3, request.arg4);
+    },
+    removeAttribute: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        return elem.removeAttribute(request.arg3);
+    },
+    createElement: function(request) {
+        var elem = document.createElement(request.arg2);
+        return this.Memory.addReference(elem);
+    },
+    createTextNode: function(request) {
+        var elem = document.createTextNode(request.arg2);
+        return this.Memory.addReference(elem);
+    },
+    appendChild: function(request) {
+        var parent = this.Memory.getReference(request.arg2);
+        var child = this.Memory.getReference(request.arg3);
+        this.parent.appendChild(child);
+    },
+    removeChild: function(request) {
+        var parent = this.Memory.getReference(request.arg2);
+        var child = this.Memory.getReference(request.arg3);
+        this.parent.removeChild(child);
+    },
+    replaceChild: function(request) {
+        var parent = this.Memory.getReference(request.arg2);
+        var child_new = this.Memory.getReference(request.arg3);                   
+        var child_old = this.Memory.getReference(request.arg4);
+        this.parent.replaceChild(child_new, child_old);
+    },
+    style: function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        if (request.arg4) {
+            elem.style[request.arg3] = request.arg4;
+            return "";
+        } else {
+            return elem.style[request.arg3];
+        }
+    },
+    clearMemory: function(request) {
+        if (!request.arg2) {
+            request.arg2 = null;
+        }
+        this.Memory.clearMemory(request.arg2);
+    },
+    switchNamespace: function(request) {
+        if (!request.arg2) {
+            request.arg2 = null;
+        }
+        this.Memory.switchNamespace(request.arg2);
+    },
+    removeReference: function(request) {
+        this.Memory.removeReference(request.arg2);
+    }
+}
+
+
+JSWrapper.prototype = {
 
     process : function(req) {
-        //make document accessible in all wrappers
+        
+        //make document accessible globally in all wrappers
         document = this._document;
+        
         var response = null;
+        
         try {
             var request = this.nativeJSON.decode(req);
         } catch (e) {
             debug.debug("Could not decode JSON.\nRequest:\n"+req+"\nReason:\n"+e, "error");
-            return "";
         }
         if (!request.hasOwnProperty("type")) {
             debug.debug("Unexpected request from Poly", "error");
-            return "";
         }
+        
         switch (request.type) {
             case 0: //output
                 this.console.log(request.output);
@@ -269,6 +276,7 @@ JSWrapper.prototype = {
                                     //send an exception. TODO: think about that =)
                                 }
                                 self.socket1.send(f);
+                                dump("\n\n Memory when callback is called: " + self.Memory.ran + "\n\n");
                             }
                             l.push(f)
                             this.listeners[elem].push(l);
@@ -336,8 +344,8 @@ JSWrapper.prototype = {
                 .createInstance(Ci.nsIJSON),
         this.listeners = {};
         this.timers = [];
-        this.Memory = new Memory;
-        this.DOMWrappers.Memory = this.Memory;
+        this.Memory = new Memory();
+        this.DOMWrappers = new DOMWrappers(this.Memory);
     }
 }
 

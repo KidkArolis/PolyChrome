@@ -15,7 +15,7 @@ var Utils = {
         var file = Components.classes["@mozilla.org/file/local;1"]
             .createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(filename);
-        if ( file.exists() == false || file.isDirectory()) {
+        if (file.exists() == false || file.isDirectory()) {
             return null;
         }
         var is = Components.classes["@mozilla.org/network/file-input-stream;1"]
@@ -23,16 +23,16 @@ var Utils = {
         is.init( file,0x01, 00004, null);
         var sis = Components.classes["@mozilla.org/scriptableinputstream;1"]
             .createInstance( Components.interfaces.nsIScriptableInputStream );
-        sis.init( is );
-        var output = sis.read( sis.available() );
+        sis.init(is);
+        var output = sis.read(sis.available());
         return output;
     },
 
     startProcess : function(binpath, args) {
+        dump(binpath);
         var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(binpath);
         var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
-        dump(binpath);
         process.init(file);
         process.run(false, args, args.length);
         return process;
@@ -45,8 +45,9 @@ var Utils = {
         //when installed as an xpi extension
         var path2 = Utils.readFile(path1);
         if (path2==null) {
-            return path1.substr(0, path1.length-1);
+            return path1;
         } else {
+            //if path was read from the file - remove the new line character
             return path2.substr(0, path2.length-1);
         }
     }

@@ -97,7 +97,7 @@ fun fold_nat f i a =
 (*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 4;
+val QUANTITY = 10;
 
 val mouseX = ref (0:int);
 val mouseY = ref (0:int);
@@ -146,10 +146,8 @@ fun mouseMoveHandler (x, y) = let
     val _ = (mouseY := y);
   in () end;
 
-(*
 addEventListener canvas "mousemove"
   "mouseMoveHandler({clientX}, {clientY});";
-*)
 
 fun drawAndUpdateParticle (p:particle) =
   let

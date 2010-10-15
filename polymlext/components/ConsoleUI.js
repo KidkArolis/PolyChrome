@@ -63,6 +63,12 @@ ConsoleUI.prototype = {
         this.activeConsole.minimized = !this.activeConsole.minimized;
     },
     
+    disable : function(console) {
+        if (this.activeConsole == console) {
+            this.onDisable();
+        }
+    },
+    
     onDisable : function(event) {
         if (this.activeConsole == null) {
             return;
