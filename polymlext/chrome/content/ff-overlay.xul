@@ -7,7 +7,8 @@
 
 	<popupset id="mainPopupSet">
 		<menupopup id="polymlext-popup" position="after_end">
-		  <menuitem id="polymlext-demos-button" label="Demos" tooltiptext="Demonstrations of using PolyMLext."/>
+		  <menuitem id="polymlext-the-construct-button" label="The Construct" tooltiptext="The Construct - an interactive PolyML instance" />
+		  <menuitem id="polymlext-demos-button" label="Demos" tooltiptext="Demonstrations of using PolyMLext." />
 		  <menuseparator/>
 		  <menuitem label="Settings" />
 		  <menuseparator/>

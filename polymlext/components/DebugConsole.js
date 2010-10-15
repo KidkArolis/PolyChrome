@@ -6,10 +6,25 @@ DebugConsole.prototype = (function() {
     return {
         consoleService : null,
         
-        debug : function(m, l) {
-            level = l==null ? "INFO" : l;
-            consoleService.logStringMessage(level + ": " + m + "\n");
+        log : function(m, p) {
+            prefix = p==null ? "INFO" : p;
+            consoleService.logStringMessage(prefix + ": " + m + "\n");
         },
+        
+        error : function(m, source) {
+            var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+                    .createInstance(Components.interfaces.nsIScriptError);
+            var aSourceName = source;
+            var aSourceLine = "";
+            var aLineNumber = "";
+            var aColumnNumber = "";
+            var aFlags = 0x0;
+            var aCategory = "";
+            scriptError.init(m, aSourceName, aSourceLine, aLineNumber, 
+                   aColumnNumber, aFlags, aCategory);
+            consoleService.logMessage(scriptError);
+        },
+        
         init : function() {
             consoleService = Cc["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService);

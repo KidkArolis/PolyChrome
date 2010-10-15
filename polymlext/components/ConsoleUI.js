@@ -5,12 +5,6 @@ const Cr = Components.results;
 var debug;
 
 ConsoleUI.prototype = {
-    prefService : null,
-    browser : null,
-    
-    logArea : null,  
-    onButton : false,
-    offButton : false,
     
     activeConsole : null,
     
@@ -22,6 +16,7 @@ ConsoleUI.prototype = {
     },
     
     select : function(console) {
+        this.codeIndicator.setAttribute("hidden", false);
         this.activeConsole = console;
         this.logArea.value = this.activeConsole.content;
         this.scrollDown(this.logArea);
@@ -33,7 +28,7 @@ ConsoleUI.prototype = {
             }
             this.setButtonColor("red");
         } else {
-            this.onDisable();
+            this.disable();
         }
     },
     
@@ -62,28 +57,27 @@ ConsoleUI.prototype = {
         this.setButtonColor("red");
         this.activeConsole.minimized = !this.activeConsole.minimized;
     },
-    
-    disable : function(console) {
-        if (this.activeConsole == console) {
-            this.onDisable();
-        }
-    },
-    
-    onDisable : function(event) {
-        if (this.activeConsole == null) {
-            return;
-        }
-        if (event!=null && event.button!=0) {
-            return;
-        }
-        
+     
+    //this disables the console, but keeps the activeConsole reference if it
+    //were to be enabled again
+    disable : function() {
         this.activeConsole.enabled = false;
         this.activeConsole.minimized = true;
         this.activeConsole.content = "";
-
         this.hideConsole();
         this.setButtonColor("gray");
         this.clearConsole();
+    },
+    
+    //this is called when a page containing no PolyML becomes active
+    off : function(console) {
+        if (console==undefined || this.activeConsole == console) {
+            this.activeConsole = null;
+            this.hideConsole();
+            this.clearConsole();
+            this.setButtonColor("gray");
+            this.codeIndicator.setAttribute("hidden", true);
+        }
     },
     
     setButtonColor : function(c) {
@@ -116,7 +110,10 @@ ConsoleUI.prototype = {
             self.toggleConsole(event)
         }, false);
         this.disableButton.addEventListener("click", function(event) {
-            self.onDisable(event)
+            var LEFT_BUTTON = 0;
+            if (event.button==LEFT_BUTTON) {
+                self.disable();
+            }
         }, false);
     },
     
@@ -132,14 +129,9 @@ ConsoleUI.prototype = {
         }, false);
     },
     
-    noPoly : function() {
-        this.hideConsole();
-        this.setButtonColor("gray");
-        this.activeConsole = null;
-    },
-    
     init : function(b) {
-        debug = Cc["@ed.ac.uk/poly/debug-console;1"].getService().wrappedJSObject;
+        debug = Cc["@ed.ac.uk/poly/debug-console;1"]
+                .getService().wrappedJSObject;
         
         this.browser = b;
         this.logArea = this.browser
@@ -150,6 +142,8 @@ ConsoleUI.prototype = {
                 .getElementById("polymlextConsoleDisableButton");
         this.commandLine = this.browser
                 .getElementById("polymlextCommandLine");
+        this.codeIndicator = this.browser
+                .getElementById("polymlextCodeIndicator");
         
         this.bindButtons();
         this.bindCommandLine();

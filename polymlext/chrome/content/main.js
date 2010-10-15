@@ -1,9 +1,8 @@
-var PolyMLext = (function ()
-{
-    var debug;
+var debug;
+
+var PolyMLext = (function() {
     var consoleUI;
     var polyPages = [];
-    var codeIndicator;
 
     var lookForPolyMLCode = function(doc) {
         var poly;
@@ -20,15 +19,9 @@ var PolyMLext = (function ()
                     polyPages.push({document: doc, poly:poly});
                     //add event listener for page unload
                     doc.defaultView.addEventListener("unload", onPageUnload, true);
-                    codeIndicator.setAttribute("hidden", false);
                     return;
                 }
             }
-        }
-        
-        if (content.document==doc) {
-            codeIndicator.setAttribute("hidden", true);
-            consoleUI.onDisable();
         }
     }
 
@@ -51,21 +44,29 @@ var PolyMLext = (function ()
         }
     }
 
-    var bindLoadUnload = function() {
+    var bindPageLoad = function() {
         var browser = document.getElementById("appcontent");
         if(browser) {
             browser.addEventListener("load", onPageLoad, true);
         }
     }
 
-    var bindDemos = function() {
+    var bindContextMenu = function() {
         Components.utils.import("resource://polymlext/Utils.jsm");
+        
         var demosLink = Utils.getExtensionPath();
         demosLink += '/chrome/content/demos';
-        debug.debug
         document.getElementById("polymlext-demos-button")
             .addEventListener("click", function() {
             gBrowser.selectedTab = gBrowser.addTab(demosLink);
+        }, false);
+        
+        //The Construct (The Matrix reference)
+        var theConstructLink = Utils.getExtensionPath();
+        theConstructLink += '/chrome/content/theConstruct.html';
+        document.getElementById("polymlext-the-construct-button")
+            .addEventListener("click", function() {
+            gBrowser.selectedTab = gBrowser.addTab(theConstructLink);
         }, false);
     }
 
@@ -74,25 +75,22 @@ var PolyMLext = (function ()
             for (var i=0, len=polyPages.length; i<len; ++i) {
                 if (polyPages[i].document == content.document) {
                     polyPages[i].poly.console.select();
-                    codeIndicator.setAttribute("hidden", false);
                     return;
                 }
             }
-            consoleUI.noPoly();
-            codeIndicator.setAttribute("hidden", true);
+            consoleUI.off();
         }, false);
     }
 
-
     var init = function () {
-        codeIndicator = document.getElementById("polymlextCodeIndicator");
         debug = Cc["@ed.ac.uk/poly/debug-console;1"].getService().wrappedJSObject;
         consoleUI = Cc["@ed.ac.uk/poly/console-ui;1"]
                 .getService().wrappedJSObject;
-        consoleUI.init(document);
-        bindLoadUnload();
+        var browserUI = document;
+        consoleUI.init(browserUI);
+        bindPageLoad();
         bindTabSelect();
-        bindDemos();
+        bindContextMenu();
     }
 
     return {

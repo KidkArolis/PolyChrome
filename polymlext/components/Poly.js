@@ -33,7 +33,7 @@ Socket1.prototype = {
             try {
                 var r = this.sin.read(PREFIX_SIZE);
             } catch (e) {
-                debug.debug(e, "ERROR");
+                debug.error(e, this._document.location.href);
                 return;
             }
             this.bytesLeft = parseInt(r);
@@ -45,7 +45,7 @@ Socket1.prototype = {
             try {
                 var chunk = this.sin.read(this.bytesNextChunk);
             } catch (e) {
-                debug.debug(e, "ERROR");
+                debug.error(e, this._document.location.href);
                 return;
             }
             this.request += chunk;
@@ -177,16 +177,20 @@ Socket2.prototype = {
 Poly.prototype = {
     startPoly : function () {        
         var binpath = Utils.getExtensionPath() + '/poly/bin/polyml';
-        debug.debug(this.socket1.port());
-        debug.debug(this.socket2.port());
         var args = [this.socket1.port(), this.socket2.port()];
         this.process = Utils.startProcess(binpath, args);
     },
 
     destroy : function() {
+        //empty these callback functions, because there might still
+        //be some events accumulated in firefox, that call these functions
+        //after the sockets are closed
+        this.socket1.onInputStreamReady = function() {};
+        this.socket2.onInputStreamReady = function() {};
+        
+        this.process.kill();
         this.socket1.destroy();
         this.socket2.destroy();
-        this.process.kill();
         this.console.destroy();
     },
 

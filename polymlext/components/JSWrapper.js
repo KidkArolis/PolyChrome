@@ -201,10 +201,13 @@ JSWrapper.prototype = {
         try {
             var request = this.nativeJSON.decode(req);
         } catch (e) {
-            debug.debug("Could not decode JSON.\nRequest:\n"+req+"\nReason:\n"+e, "error");
+            debug.error("Could not decode JSON.\nRequest:\n"+req+"\n",
+                    this._document.location.href);
         }
+        
         if (!request.hasOwnProperty("type")) {
-            debug.debug("Unexpected request from Poly", "error");
+            debug.error("Unexpected request from Poly",
+                    this._document.location.href);
         }
         
         switch (request.type) {
@@ -236,7 +239,8 @@ JSWrapper.prototype = {
                         response = null;
                     }
                 } else {
-                    debug.debug("This DOM wrapper is not implemented");
+                    debug.error(request.arg1 + " is not implemented",
+                            this._document.location.href);
                 }
                 break;
 
@@ -276,7 +280,6 @@ JSWrapper.prototype = {
                                     //send an exception. TODO: think about that =)
                                 }
                                 self.socket1.send(f);
-                                dump("\n\n Memory when callback is called: " + self.Memory.ran + "\n\n");
                             }
                             l.push(f)
                             this.listeners[elem].push(l);
@@ -320,12 +323,19 @@ JSWrapper.prototype = {
                 break;
             case 5: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
-                response = unsafeWin[request.wrapper]
-                        .processRequest(request, this.Memory);
+                if (unsafeWin[request.wrapper]!=undefined) {
+                    response = unsafeWin[request.wrapper]
+                            .processRequest(request, this.Memory);
+                } else {
+                    debug.error(request.wrapper +
+                            " wrapper could not be found",
+                    this._document.location.href);
+                }
                 break;
 
             default:
-                debug.debug("Unexpected request from Poly", "ERROR");
+                debug.error("Unexpected request from Poly",
+                    this._document.location.href);
         }
         if (response != null) {
             return response.toString();

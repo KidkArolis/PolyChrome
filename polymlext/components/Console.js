@@ -39,7 +39,7 @@ Console.prototype = {
     },
     
     destroy : function() {
-        this.consoleUI.disable(this);
+        this.consoleUI.off(this);
     }
 };
 
