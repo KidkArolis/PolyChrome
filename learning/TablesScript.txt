@@ -1,0 +1,57 @@
+> Built polyml heap: all.polyml-heap
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ ls heaps/
+all.polyml-heap
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ pwd
+/home/karolis/Dropbox/work/isaplanner/trunk/isaplib
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ 
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ ls
+basic  concurrent  heaps     ML-Systems  parser      project  search
+bin    graph       Makefile  names       polyscript  ROOT.ML
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ rl
+rletopnm  rlogin    rlwrap    
+karolis@inrainbows:~/Dropbox/work/isaplanner/trunk/isaplib$ rlwrap poly
+Poly/ML 5.4 Release
+>  PolyML.SaveState.loadState "/home/karolis/Dropbox/work/isaplanner/trunk/isaplib/heaps/all.polyml-heap";
+val it = (): unit
+> structure MyTab = SStrName;
+structure MyTab : SSTR_NAMES
+> structure K = SStrName;
+structure K : SSTR_NAMES
+> val x = K.NTab.empty;
+val x = Tab {tab = Empty, names = Empty}: 'a K.NTab.T
+> K.add ;
+Error-Value or constructor (add) has not been declared in structure K
+Found near K.add
+Static Errors
+> N.NTab.add;
+Error-Structure (N) has not been declared Found near N.NTab.add
+Static Errors
+> K.NTab.add;
+val it = fn: K.NTab.name * 'a -> 'a K.NTab.T -> K.NTab.name * 'a K.NTab.T
+> structure Tab = K.NTab;
+structure Tab : NAME_TAB
+> val (n,x) = Tab.add (K.default_name, 1) Tab.empty;
+val n = StrName ("", 1): Tab.name
+val x =
+   Tab
+    {tab = Branch2 (Empty, (StrName ("", 1), 1), Empty), names =
+     Br (1, (StrName ("", 1), StrName ("", 1)), Empty, Empty)}: int Tab.T
+> Tab.print (fn i => Pretty.str (Int.toString i));
+val it = fn: int Tab.T -> unit
+> Tab.print (fn i => Pretty.str (Int.toString i)) x;
+a => 1
+val it = (): unit
+> val (n,x) = Tab.add (K.default_name, 5) x;
+val n = StrName ("", 2): Tab.name
+val x =
+   Tab
+    {tab =
+     Branch3
+      (Empty, (StrName ("", 1), 1), Empty, (StrName ("", 2), 5), Empty),
+     names = Br (1, (StrName ("", 1), StrName ("", 2)), Empty, Empty)}:
+   int Tab.T
+> Tab.print (fn i => Pretty.str (Int.toString i)) x;
+a => 1
+b => 5
+val it = (): unit
+> 

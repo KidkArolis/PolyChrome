@@ -1,0 +1,32 @@
+> structure K = SStrName;
+> structure Tab = K.NTab;
+> val x = Tab.empty;
+> val (n,x) = Tab.add (K.default_name, 1) x;
+val n = StrName ("", 1): Tab.name
+val x =
+   Tab
+    {tab = Branch2 (Empty, (StrName ("", 1), 1), Empty), names =
+     Br (1, (StrName ("", 1), StrName ("", 1)), Empty, Empty)}: int Tab.T
+
+
+> Tab.print (fn i => Pretty.str (Int.toString i)) x;
+a => 1
+val it = (): unit
+
+
+> val (n,x) = Tab.add (K.default_name, 5) x;
+val n = StrName ("", 2): Tab.name
+val x =
+   Tab
+    {tab =
+     Branch3
+      (Empty, (StrName ("", 1), 1), Empty, (StrName ("", 2), 5), Empty),
+     names = Br (1, (StrName ("", 1), StrName ("", 2)), Empty, Empty)}:
+   int Tab.T
+> Tab.print (fn i => Pretty.str (Int.toString i)) x;
+a => 1
+b => 5
+val it = (): unit
+
+K.mk
+K.string_of_name

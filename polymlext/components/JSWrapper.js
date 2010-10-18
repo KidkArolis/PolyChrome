@@ -324,12 +324,19 @@ JSWrapper.prototype = {
             case 5: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
                 if (unsafeWin[request.wrapper]!=undefined) {
-                    response = unsafeWin[request.wrapper]
-                            .processRequest(request, this.Memory);
+                    if (unsafeWin[request.wrapper][request.arg1]!=undefined) {
+                        unsafeWin[request.wrapper].Memory = this.Memory;
+                        response = unsafeWin[request.wrapper]
+                                [request.arg1](request);
+                    } else {
+                        debug.error(request.wrapper.request.arg1 +
+                            " function does not exist",
+                            this._document.location.href);
+                    }
                 } else {
                     debug.error(request.wrapper +
-                            " wrapper could not be found",
-                    this._document.location.href);
+                            " wrapper does not exist",
+                            this._document.location.href);
                 }
                 break;
 
@@ -337,7 +344,7 @@ JSWrapper.prototype = {
                 debug.error("Unexpected request from Poly",
                     this._document.location.href);
         }
-        if (response != null) {
+        if (response != null && typeof(response.toString) != undefined) {
             return response.toString();
         } else {
             return response;

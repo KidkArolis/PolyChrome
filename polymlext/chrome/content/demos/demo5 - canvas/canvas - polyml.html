@@ -11,7 +11,7 @@
 
 <script type="text/javascript" src="CanvasWrapper.js"></script>
 <script type="application/x-polyml">
-open DOM;
+open DOM
 
 (*this could be an external file when thats going to be possible*)
 structure Canvas =
@@ -102,7 +102,7 @@ val QUANTITY = 10;
 val mouseX = ref (0:int);
 val mouseY = ref (0:int);
 
-val drawInterval = 1000;
+val drawInterval = 40;
 val frameCount = ref (0:int);
 val fps = ref (0:int);
 val maxfps = round(1000.0 / Real.fromInt(drawInterval));
@@ -131,7 +131,7 @@ fun newParticle (x) =
    id = x,
    position = (!mouseX, !mouseY),
    shift = (!mouseX, !mouseY),
-   size = 5.0,
+   size = 2.0,
    angle = 0.0,
    speed = 0.01 + (Real.fromInt (random_range 0 10)) * 0.004,
    targetSize = 5.0,
@@ -205,8 +205,7 @@ fun loop () =
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
   
     val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
-    (*val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);*)
-	val _ = Canvas.fillRect context 0 0 600 600;
+    val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
 
     val new_particles = map drawAndUpdateParticle (!particles);
     val _ = (particles := new_particles);

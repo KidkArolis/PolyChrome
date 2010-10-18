@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ### EDIT THIS!! ##############################################################
 # make sure this is the profile you will be using the extension with
 ff_profile=/home/karolis/.mozilla/firefox/rt8tmtpt.default
 ##############################################################################
 
+THE_POLY_HEAP="polymlext.heap"
 
 #the directory of the extension
 extension=`dirname $0`
@@ -18,6 +19,9 @@ rm polymlext@ed.ac.uk
 #remove these files to make firefox reregister the updated components
 if [ -e $ff_profile/xpti.dat ]; then rm "$ff_profile/xpti.dat"; fi
 if [ -e $ff_profile/compreg.dat ]; then rm "$ff_profile/compreg.dat"; fi
+if [ -e $extension/polymlext/poly/bin/$THE_POLY_HEAP ]; then
+    rm $extension/polymlext/poly/bin/$THE_POLY_HEAP
+fi
 
 #if run is passed as a parameter run firefox
 if [ "$1" == "run" ]; then firefox -jsconsole; fi

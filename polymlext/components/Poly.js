@@ -25,22 +25,36 @@ Socket1.prototype = {
     //scriptableInputStream
     sin : null,
     
+    /*
+    onInputStreamReady : function(input) {
+        this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Ci.nsIScriptableInputStream);
+        this.sin.init(input);
+        var r = this.sin.read(PREFIX_SIZE);
+        this.request = this.sin.read(parseInt(r));
+        this.eventTarget.onRequest(this.request);
+        this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
+    },
+    */
+    
     onInputStreamReady : function(input) {
         if (!this.reading) {
             this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
             this.sin.init(input);
             try {
+                //TODO also check here, if we really read as much as we
+                //wanted
                 var r = this.sin.read(PREFIX_SIZE);
             } catch (e) {
                 debug.error(e, this._document.location.href);
                 return;
             }
-            this.bytesLeft = parseInt(r);
+            this.bytesLeft = parseInt(r);            
             this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
             this.request = "";
             this.reading = true;
-            this.input.asyncWait(this,0,this.bytesNextChunk,this.tm.mainThread);
+            this.input.asyncWait(this,0,0,this.tm.mainThread);
         } else {
             try {
                 var chunk = this.sin.read(this.bytesNextChunk);
@@ -51,8 +65,10 @@ Socket1.prototype = {
             this.request += chunk;
             this.bytesLeft -= chunk.length;
             if (this.bytesLeft == 0) {
+                
                 //dump("firefox <--- poly : " + ++counterReceived + "\n");
                 //dump(this.request + "\n\n");
+                
                 //we're done with reading this request
                 this.eventTarget.onRequest(this.request);
                 //cleanup
@@ -64,7 +80,7 @@ Socket1.prototype = {
                 //there is more to read
                 this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
                 //wait for the next chunk
-                this.input.asyncWait(this,0,this.bytesNextChunk,this.tm.mainThread);
+                this.input.asyncWait(this,0,0,this.tm.mainThread);
             }
         }
     },
@@ -82,8 +98,11 @@ Socket1.prototype = {
 
     //can't call send before the socket was accepted
     send : function(data) {
+        
         //dump("firefox ---> poly : " + ++counterSent + "\n");
-        //dump(data + "\n\n");
+        //var temp = data;
+        //if (data=="") { temp = "-EMPTY STRING-"; }
+        //dump(temp + "\n\n");
         
         var prefix = (data.length.toString() + Array(PREFIX_SIZE).join(" "))
                 .substring(0, PREFIX_SIZE);
@@ -131,8 +150,11 @@ function Socket2() {
 Socket2.prototype = {
     //can't call send before the socket was accepted
      send : function(data) {
+        
         //dump("firefox ---> poly : " + ++counterSent + "\n");
-        //dump(data + "\n\n");
+        //var temp = data;
+        //if (data=="") { temp = "-EMPTY STRING-"; }
+        //dump(temp + "\n\n");
         
         var prefix = (data.length.toString() + Array(9).join(" "))
                 .substring(0, 9);
@@ -178,6 +200,9 @@ Poly.prototype = {
     startPoly : function () {        
         var binpath = Utils.getExtensionPath() + '/poly/bin/polyml';
         var args = [this.socket1.port(), this.socket2.port()];
+        if (Utils.isDevelopmentMode()) {
+            args.push("dev");
+        }
         this.process = Utils.startProcess(binpath, args);
     },
 
@@ -188,6 +213,7 @@ Poly.prototype = {
         this.socket1.onInputStreamReady = function() {};
         this.socket2.onInputStreamReady = function() {};
         
+        //TODO: not really needed, because bash script returns after runninng polly
         this.process.kill();
         this.socket1.destroy();
         this.socket2.destroy();

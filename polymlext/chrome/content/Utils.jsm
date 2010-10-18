@@ -29,7 +29,6 @@ var Utils = {
     },
 
     startProcess : function(binpath, args) {
-        dump(binpath);
         var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(binpath);
         var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
@@ -50,6 +49,15 @@ var Utils = {
             //if path was read from the file - remove the new line character
             return path2.substr(0, path2.length-1);
         }
+    },
+    
+    isDevelopmentMode : function() {
+        var path = Utils.getProfilePath() +
+                'extensions/polymlext@ed.ac.uk';  
+        var file = Components.classes["@mozilla.org/file/local;1"]
+            .createInstance(Components.interfaces.nsILocalFile);
+        file.initWithPath(path);
+        return !file.isDirectory();
     }
 }
 
