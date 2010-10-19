@@ -48,11 +48,14 @@ Memory.prototype = {
         this.elements = {"main":[]};
         this.currentNamespace = "main";
         this.ran = Math.floor(Math.random()*1000);
+        this.listeners = {};
+        this.timers = {};
     }
 }
 
-function DOMWrappers (memory) {
+function DOMWrappers (memory, socket) {
     this.Memory = memory;
+    this.socket = socket;
 }
 DOMWrappers.prototype = {
     getElementById : function(request) {
@@ -171,6 +174,63 @@ DOMWrappers.prototype = {
             return elem.style[request.arg3];
         }
     },
+    
+    //events
+    addEventListener : function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        var socket = this.socket;
+        this.Memory.listeners[request.arg4] = function(event) {
+            var data = "";
+            if (request.arg5!=undefined) {
+                for (i=0, len=request.arg5.length; i<len; i++) {
+                    data += event[request.arg5[i]]+",";
+                }
+            }
+            var cmd = 'handle_event "'+request.arg4+'" "'+data+'"';
+            socket.send(cmd);
+        }
+        elem.addEventListener(
+            request.arg3,
+            this.Memory.listeners[request.arg4],
+            false
+        );
+    },
+    removeEventListener : function(request) {
+        var elem = this.Memory.getReference(request.arg2);
+        elem.removeEventListener(
+            request.arg3,
+            this.Memory.listeners[request.arg4],
+            false
+        );
+        delete this.Memory.listeners[request.arg4];
+    },
+    //an example of a custom event function
+    onMouseMove : function(request) {
+        request.arg5 = ["clientX", "clientY"];
+        this.addEventListener(request);
+    },
+    
+    //timers
+    setInterval : function(request) {
+        var socket = this.socket;
+        var f = function() {
+            var cmd = 'handle_timer "'+request.arg3+'"';
+            socket.send(cmd);
+        }
+        var id = document.defaultView.wrappedJSObject.setInterval(
+            f,
+            parseInt(request.arg2)
+        );
+        this.Memory.timers[request.arg3] = id;
+    },
+    clearInterval : function(request) {
+        document.defaultView.wrappedJSObject.clearInterval(
+            this.Memory.timers[request.arg2]
+        );
+        delete this.Memory.timers[request.arg2];
+    },
+
+    //Memory management
     clearMemory: function(request) {
         if (!request.arg2) {
             request.arg2 = null;
@@ -185,14 +245,13 @@ DOMWrappers.prototype = {
     },
     removeReference: function(request) {
         this.Memory.removeReference(request.arg2);
-    }
+    },
 }
 
 
 JSWrapper.prototype = {
 
     process : function(req) {
-        
         //make document accessible globally in all wrappers
         document = this._document;
         
@@ -219,18 +278,7 @@ JSWrapper.prototype = {
                 this.console.log(request.output);
                 break;
 
-            case 2: //code to evaluate
-                //NOT USED FOR SECURITY REASONS. perhaps evalInSandbox could be used..
-                //response = document.defaultView.eval.call(document.defaultView, request.code);
-                /*
-                response = eval(request.arg1);
-                if (response==""||response==null) {
-                    response = "";
-                }
-                */
-                break;
-
-            case 3: //DOM function
+            case 2: //DOM function
                 if (this.DOMWrappers[request.arg1] != undefined) {
                     response = this.DOMWrappers[request.arg1](request);
                     //if the wrapper does not return anything, set the
@@ -243,126 +291,55 @@ JSWrapper.prototype = {
                             this._document.location.href);
                 }
                 break;
-
-            case 4: //events
-                switch (request.arg1) {
-                    case "addEventListener":
-                        var elem = this.Memory.getReference(request.arg2);
-                        var found = false;
-                        var l = [request.arg3, request.arg4];
-                        if (typeof(this.listeners[elem])!="undefined") {
-                            for (var i=0, len=this.listeners[elem].length; i<len; i++) {
-                                if (this.listeners[elem][i]!=null) {
-                                    found = (this.listeners[elem][i][0]==l[0]
-                                            &&this.listeners[elem][i][1]==l[1]);
-                                }
-                                if (found) break;
-                            }
-                        } else {
-                            this.listeners[elem] = [];
-                        }
-                        if (!found) {
-                            var self = this;
-                            var f = function(event) {
-                                var f = request.arg4;
-                                var matches = f.match(/{.*?}/g);
-                                try {
-                                    for (i=0, len=matches.length; i<len; i++) {
-                                        //cut off the { } from end and beginning
-                                        var c = matches[i].substring(1, matches[i].length-1);
-                                        //only attributes of the event can be accessed, but not functions :-/
-                                        var r = event[c];
-                                        f = f.replace(matches[i], r);
-                                    }
-                                } catch (e) {
-                                    //if something will go wrong we'll just send
-                                    //the string as it was, we could also alternatively
-                                    //send an exception. TODO: think about that =)
-                                }
-                                self.socket1.send(f);
-                            }
-                            l.push(f)
-                            this.listeners[elem].push(l);
-                            var n = this.listeners[elem].length-1;
-                            elem.addEventListener(request.arg3, this.listeners[elem][n][2], false);
-                        }
-                        break;
-                    case "removeEventListener":
-                        var elem = this.Memory.getReference(request.arg2);
-
-                        var found = false;
-                        var l = [request.arg3, request.arg4];
-                        var i;
-                        if (typeof(this.listeners[elem])!="undefined") {
-                            for (i=0, len=this.listeners[elem].length; i<len; i++) {
-                                if (this.listeners[elem][i]!=null) {
-                                    found = (this.listeners[elem][i][0]==l[0]
-                                            &&this.listeners[elem][i][1]==l[1]);
-                                }
-                                if (found) break;
-                            }
-                        }
-                        if (found) {
-                            elem.removeEventListener(request.arg3, this.listeners[elem][i][2], false);
-                            //delete this.listeners[hash];
-                            //TODO: we should completely remove listeners instead of just nullifying
-                            this.listeners[elem][i] = null;
-                        }
-
-                        break;
-                    case "setInterval":
-                        var self = this;
-                        var f = function() {
-                            self.socket1.send(request.arg2);
-                        }
-                        this.timers.push(f)
-                        var n = this.timers.length-1;
-                        document.defaultView.wrappedJSObject.setInterval(this.timers[n], parseInt(request.arg3));
-                        break;
-                }
-                break;
-            case 5: //custom wrappers
+            
+            case 3: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
-                if (unsafeWin[request.wrapper]!=undefined) {
-                    if (unsafeWin[request.wrapper][request.arg1]!=undefined) {
-                        unsafeWin[request.wrapper].Memory = this.Memory;
-                        response = unsafeWin[request.wrapper]
-                                [request.arg1](request);
-                    } else {
-                        debug.error(request.wrapper.request.arg1 +
-                            " function does not exist",
-                            this._document.location.href);
-                    }
-                } else {
+                
+                if (unsafeWin[request.wrapper] == undefined) {
                     debug.error(request.wrapper +
                             " wrapper does not exist",
                             this._document.location.href);
+                    break;
                 }
+                
+                if (unsafeWin[request.wrapper][request.arg1] == undefined) {
+                    debug.error(request.wrapper.request.arg1 +
+                        " function does not exist",
+                        this._document.location.href);
+                    break;
+                }
+                
+                unsafeWin[request.wrapper].Memory = this.Memory;
+                response = unsafeWin[request.wrapper][request.arg1](request);
                 break;
 
             default:
                 debug.error("Unexpected request from Poly",
                     this._document.location.href);
         }
-        if (response != null && typeof(response.toString) != undefined) {
-            return response.toString();
+        
+        if (response != null
+            && response != undefined
+            && typeof(response.toString) != undefined) {
+                return response.toString();
         } else {
             return response;
         }
     },
 
     init : function(doc, s, c) {
-        this._document = doc;
-        this.socket1 = s;
-        this.console = c;
         debug = Cc["@ed.ac.uk/poly/debug-console;1"]
                 .getService().wrappedJSObject;
+        
+        this._document = doc;
+        this.socket = s;
+        this.console = c;
+        
         this.nativeJSON = Cc["@mozilla.org/dom/json;1"]
                 .createInstance(Ci.nsIJSON),
-        this.listeners = {};
-        this.timers = [];
+
         this.Memory = new Memory();
-        this.DOMWrappers = new DOMWrappers(this.Memory);
+        this.DOMWrappers = new DOMWrappers(this.Memory, this.socket);
     }
 }
 

@@ -141,13 +141,13 @@ fun newParticle (x) =
 
 val particles = ref (fold_nat (fn x => fn l => newParticle(x) :: l) QUANTITY []);
 
-fun mouseMoveHandler (x, y) = let
-    val _ = (mouseX := x);
-    val _ = (mouseY := y);
+fun mouseMoveHandler (eventData) = let
+    val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
+    val _ = (mouseX := valOf (Int.fromString x));
+    val _ = (mouseY := valOf (Int.fromString y));
   in () end;
 
-addEventListener canvas "mousemove"
-  "mouseMoveHandler({clientX}, {clientY});";
+onMouseMove canvas (EventHandler mouseMoveHandler);
 
 fun drawAndUpdateParticle (p:particle) =
   let
@@ -218,7 +218,7 @@ fun loop () =
     ()
   end;
 
-setInterval "loop();" drawInterval;
+val a = setInterval (TimerHandler loop) drawInterval;
 </script>
 
 </body>

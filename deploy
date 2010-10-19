@@ -19,9 +19,6 @@ rm polymlext@ed.ac.uk
 #remove these files to make firefox reregister the updated components
 if [ -e $ff_profile/xpti.dat ]; then rm "$ff_profile/xpti.dat"; fi
 if [ -e $ff_profile/compreg.dat ]; then rm "$ff_profile/compreg.dat"; fi
-if [ -e $extension/polymlext/poly/bin/$THE_POLY_HEAP ]; then
-    rm $extension/polymlext/poly/bin/$THE_POLY_HEAP
-fi
 
 #if run is passed as a parameter run firefox
 if [ "$1" == "run" ]; then firefox -jsconsole; fi
@@ -29,7 +26,16 @@ if [ "$1" == "run" ]; then firefox -jsconsole; fi
 #if package is passed as a parameter create the xpi package
 if [ "$1" == "package" ]
     then
+        #remove the packaged extension
+        if [ -e $extension/polymlext/poly/isaplib/heaps/all.polyml-heap ]; then
+            rm $extension/polymlext/poly/isaplib/heaps/all.polyml-heap;
+        fi
+        #remove the isaplib heap
         if [ -e polymlext.xpi ]; then rm polymlext.xpi; fi
+        #remove the polyml heap
+        if [ -e $extension/polymlext/poly/bin/$THE_POLY_HEAP ]; then
+            rm $extension/polymlext/poly/bin/$THE_POLY_HEAP
+        fi
         ZIP=`which zip`
         cd polymlext
         ${ZIP} -r ../polymlext.xpi *

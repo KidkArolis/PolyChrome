@@ -8,8 +8,12 @@
 open DOM;
 val b = valOf (getElementById document "body");
 val e = valOf (getElementById document "abc");
-fun u (x,y) = innerHTML e (SOME ((Int.toString x)^", "^(Int.toString y)));
-addEventListener b "mousemove" "u({clientX}, {clientY});";
+fun u (eventData) =
+    let
+        val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
+        val _ = innerHTML e (SOME (x^","^y));
+    in () end;
+onMouseMove b (EventHandler u);
 </script>
 
 <style type= "text/css">

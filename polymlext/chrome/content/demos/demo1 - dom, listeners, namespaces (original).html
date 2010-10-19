@@ -25,16 +25,13 @@ fun applyOperation operation =
         ()
     end;
 
-(*
 fun removeToggle1 () =
     let
       val e = valOf (getElementById document "remove1");
-      fun a (s) = if (s="remove first listener")
-                  then ("add first listener")
+      fun a (s) = if (s="remove first listener") then ("add first listener")
                   else ("remove first listener");
-      fun b (s) = if (s="remove first listener")
-                  then (removeEventListener (valOf (getElementById document "button1")) click (fn()=>applyOperation(op+)))
-                  else (addEventListener (valOf (getElementById document "button1")) click (fn()=>applyOperation(op+)));
+      fun b (s) = if (s="remove first listener") then (removeEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)")
+                  else (addEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)");
       val current_value = value e NONE;
       val new_value = a (current_value);
       val _ = value e (SOME new_value);
@@ -46,11 +43,10 @@ fun removeToggle1 () =
 fun removeToggle2 () =
     let
       val e = valOf (getElementById document "remove2");
-      fun a (s) = if (s="remove second listener")
-                  then ("add second listener")
+      fun a (s) = if (s="remove second listener") then ("add second listener")
                   else ("remove second listener");
-      fun b (s) = if (s="remove second listener") then (removeEventListener (valOf (getElementById document "button2")) click (fn()=>applyOperation(op-)))
-                  else (addEventListener (valOf (getElementById document "button2")) click (fn()=>applyOperation(op-)));
+      fun b (s) = if (s="remove second listener") then (removeEventListener (valOf (getElementById document "button2")) click "applyOperation(op-)")
+                  else (addEventListener (valOf (getElementById document "button2")) click "applyOperation(op-)");
       val current_value = value e NONE;
       val new_value = a (current_value);
       val _ = value e (SOME new_value);
@@ -58,26 +54,16 @@ fun removeToggle2 () =
     in
       clearMemory(SOME "temp")
     end;
-*)
 
 switchNamespace(SOME "temp");
-
-val but1 = (valOf (getElementById document "button1"))
-val but2 = (valOf (getElementById document "button2"))
-val rem1 = (valOf (getElementById document "remove1"))
-val rem2 = (valOf (getElementById document "remove2"))
-
-val l1 = addEventListener but1 click (EventHandler (fn(_:string)=>applyOperation(op+)));
-removeEventListener l1;
-removeEventListener l1;
-val l2 = addEventListener but1 click (EventHandler (fn(_:string)=>applyOperation(op+)));
-val l3 = addEventListener but2 click (EventHandler (fn(_:string)=>applyOperation(op-)));
-
-(*
-addEventListener rem1 click removeToggle1;
-addEventListener rem2 click removeToggle2;
-*)
-
+addEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)";
+removeEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)";
+removeEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button1")) click "applyOperation(op+)";
+addEventListener (valOf (getElementById document "button2")) click "applyOperation(op-)";
+addEventListener (valOf (getElementById document "remove1")) click "removeToggle1()";
+addEventListener (valOf (getElementById document "remove2")) click "removeToggle2()";
 clearMemory(SOME "temp");
 </script>
 

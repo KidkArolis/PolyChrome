@@ -205,6 +205,13 @@ Poly.prototype = {
         }
         this.process = Utils.startProcess(binpath, args);
     },
+    
+    stopPoly : function() {
+        var binpath = Utils.getExtensionPath() +
+                '/poly/bin/stop_child_processes.sh';
+        var args = [this.process.pid];
+        var process = Utils.startProcess(binpath, args);
+    },
 
     destroy : function() {
         //empty these callback functions, because there might still
@@ -214,7 +221,7 @@ Poly.prototype = {
         this.socket2.onInputStreamReady = function() {};
         
         //TODO: not really needed, because bash script returns after runninng polly
-        this.process.kill();
+        this.stopPoly();
         this.socket1.destroy();
         this.socket2.destroy();
         this.console.destroy();
