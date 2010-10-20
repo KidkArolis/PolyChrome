@@ -230,7 +230,12 @@ Poly.prototype = {
     onRequest : function(request) {
         var response = this.jswrapper.process(request);
         if (response!=null) {
-            this.socket2.send(response);
+            if (response.hasOwnProperty('type') && response.type=='exn') {
+                this.socket2.send(response.id+response.message);
+            } else {
+                this.socket2.send("0"+response);
+            }
+            
         }
     },
 

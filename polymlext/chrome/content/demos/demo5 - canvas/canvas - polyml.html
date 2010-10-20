@@ -233,7 +233,7 @@ fun loop () =
     val _ = (particles := new_particles);
     
     (*update fps display*)
-    val _ = innerHTML fpsDisplay (SOME ((Int.toString (!fps)) ^ "fps"));
+    val _ = setInnerHTML fpsDisplay ((Int.toString (!fps)) ^ "fps");
     
     val _ = (frameCount := !frameCount+1);
   in

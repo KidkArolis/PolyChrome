@@ -25,7 +25,7 @@ Console.prototype = {
     
     historyAdd : function(m) {
         this.historyResetPointer();
-        if (this.historyOlder() != m) {
+        if (m!="" && this.historyOlder() != m) {
             this.cmdHistory.unshift(m);
             if (this.cmdHistory.length > this.HISTORY_LIMIT) {
                 this.cmdHistory.splice(this.cmdHistory.length-1,1);
@@ -77,9 +77,6 @@ Console.prototype = {
         this.enabled = this.prefService.getBoolPref(
                 "extensions.PolyMLext.Console.enabledOnStartup");
         this.minimized = !this.enabled;
-        
-        this.ran = Math.floor(Math.random()*100);
-        debug.log(this.ran);
         
         this.cmdHistory = [];
     },

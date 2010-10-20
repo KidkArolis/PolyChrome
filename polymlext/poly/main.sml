@@ -17,6 +17,7 @@ structure PolyMLext (*: POLYMLEXT*)
     val counterReceived = ref 0;
 
     exception Error of string
+    exception DOMExn of string
 
     fun the (reference) = Option.valOf (!reference)
 
@@ -64,7 +65,13 @@ structure PolyMLext (*: POLYMLEXT*)
         end
 
     fun recv1 () = recv_ (the socket1)
-    fun recv2 () = recv_ (the socket2)
+    fun recv2 () = let
+        val m = recv_ (the socket2)
+        val t = valOf (Int.fromString (String.substring (m, 0, 1)))
+        val m = String.substring (m, 1, (String.size m)-1)
+        in
+            if t=0 then m else raise DOMExn (m)
+        end
 
     fun expand (str, 9) = str
               | expand (str, x) = expand (str^" ", x+1);

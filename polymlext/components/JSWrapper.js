@@ -10,11 +10,11 @@ function Memory() {
     this.init();
 }
 Memory.prototype = {
-    addReference : function(elem) {
-        if (elem==null) {
+    addReference : function(element) {
+        if (element==null) {
             return "null";
         } else {
-            this.elements[this.currentNamespace].push(elem);
+            this.elements[this.currentNamespace].push(element);
             return (this.elements[this.currentNamespace].length-1)+"";
         }
     },
@@ -47,7 +47,6 @@ Memory.prototype = {
     init : function() {
         this.elements = {"main":[]};
         this.currentNamespace = "main";
-        this.ran = Math.floor(Math.random()*1000);
         this.listeners = {};
         this.timers = {};
     }
@@ -59,8 +58,8 @@ function DOMWrappers (memory, socket) {
 }
 DOMWrappers.prototype = {
     getElementById : function(request) {
-        var elem = document.getElementById(request.arg1);
-        return this.Memory.addReference(elem);
+        var element = document.getElementById(request.arg1);
+        return this.Memory.addReference(element);
     },
     getElementsByTagName: function(request) {
         var elems = document.getElementsByTagName(request.arg1);
@@ -72,8 +71,8 @@ DOMWrappers.prototype = {
         return response;
     },
     childNodes: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        var elems = elem.childNodes;
+        var element = this.Memory.getReference(request.arg1);
+        var elems = element.childNodes;
         var response = "[";
         for (var i=0, len=elems.length; i<len; i++) {
             response += "\""+this.Memory.addReference(elems[i])+"\",";
@@ -82,105 +81,126 @@ DOMWrappers.prototype = {
         return response;
     },
     parentNode: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return this.Memory.addReference(elem.parentNode);
+        var element = this.Memory.getReference(request.arg1);
+        return this.Memory.addReference(element.parentNode);
     },
     firstChild: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return this.Memory.addReference(elem.firstChild);
+        var element = this.Memory.getReference(request.arg1);
+        return this.Memory.addReference(element.firstChild);
     },
     lastChild: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return this.Memory.addReference(elem.lastChild);
+        var element = this.Memory.getReference(request.arg1);
+        return this.Memory.addReference(element.lastChild);
     },
     nextSibling: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return this.Memory.addReference(elem.nextSibling);
+        var element = this.Memory.getReference(request.arg1);
+        return this.Memory.addReference(element.nextSibling);
     },
     previousSibling: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return this.Memory.addReference(elem.previousSibling);
+        var element = this.Memory.getReference(request.arg1);
+        return this.Memory.addReference(element.previousSibling);
     },
+    /*
     innerHTML: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        if (elem&&elem.innerHTML!=null) {
-            if (request.arg2) {
-                elem.innerHTML = request.arg2;
-                return "";
-            } else {
-                return elem.innerHTML;
-            }
+        var element = this.Memory.getReference(request.arg1);
+        if (request.arg2) {
+            element.innerHTML = request.arg2;
+            return "";
         } else {
-            return "exception";
+            return element.innerHTML;
         }
     },
+    */
+    getInnerHTML: function(request) {
+        var element = this.Memory.getReference(request.arg1);
+        return element.innerHTML;
+    },
+    setInnerHTML: function(request) {
+        var element = this.Memory.getReference(request.arg1);
+        element.innerHTML = request.arg2;
+        return null;
+    },
+    /*
     value: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        if (elem&&elem.value!=null) {
-            if (request.arg2) {
-                elem.value = request.arg2;
-                return "";
-            } else {
-                return elem.value;
-            }
+        var element = this.Memory.getReference(request.arg1);
+        if (request.arg2) {
+            element.value = request.arg2;
+            return "";
         } else {
-            //TODO: must send things to Poly in packets, so we
-            //can indicate exceptions..
-            return "exception";
+            return element.value;
         }
+    },
+    */
+    getValue: function(request) {
+        var element = this.Memory.getReference(request.arg1);
+        return element.value;
+    },
+    setValue: function(request) {
+        element.value = request.arg2;
+        return null;
     },
     getAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return elem.getAttribute(request.arg2);
+        var element = this.Memory.getReference(request.arg1);
+        return element.getAttribute(request.arg2);
     },
     setAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return elem.setAttribute(request.arg2, request.arg3);
+        var element = this.Memory.getReference(request.arg1);
+        return element.setAttribute(request.arg2, request.arg3);
     },
     removeAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        return elem.removeAttribute(request.arg2);
+        var element = this.Memory.getReference(request.arg1);
+        return element.removeAttribute(request.arg2);
     },
     createElement: function(request) {
-        var elem = document.createElement(request.arg1);
-        return this.Memory.addReference(elem);
+        var element = document.createElement(request.arg1);
+        return this.Memory.addReference(element);
     },
     createTextNode: function(request) {
-        var elem = document.createTextNode(request.arg1);
-        return this.Memory.addReference(elem);
+        var element = document.createTextNode(request.arg1);
+        return this.Memory.addReference(element);
     },
     appendChild: function(request) {
         var parent = this.Memory.getReference(request.arg1);
         var child = this.Memory.getReference(request.arg2);
         this.parent.appendChild(child);
+        return null;
     },
     removeChild: function(request) {
         var parent = this.Memory.getReference(request.arg1);
         var child = this.Memory.getReference(request.arg2);
         this.parent.removeChild(child);
+        return null;
     },
     replaceChild: function(request) {
         var parent = this.Memory.getReference(request.arg1);
         var child_new = this.Memory.getReference(request.arg2);                   
         var child_old = this.Memory.getReference(request.arg3);
         this.parent.replaceChild(child_new, child_old);
+        return null;
     },
+    /*
     style: function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        if (elem.style == undefined) {
-            return "exception";
-        }
+        var element = this.Memory.getReference(request.arg1);
         if (request.arg3) {
-            elem.style[request.arg2] = request.arg3;
+            element.style[request.arg2] = request.arg3;
             return "";
         } else {
-            return elem.style[request.arg2];
+            return element.style[request.arg2];
         }
+    },
+    */
+    getStyle: function(request) {
+        var element = this.Memory.getReference(request.arg1);
+        return element.style[request.arg2];
+    },
+    setStyle: function(request) {
+        element.style[request.arg2] = request.arg3;
+        return null;
     },
     
     //events
     addEventListener : function(request) {
-        var elem = this.Memory.getReference(request.arg1);
+        var element = this.Memory.getReference(request.arg1);
         var socket = this.socket;
         this.Memory.listeners[request.arg3] = function(event) {
             var data = "";
@@ -192,25 +212,28 @@ DOMWrappers.prototype = {
             var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
             socket.send(cmd);
         }
-        elem.addEventListener(
+        element.addEventListener(
             request.arg2,
             this.Memory.listeners[request.arg3],
             false
         );
+        return null;
     },
     removeEventListener : function(request) {
-        var elem = this.Memory.getReference(request.arg1);
-        elem.removeEventListener(
+        var element = this.Memory.getReference(request.arg1);
+        element.removeEventListener(
             request.arg2,
             this.Memory.listeners[request.arg3],
             false
         );
         delete this.Memory.listeners[request.arg3];
+        return null;
     },
     //an example of a custom event function
     onMouseMove : function(request) {
         request.arg4 = ["clientX", "clientY"];
         this.addEventListener(request);
+        return null;
     },
     
     //timers
@@ -225,12 +248,14 @@ DOMWrappers.prototype = {
             parseInt(request.arg1)
         );
         this.Memory.timers[request.arg2] = id;
+        return null;
     },
     clearInterval : function(request) {
         document.defaultView.wrappedJSObject.clearInterval(
             this.Memory.timers[request.arg1]
         );
         delete this.Memory.timers[request.arg1];
+        return null;
     },
 
     //Memory management
@@ -239,15 +264,18 @@ DOMWrappers.prototype = {
             request.arg1 = null;
         }
         this.Memory.clearMemory(request.arg1);
+        return null;
     },
     switchNamespace: function(request) {
         if (!request.arg1) {
             request.arg1 = null;
         }
         this.Memory.switchNamespace(request.arg1);
+        return null;
     },
     removeReference: function(request) {
         this.Memory.removeReference(request.arg1);
+        return null;
     },
 }
 
@@ -278,16 +306,28 @@ JSWrapper.prototype = {
                 break;
 
             case 1: //errors
-                this.console.log(request.output);
+                this.console.log(request.output + "\n");
                 break;
 
             case 2: //DOM function
                 if (this.DOMWrappers[request.f] != undefined) {
-                    response = this.DOMWrappers[request.f](request);
-                    //if the wrapper does not return anything, set the
-                    //response to null
-                    if (response == undefined) {
-                        response = null;
+                    try {
+                        response = this.DOMWrappers[request.f](request);
+                        if (response === undefined) {
+                            throw "undefined";
+                        }
+                    } catch (e) {
+                        /*
+                        var vDebug = ""; 
+                        for (var prop in e) 
+                        {  
+                           vDebug += "property: "+ prop+ " value: ["+ e[prop]+ "]\n"; 
+                        } 
+                        vDebug += "toString(): " + " value: [" + e.toString() + "]"; 
+                        debug.log(vDebug);
+                        */
+                        
+                        response = {type:"exn", id:1, message:e};
                     }
                 } else {
                     debug.error(request.f + " is not implemented",
@@ -298,6 +338,8 @@ JSWrapper.prototype = {
             case 3: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
                 
+                //TODO: perhaps these are not needed with the auto
+                //exception handling
                 if (unsafeWin[request.w] == undefined) {
                     debug.error(request.w +
                             " wrapper does not exist",
@@ -313,7 +355,14 @@ JSWrapper.prototype = {
                 }
                 
                 unsafeWin[request.w].Memory = this.Memory;
-                response = unsafeWin[request.w][request.f](request);
+                try {
+                    response = unsafeWin[request.w][request.f](request);
+                    if (response === undefined) {
+                        throw "undefined";
+                    }
+                } catch (e) {
+                    response = {type:"exn", id:1, message:e};
+                }
                 break;
 
             default:
@@ -322,8 +371,8 @@ JSWrapper.prototype = {
         }
         
         if (response != null
-            && response != undefined
-            && typeof(response.toString) != undefined) {
+            && typeof(response.toString) != undefined
+            && typeof(response) != 'object') {
                 return response.toString();
         } else {
             return response;

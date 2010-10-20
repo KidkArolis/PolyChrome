@@ -131,17 +131,35 @@ struct
             val result = case response of "null" => NONE | x => SOME (x:elem);
         in result end
 
+    (*
     fun innerHTML (e:elem) (html:string option) = let
             val req = case html of
                 NONE   => JSONReqStr2 "innerHTML" [JSON.String e]
               | SOME s => JSONReqStr2 "innerHTML" [JSON.String e, JSON.String s]
             val _ = PolyMLext.send(req)
         in PolyMLext.recv2() end
+    *)
+    fun setInnerHTML (e:elem) (value) = let
+            val req = JSONReqStr2 "setInnerHTML" [JSON.String e, JSON.String value]
+        in PolyMLext.send(req) end
+    fun getInnerHTML (e:elem) = let
+            val req = JSONReqStr2 "getInnerHTML" [JSON.String e]
+            val _ = PolyMLext.send(req);
+        in PolyMLext.recv2() end
 
+    (*
     fun value (e:elem) (value:string option) = let
             val req = case value of
                 NONE   => JSONReqStr2 "value" [JSON.String e]
               | SOME s => JSONReqStr2 "value" [JSON.String e, JSON.String s]
+            val _ = PolyMLext.send(req);
+        in PolyMLext.recv2() end
+    *)
+    fun setValue (e:elem) (value) = let
+            val req = JSONReqStr2 "setValue" [JSON.String e, JSON.String value]
+        in PolyMLext.send(req) end
+    fun getValue (e:elem) = let
+            val req = JSONReqStr2 "getValue" [JSON.String e]
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
 
@@ -185,12 +203,22 @@ struct
             val _ = PolyMLext.send(req);
         in () end
 
+    (*
     fun style (e:elem) (attr:string) (value:string option) = let
             val req = case value of
                         NONE => JSONReqStr2 "style" [JSON.String e, JSON.String attr]
                       | SOME s => JSONReqStr2 "style" [JSON.String e, JSON.String attr, JSON.String s]
             val _ = PolyMLext.send(req);
         in PolyMLext.recv2() end
+    *)
+    fun setStyle (e:elem) (value) = let
+            val req = JSONReqStr2 "setStyle" [JSON.String e, JSON.String value]
+        in PolyMLext.send(req) end
+    fun getStyle (e:elem) = let
+            val req = JSONReqStr2 "getStyle" [JSON.String e]
+            val _ = PolyMLext.send(req);
+        in PolyMLext.recv2() end
+    
 
 
     (* events *)    
