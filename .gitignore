@@ -1,9 +1,5 @@
-src/Release
-src/Debug
-src/libmldom/Release
-poly/bin/*
-polymlext/poly/*
-*.so
-.project
-.cproject
 .komodoproject
+.svn
+*.polyml-heap
+*.so
+*.xpi

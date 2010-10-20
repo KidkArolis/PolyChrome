@@ -12,10 +12,51 @@ Console.prototype = {
     
     content : "",
     
+    cmdHistory : null,
+    HISTORY_LIMIT : 200,    
+    historyPointer : -1,
+    
     log : function(m) {
         if (this.enabled) {
             this.content += m;
             this.consoleUI.update(this);
+        }
+    },
+    
+    historyAdd : function(m) {
+        this.historyResetPointer();
+        if (this.historyOlder() != m) {
+            this.cmdHistory.unshift(m);
+            if (this.cmdHistory.length > this.HISTORY_LIMIT) {
+                this.cmdHistory.splice(this.cmdHistory.length-1,1);
+            }
+        }
+        this.historyResetPointer();
+    },
+    
+    historyResetPointer : function() {
+        this.historyPointer = -1;
+    },
+    
+    historyOlder : function() {
+        if (this.historyPointer<this.cmdHistory.length-1) {
+            this.historyPointer++;
+        }
+        if (this.historyPointer==-1) {
+            return "";
+        } else {
+            return this.cmdHistory[this.historyPointer];
+        }
+    },
+    
+    historyNewer : function() {
+        if (this.historyPointer>-1) {
+            this.historyPointer--;
+        }
+        if (this.historyPointer==-1) {
+            return "";
+        } else {
+            return this.cmdHistory[this.historyPointer];
         }
     },
     
@@ -36,6 +77,11 @@ Console.prototype = {
         this.enabled = this.prefService.getBoolPref(
                 "extensions.PolyMLext.Console.enabledOnStartup");
         this.minimized = !this.enabled;
+        
+        this.ran = Math.floor(Math.random()*100);
+        debug.log(this.ran);
+        
+        this.cmdHistory = [];
     },
     
     destroy : function() {

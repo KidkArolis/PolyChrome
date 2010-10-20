@@ -1,11 +1,12 @@
 #polymlextCommandBox {
     border-top: 1px solid #CCCCCC;
     background-color: #FFFFFF;
-    font-size:12px;
+    font-size:13px;
+    font-weight:bold;
 }
 #polymlextCommandArrow {
     margin: 2px 0 2px 7px;
-    font-family: monospace;
+    font-family: Monaco, monospace;
     color: #FF0000;
 }
 
@@ -15,7 +16,7 @@
     padding: 0 4px;
     height: 0;
     border: none;
-    font-family: monospace;
+    font-family: Monaco, monospace;
     direction: ltr;
 }
 
@@ -24,8 +25,9 @@
 }
 #polymlLogArea {
 	-moz-appearance: none;
-	font-family:monospace;
-	font-size:12px;
+	font-family: Monaco, monospace;
+	font-size:13px;
+	font-weight:bold;
 	margin:0;
 	border:none;
 	border-top:1px solid #ccc;

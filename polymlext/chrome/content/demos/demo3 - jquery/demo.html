@@ -16,10 +16,12 @@ open DOM
 (*this could be an external file when thats possible*)
 structure jQueryWrapper =
 struct
+    val w = "jQueryWrapper"
     fun $ (selector:string) = let
-            val _ = PolyMLext.send(json ["jQueryWrapper", "select", selector]);
-            val response = PolyMLext.recv2();
-            val _ = PolyMLext.evaluate "eval" ("val _ = (temp:="^response^");");
+            val req = JSONReqStr w "select" [JSON.String selector]
+            val _ = PolyMLext.send(req)
+            val response = PolyMLext.recv2()
+            val _ = PolyMLext.evaluate "eval" ("val _ = (temp:="^response^");")
         in !temp end
 end
 open jQueryWrapper;

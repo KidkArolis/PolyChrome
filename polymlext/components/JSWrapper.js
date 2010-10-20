@@ -59,11 +59,11 @@ function DOMWrappers (memory, socket) {
 }
 DOMWrappers.prototype = {
     getElementById : function(request) {
-        var elem = document.getElementById(request.arg2);
+        var elem = document.getElementById(request.arg1);
         return this.Memory.addReference(elem);
     },
     getElementsByTagName: function(request) {
-        var elems = document.getElementsByTagName(request.arg2);
+        var elems = document.getElementsByTagName(request.arg1);
         var response = "[";
         for (var i=0, len=elems.length; i<len; i++) {
             response += "\""+this.Memory.addReference(elems[i])+"\",";
@@ -72,40 +72,40 @@ DOMWrappers.prototype = {
         return response;
     },
     childNodes: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         var elems = elem.childNodes;
         var response = "[";
         for (var i=0, len=elems.length; i<len; i++) {
-            response += "\""+this.Memory.addReference(this.elems[i])+"\",";
+            response += "\""+this.Memory.addReference(elems[i])+"\",";
         }
         response = response.substr(0, response.length-1)+"]";
         return response;
     },
     parentNode: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(elem.parentNode);
     },
     firstChild: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(elem.firstChild);
     },
     lastChild: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(elem.lastChild);
     },
     nextSibling: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(elem.nextSibling);
     },
     previousSibling: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(elem.previousSibling);
     },
     innerHTML: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         if (elem&&elem.innerHTML!=null) {
-            if (request.arg3) {
-                elem.innerHTML = request.arg3;
+            if (request.arg2) {
+                elem.innerHTML = request.arg2;
                 return "";
             } else {
                 return elem.innerHTML;
@@ -115,10 +115,10 @@ DOMWrappers.prototype = {
         }
     },
     value: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         if (elem&&elem.value!=null) {
-            if (request.arg3) {
-                elem.value = request.arg3;
+            if (request.arg2) {
+                elem.value = request.arg2;
                 return "";
             } else {
                 return elem.value;
@@ -130,83 +130,86 @@ DOMWrappers.prototype = {
         }
     },
     getAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
-        return elem.getAttribute(request.arg3);
+        var elem = this.Memory.getReference(request.arg1);
+        return elem.getAttribute(request.arg2);
     },
     setAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
-        return elem.setAttribute(request.arg3, request.arg4);
+        var elem = this.Memory.getReference(request.arg1);
+        return elem.setAttribute(request.arg2, request.arg3);
     },
     removeAttribute: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
-        return elem.removeAttribute(request.arg3);
+        var elem = this.Memory.getReference(request.arg1);
+        return elem.removeAttribute(request.arg2);
     },
     createElement: function(request) {
-        var elem = document.createElement(request.arg2);
+        var elem = document.createElement(request.arg1);
         return this.Memory.addReference(elem);
     },
     createTextNode: function(request) {
-        var elem = document.createTextNode(request.arg2);
+        var elem = document.createTextNode(request.arg1);
         return this.Memory.addReference(elem);
     },
     appendChild: function(request) {
-        var parent = this.Memory.getReference(request.arg2);
-        var child = this.Memory.getReference(request.arg3);
+        var parent = this.Memory.getReference(request.arg1);
+        var child = this.Memory.getReference(request.arg2);
         this.parent.appendChild(child);
     },
     removeChild: function(request) {
-        var parent = this.Memory.getReference(request.arg2);
-        var child = this.Memory.getReference(request.arg3);
+        var parent = this.Memory.getReference(request.arg1);
+        var child = this.Memory.getReference(request.arg2);
         this.parent.removeChild(child);
     },
     replaceChild: function(request) {
-        var parent = this.Memory.getReference(request.arg2);
-        var child_new = this.Memory.getReference(request.arg3);                   
-        var child_old = this.Memory.getReference(request.arg4);
+        var parent = this.Memory.getReference(request.arg1);
+        var child_new = this.Memory.getReference(request.arg2);                   
+        var child_old = this.Memory.getReference(request.arg3);
         this.parent.replaceChild(child_new, child_old);
     },
     style: function(request) {
-        var elem = this.Memory.getReference(request.arg2);
-        if (request.arg4) {
-            elem.style[request.arg3] = request.arg4;
+        var elem = this.Memory.getReference(request.arg1);
+        if (elem.style == undefined) {
+            return "exception";
+        }
+        if (request.arg3) {
+            elem.style[request.arg2] = request.arg3;
             return "";
         } else {
-            return elem.style[request.arg3];
+            return elem.style[request.arg2];
         }
     },
     
     //events
     addEventListener : function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         var socket = this.socket;
-        this.Memory.listeners[request.arg4] = function(event) {
+        this.Memory.listeners[request.arg3] = function(event) {
             var data = "";
-            if (request.arg5!=undefined) {
-                for (i=0, len=request.arg5.length; i<len; i++) {
-                    data += event[request.arg5[i]]+",";
+            if (request.arg4!=undefined) {
+                for (i=0, len=request.arg4.length; i<len; i++) {
+                    data += event[request.arg4[i]]+",";
                 }
             }
-            var cmd = 'handle_event "'+request.arg4+'" "'+data+'"';
+            var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
             socket.send(cmd);
         }
         elem.addEventListener(
-            request.arg3,
-            this.Memory.listeners[request.arg4],
+            request.arg2,
+            this.Memory.listeners[request.arg3],
             false
         );
     },
     removeEventListener : function(request) {
-        var elem = this.Memory.getReference(request.arg2);
+        var elem = this.Memory.getReference(request.arg1);
         elem.removeEventListener(
-            request.arg3,
-            this.Memory.listeners[request.arg4],
+            request.arg2,
+            this.Memory.listeners[request.arg3],
             false
         );
-        delete this.Memory.listeners[request.arg4];
+        delete this.Memory.listeners[request.arg3];
     },
     //an example of a custom event function
     onMouseMove : function(request) {
-        request.arg5 = ["clientX", "clientY"];
+        request.arg4 = ["clientX", "clientY"];
         this.addEventListener(request);
     },
     
@@ -214,37 +217,37 @@ DOMWrappers.prototype = {
     setInterval : function(request) {
         var socket = this.socket;
         var f = function() {
-            var cmd = 'handle_timer "'+request.arg3+'"';
+            var cmd = 'val _ = handle_timer "'+request.arg2+'"';
             socket.send(cmd);
         }
         var id = document.defaultView.wrappedJSObject.setInterval(
             f,
-            parseInt(request.arg2)
+            parseInt(request.arg1)
         );
-        this.Memory.timers[request.arg3] = id;
+        this.Memory.timers[request.arg2] = id;
     },
     clearInterval : function(request) {
         document.defaultView.wrappedJSObject.clearInterval(
-            this.Memory.timers[request.arg2]
+            this.Memory.timers[request.arg1]
         );
-        delete this.Memory.timers[request.arg2];
+        delete this.Memory.timers[request.arg1];
     },
 
     //Memory management
     clearMemory: function(request) {
-        if (!request.arg2) {
-            request.arg2 = null;
+        if (!request.arg1) {
+            request.arg1 = null;
         }
-        this.Memory.clearMemory(request.arg2);
+        this.Memory.clearMemory(request.arg1);
     },
     switchNamespace: function(request) {
-        if (!request.arg2) {
-            request.arg2 = null;
+        if (!request.arg1) {
+            request.arg1 = null;
         }
-        this.Memory.switchNamespace(request.arg2);
+        this.Memory.switchNamespace(request.arg1);
     },
     removeReference: function(request) {
-        this.Memory.removeReference(request.arg2);
+        this.Memory.removeReference(request.arg1);
     },
 }
 
@@ -279,15 +282,15 @@ JSWrapper.prototype = {
                 break;
 
             case 2: //DOM function
-                if (this.DOMWrappers[request.arg1] != undefined) {
-                    response = this.DOMWrappers[request.arg1](request);
+                if (this.DOMWrappers[request.f] != undefined) {
+                    response = this.DOMWrappers[request.f](request);
                     //if the wrapper does not return anything, set the
                     //response to null
                     if (response == undefined) {
                         response = null;
                     }
                 } else {
-                    debug.error(request.arg1 + " is not implemented",
+                    debug.error(request.f + " is not implemented",
                             this._document.location.href);
                 }
                 break;
@@ -295,22 +298,22 @@ JSWrapper.prototype = {
             case 3: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
                 
-                if (unsafeWin[request.wrapper] == undefined) {
-                    debug.error(request.wrapper +
+                if (unsafeWin[request.w] == undefined) {
+                    debug.error(request.w +
                             " wrapper does not exist",
                             this._document.location.href);
                     break;
                 }
                 
-                if (unsafeWin[request.wrapper][request.arg1] == undefined) {
-                    debug.error(request.wrapper.request.arg1 +
+                if (unsafeWin[request.w][request.f] == undefined) {
+                    debug.error(request.w+"."+request.f +
                         " function does not exist",
                         this._document.location.href);
                     break;
                 }
                 
-                unsafeWin[request.wrapper].Memory = this.Memory;
-                response = unsafeWin[request.wrapper][request.arg1](request);
+                unsafeWin[request.w].Memory = this.Memory;
+                response = unsafeWin[request.w][request.f](request);
                 break;
 
             default:

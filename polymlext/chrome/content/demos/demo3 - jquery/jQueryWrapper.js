@@ -1,6 +1,6 @@
 var jQueryWrapper = {
     select : function(request) {
-        var elements = $(request.arg2);
+        var elements = $(request.arg1);
         response = "[";
         if (elements.length>0) {
             for (var i=0, len=elements.length; i<len; i++) {

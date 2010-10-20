@@ -16,56 +16,78 @@ open DOM
 (*this could be an external file when thats going to be possible*)
 structure Canvas =
 struct
+    val wn = "CanvasWrapper"
     fun getContext (e:elem) (c:string) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "getContext", e, c]);
+            val req = JSONReqStr wn "getContext" [JSON.String e,
+                                                 JSON.String c]
+            val _ = PolyMLext.send(req)
         in PolyMLext.recv2():elem end;
 
     fun beginPath (e:elem) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "beginPath", e]);
-        in () end;
+            val req = JSONReqStr wn "beginPath" [JSON.String e]
+        in PolyMLext.send (req) end;
 
     fun fillStyle (e:elem) (s:string) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "fillStyle", e, s]);
-        in () end;
+            val req = JSONReqStr wn "fillStyle" [JSON.String e,
+                                                JSON.String s]
+        in PolyMLext.send (req) end;
 
     fun strokeStyle (e:elem) (s:string) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "strokeStyle", e, s]);
-        in () end;
+            val req = JSONReqStr wn "strokeStyle" [JSON.String e,
+                                                  JSON.String s]
+        in PolyMLext.send (req) end;
 
     fun lineWidth (e:elem) (w:real) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "lineWidth", e, (Real.toString w)]);
-        in () end;
+            val req = JSONReqStr wn "lineWidth" [JSON.String e,
+                                                JSON.Real w]
+        in PolyMLext.send (req) end;
 
     fun moveTo (e:elem) (x) (y) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "moveTo", e, (Int.toString x), (Int.toString y)]);
-        in () end;
+            val req = JSONReqStr wn "moveTo" [JSON.String e,
+                                             JSON.Int x,
+                                             JSON.Int y]
+        in PolyMLext.send (req) end;
 
     fun lineTo (e:elem) (x) (y) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "lineTo", e, (Int.toString x), (Int.toString y)]);
-        in () end;
+            val req = JSONReqStr wn "lineTo" [JSON.String e,
+                                             JSON.Int x,
+                                             JSON.Int y]
+        in PolyMLext.send (req) end;
 
     fun stroke (e:elem) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "stroke", e]);
-        in () end;
+            val req = JSONReqStr wn "stroke" [JSON.String e]
+        in PolyMLext.send (req) end;
 
-    fun arc (e:elem) (x) (y) (radius) (startAngle) (endAngle) (clockwise) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "arc", e, (Int.toString x), (Int.toString y), (Real.toString radius), (Real.toString startAngle), (Real.toString endAngle), clockwise]);
-        in () end;
+    fun arc (e:elem) (x) (y) (radius) (startAng) (endAng) (clockwise) = let
+            val req = JSONReqStr wn "arc" [JSON.String e,
+                                          JSON.Int x,
+                                          JSON.Int y,
+                                          JSON.Real radius,
+                                          JSON.Real startAng,
+                                          JSON.Real endAng,
+                                          JSON.Bool clockwise]
+        in PolyMLext.send (req) end;
 
     fun fill (e:elem) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "fill", e]);
-        in () end;
+            val req = JSONReqStr wn "fill" [JSON.String e]
+        in PolyMLext.send(req) end;
 
     fun fillRect (e:elem) (x) (y) (w) (h) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "fillRect", e, (Int.toString x), (Int.toString y), (Int.toString w), (Int.toString h)]);
-        in () end;
+            val req = JSONReqStr wn "fillRect" [JSON.String e,
+                                               JSON.Int x,
+                                               JSON.Int y,
+                                               JSON.Int w,
+                                               JSON.Int h]
+        in PolyMLext.send(req) end;
 
     fun canvasWidth (e:elem) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "canvasWidth", e]);
+            val req = JSONReqStr wn "canvasWidth" [JSON.String e]
+            val _ = PolyMLext.send(req)
         in (valOf (Int.fromString (PolyMLext.recv2()))) end;
 
     fun canvasHeight (e:elem) = let
-            val _ = PolyMLext.send(json ["CanvasWrapper", "canvasHeight", e]);
+            val req = JSONReqStr wn "canvasHeight" [JSON.String e]
+            val _ = PolyMLext.send(req)
         in (valOf (Int.fromString (PolyMLext.recv2()))) end;
 end
 
@@ -182,7 +204,7 @@ fun drawAndUpdateParticle (p:particle) =
     val _ = Canvas.moveTo context posx posy;
     val _ = Canvas.lineTo context posx_new posy_new;
     val _ = Canvas.stroke context;
-    val _ = Canvas.arc context posx_new posy_new (size/2.0) 0.0 6.28 "true";
+    val _ = Canvas.arc context posx_new posy_new (size/2.0) 0.0 6.28 true;
     val _ = Canvas.fill context;
   in
     Particle {

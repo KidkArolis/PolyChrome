@@ -6,6 +6,10 @@ var debug;
 
 ConsoleUI.prototype = {
     
+    KEY_ENTER : 13,
+    KEY_UP : 38,
+    KEY_DOWN : 40,
+    
     activeConsole : null,
     
     update : function(console) {
@@ -117,16 +121,34 @@ ConsoleUI.prototype = {
         }, false);
     },
     
+    handleKeyDown : function(event) {
+        //event.shiftKey
+        switch (event.which) {
+            case this.KEY_ENTER:
+                var command = this.commandLine.value;
+                this.commandLine.value = "";
+                this.activeConsole.log("> " + command + "\n");
+                this.activeConsole.historyAdd(command);
+                this.activeConsole.poly.socket1.send(command);
+                break;
+            case this.KEY_UP:
+                this.commandLine.value = this.activeConsole.historyOlder();
+                break;
+            case this.KEY_DOWN:
+                this.commandLine.value = this.activeConsole.historyNewer();
+                break;
+        }
+    },
+    
     bindCommandLine : function() {
         var self = this;
-        this.commandLine.addEventListener("keypress", function(event) {
-            if (event.which == 13) {
-                var command = self.commandLine.value;
-                self.commandLine.value = "";
-                self.activeConsole.log("> " + command + "\n");
-                self.activeConsole.poly.socket1.send(command);
-            }
-        }, false);
+        this.commandLine.addEventListener("keydown",
+            function(event) { self.handleKeyDown(event) },
+            false);
+    },
+    
+    rebindCommandLine : function() {
+        this.bindCommandLine();
     },
     
     init : function(b) {
