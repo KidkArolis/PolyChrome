@@ -51,7 +51,8 @@ Socket1.prototype = {
                 return;
             }
             this.bytesLeft = parseInt(r);            
-            this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
+            this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ?
+                                  CHUNK_SIZE : this.bytesLeft;
             this.request = "";
             this.reading = true;
             this.input.asyncWait(this,0,0,this.tm.mainThread);
@@ -78,7 +79,8 @@ Socket1.prototype = {
                 this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
             } else {
                 //there is more to read
-                this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ? CHUNK_SIZE : this.bytesLeft;
+                this.bytesNextChunk = this.bytesLeft > CHUNK_SIZE ?
+                                      CHUNK_SIZE : this.bytesLeft;
                 //wait for the next chunk
                 this.input.asyncWait(this,0,0,this.tm.mainThread);
             }
@@ -203,7 +205,7 @@ Poly.prototype = {
         if (Utils.isDevelopmentMode()) {
             args.push("dev");
         }
-        this.process = Utils.startProcess(binpath, args);
+        this.process = Utils.startProcess(binpath, args, false);
     },
     
     stopPoly : function() {
@@ -220,7 +222,6 @@ Poly.prototype = {
         this.socket1.onInputStreamReady = function() {};
         this.socket2.onInputStreamReady = function() {};
         
-        //TODO: not really needed, because bash script returns after runninng polly
         this.stopPoly();
         this.socket1.destroy();
         this.socket2.destroy();
@@ -251,7 +252,7 @@ Poly.prototype = {
     },
 
     init : function(doc, console) {
-        Components.utils.import("resource://polymlext/Utils.jsm");                
+        Components.utils.import("resource://polymlext/Utils.jsm");
         this.process = null;
         this._document = doc;
         this.console = Cc["@ed.ac.uk/poly/console;1"]

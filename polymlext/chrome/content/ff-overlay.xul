@@ -19,6 +19,7 @@
 	<statusbar id="status-bar">
 		<label hidden="true" id="polymlextCodeIndicator" value="PolyML" tooltiptext="This page contains PolyML code" />
 		<statusbarpanel hidden="false" id="polymlextConsoleButton" class="statusbarpanel-iconic" tooltiptext="PolyML console disabled" src="chrome://polymlext/skin/polyml_16x16_gray.png" context="polymlext-popup" />
+		<statusbarpanel hidden="true" id="polymlextNoPolyButton" class="statusbarpanel-iconic" tooltiptext="PolyML was not found on this computer (Click for more)" src="chrome://polymlext/skin/polyml_16x16_gray_no_poly.png" />
 	</statusbar>
 	
 	<vbox id="appcontent">

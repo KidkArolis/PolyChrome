@@ -9,7 +9,7 @@ LEDIT=`which cat`;
 
 if [ "$POLYML_HOME" == "" ]
 then
-    echo "Can not find PolyML ($$POLYML_HOME was empty)"; exit 0; 
+    echo "Can not find PolyML ($$POLYML_HOME was empty)"; exit 3; 
 else
     echo "Using PolyML: $POLYML_HOME";
 fi
@@ -22,7 +22,6 @@ then
     exit 2; # fail
 fi
 
-
 #compile the isaplib
 if [ ! -e "$HERE/../isaplib/heaps/all.polyml-heap" ]
 then
@@ -31,18 +30,30 @@ then
     cd ../bin
 fi
 
-
 #development mode ignores the heap file
 if [ "$3" == "dev" ]
 then
-    (echo "OS.FileSys.chDir(\"$HERE/../\"); PolyML.use \"${THE_POLY_PROGRAM}\"; PolyMLext.main($PORT1,$PORT2);"; ${LEDIT}) | ${POLYML_HOME}/bin/poly "$@";
+    #compile the main.sml
+    (echo "OS.FileSys.chDir(\"$HERE/../\");
+           PolyML.use \"${THE_POLY_PROGRAM}\";
+           PolyMLext.main($PORT1,$PORT2);"; ${LEDIT}) \
+           | ${POLYML_HOME}/bin/poly "$@";
 else
+    #build the heap if needed
     if [ ! -e "$HERE/$THE_POLY_HEAP" ]
     then
-        (echo "OS.FileSys.chDir(\"$HERE/../\"); PolyML.use \"${THE_POLY_PROGRAM}\"; PolyML.SaveState.saveState \"bin/${THE_POLY_HEAP}\"";) | ${POLYML_HOME}/bin/poly "$@";
+        (echo "OS.FileSys.chDir(\"$HERE/../\");
+               PolyML.use \"${THE_POLY_PROGRAM}\";
+               PolyML.SaveState.saveState \"bin/${THE_POLY_HEAP}\"";) \
+               | ${POLYML_HOME}/bin/poly "$@";
     fi
-    (echo "OS.FileSys.chDir(\"$HERE\"); PolyML.SaveState.loadState \"${THE_POLY_HEAP}\"; PolyMLext.main($PORT1,$PORT2);"; ${LEDIT}) | ${POLYML_HOME}/bin/poly "$@";
+    #load the heap
+    (echo "OS.FileSys.chDir(\"$HERE\");
+           PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";
+           PolyMLext.main($PORT1,$PORT2);";${LEDIT}) \
+           | ${POLYML_HOME}/bin/poly "$@";
 fi
 
 # just a reference
-#(echo "PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";"; ${LEDIT}) | ${POLYML_HOME}/bin/poly "$@"
+#(echo "PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";"; ${LEDIT})
+#| ${POLYML_HOME}/bin/poly "$@"

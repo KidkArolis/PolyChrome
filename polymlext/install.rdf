@@ -9,6 +9,7 @@
     <em:creator>Karolis Narkevičius</em:creator>
     <em:contributor></em:contributor>
     <em:aboutURL>chrome://PolyMLext/content/about.xul</em:aboutURL>
+    <em:optionsURL>chrome://PolyMLext/content/options.xul</em:optionsURL>
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->

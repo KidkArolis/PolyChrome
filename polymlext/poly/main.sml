@@ -2,7 +2,7 @@ PolyML.SaveState.loadState "isaplib/heaps/all.polyml-heap";
 
 val print = TextIO.print;
 
-use "json.ml";
+use "json.sml";
 
 structure PolyMLext (*: POLYMLEXT*)
 = struct

@@ -2,9 +2,12 @@ var EXPORTED_SYMBOLS = ["Utils"];
 
 var Utils = {
     getProfilePath : function() {
-        var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+        var fileLocator = Components
+                .classes["@mozilla.org/file/directory_service;1"]
                 .getService(Components.interfaces.nsIProperties);
-        var path = escape(fileLocator.get("ProfD", Components.interfaces.nsIFile).path.replace(/\\/g, "/")) + "/";
+        var path = fileLocator
+                .get("ProfD",Components.interfaces.nsIFile).path;
+        path = escape(path.replace(/\\/g, "/")) + "/";
         if (path.indexOf("/") != 0) {
             path = '/' + path;
         }
@@ -18,23 +21,47 @@ var Utils = {
         if (file.exists() == false || file.isDirectory()) {
             return null;
         }
-        var is = Components.classes["@mozilla.org/network/file-input-stream;1"]
-            .createInstance( Components.interfaces.nsIFileInputStream );
+        var is = Components
+                .classes["@mozilla.org/network/file-input-stream;1"]
+                .createInstance(Components.interfaces.nsIFileInputStream);
         is.init( file,0x01, 00004, null);
         var sis = Components.classes["@mozilla.org/scriptableinputstream;1"]
-            .createInstance( Components.interfaces.nsIScriptableInputStream );
+                .createInstance(Components.interfaces.
+                                nsIScriptableInputStream);
         sis.init(is);
         var output = sis.read(sis.available());
         return output;
     },
 
-    startProcess : function(binpath, args) {
-        var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+    startProcess : function(binpath, args, blocking) {
+        var file = Components.classes["@mozilla.org/file/local;1"]
+                .createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(binpath);
-        var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
+        var process = Components.classes["@mozilla.org/process/util;1"]
+                .createInstance(Components.interfaces.nsIProcess);
         process.init(file);
-        process.run(false, args, args.length);
+        process.run(blocking, args, args.length);
         return process;
+    },
+    
+    findPoly : function() {
+        var debug = Components.classes["@ed.ac.uk/poly/debug-console;1"]
+                .getService().wrappedJSObject;
+        
+        //if the user has manually given the path return true
+        var prefService = Components
+                .classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefBranch)        
+        var path = prefService.getCharPref(
+                "extensions.PolyMLext.PolyMLPath");
+        if (path!="") {
+            return true;
+        }
+        
+        //otherwise look for the path using a script
+        var binpath = Utils.getExtensionPath() + '/poly/bin/findpoly.sh';
+        var process = Utils.startProcess(binpath, [], true);
+        return (process.exitValue==0)
     },
     
     getExtensionPath : function() {

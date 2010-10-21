@@ -29,7 +29,8 @@ if [ -n "$POLYML_IN_PATH" ]; then
     POLYML_IN_PATH="$(cd $(dirname $POLYML_IN_PATH); cd ..; pwd)"
 fi
 
-[ -d "$ROOT_DIR/../polyml" ] && LOCAL_POLY_DIR="$(cd $ROOT_DIR/../polyml; pwd)"
+[ -d "$ROOT_DIR/../polyml" ] \
+&& LOCAL_POLY_DIR="$(cd $ROOT_DIR/../polyml; pwd)"
 
 POLYML_HOME=$(choosefrom \
   "$POLYML_HOME" \
@@ -40,4 +41,7 @@ POLYML_HOME=$(choosefrom \
   "/opt/polyml" \
   "")
 
-echo $POLYML_HOME;
+if [ "$POLYML_HOME" == "" ]
+then echo "Can not find PolyML"; exit 3; 
+else echo $POLYML_HOME;
+fi
