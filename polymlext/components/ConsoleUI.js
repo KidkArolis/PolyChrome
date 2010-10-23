@@ -73,6 +73,13 @@ ConsoleUI.prototype = {
         this.clearConsole();
     },
     
+    enable : function() {
+        this.activeConsole.enabled = true;
+        this.activeConsole.minimized = false;
+        this.showConsole();
+        this.setButtonColor("red");
+    },
+    
     //this is called when a page containing no PolyML becomes active
     off : function(console) {
         if (console==undefined || this.activeConsole == console) {
@@ -129,7 +136,7 @@ ConsoleUI.prototype = {
                 this.commandLine.value = "";
                 this.activeConsole.log("> " + command + "\n");
                 this.activeConsole.historyAdd(command);
-                this.activeConsole.poly.socket1.send(command);
+                this.activeConsole.poly.socket1.send("0"+command);
                 break;
             case this.KEY_UP:
                 this.commandLine.value = this.activeConsole.historyOlder();

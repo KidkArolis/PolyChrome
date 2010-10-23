@@ -121,13 +121,8 @@ val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
 val QUANTITY = 10;
 
-val mouseX = ref (0:int);
-val mouseY = ref (0:int);
-
-val drawInterval = 40;
 val frameCount = ref (0:int);
 val fps = ref (0:int);
-val maxfps = round(1000.0 / Real.fromInt(drawInterval));
 val lastTime = ref (Time.now():Time.time);
 val fpsDisplay = valOf (getElementById "fps");
 
@@ -151,11 +146,11 @@ fun randomColour () = fold_nat (fn x => fn s => s ^ (Int.toString(random_range 0
 fun newParticle (x) =
  Particle {
    id = x,
-   position = (!mouseX, !mouseY),
-   shift = (!mouseX, !mouseY),
+   position = (0,0),
+   shift = (0,0),
    size = 2.0,
    angle = 0.0,
-   speed = 0.01 + (Real.fromInt (random_range 0 10)) * 0.004,
+   speed = 0.1 + (Real.fromInt (random_range 0 10)) * 0.004,
    targetSize = 5.0,
    fillColor = (randomColour()),
    orbit = RADIUS*0.5 + (RADIUS*0.05*(Real.fromInt (random_range 0 10)))
@@ -163,16 +158,20 @@ fun newParticle (x) =
 
 val particles = ref (fold_nat (fn x => fn l => newParticle(x) :: l) QUANTITY []);
 
+(*
 fun mouseMoveHandler (eventData) = let
     val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
     val _ = (mouseX := valOf (Int.fromString x));
     val _ = (mouseY := valOf (Int.fromString y));
   in () end;
-
 onMouseMove canvas (EventHandler mouseMoveHandler);
+*)
+
+
 
 fun drawAndUpdateParticle (p:particle) =
   let
+    val (mouseX, mouseY) = getMouseCoords();
     val Particle {
       id = id,
       position = (posx,posy),
@@ -187,8 +186,8 @@ fun drawAndUpdateParticle (p:particle) =
     
     val angle_new = angle + speed;
 
-    val shiftx_new = shiftx + round(Real.fromInt(((!mouseX) - shiftx)) * (speed));
-    val shifty_new = shifty + round(Real.fromInt(((!mouseY) - shifty)) * (speed));
+    val shiftx_new = shiftx + round(Real.fromInt((mouseX - shiftx)) * (speed));
+    val shifty_new = shifty + round(Real.fromInt((mouseY - shifty)) * (speed));
 
     val posx_new = shiftx_new + round(Math.cos(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
     val posy_new = shifty_new + round(Math.sin(Real.fromInt id + angle_new)*orbit*RADIUS_SCALE);
@@ -236,11 +235,17 @@ fun loop () =
     val _ = setInnerHTML fpsDisplay ((Int.toString (!fps)) ^ "fps");
     
     val _ = (frameCount := !frameCount+1);
+    
+    (* limit the fps *)
+    val endTime = Time.now();
+    val diffTime = (Time.toMilliseconds endTime)-(Time.toMilliseconds nowTime);
+    val _ = if (diffTime<35) then OS.Process.sleep (Time.fromMilliseconds (35 - diffTime)) else ();
   in
-    ()
+    loop ()
   end;
 
-val a = setInterval (TimerHandler loop) drawInterval;
+(*val a = setInterval (TimerHandler loop) drawInterval;*)
+loop();
 </script>
 
 </body>

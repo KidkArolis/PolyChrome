@@ -13,22 +13,24 @@
 
 <script type="application/x-polyml">
 open DOM
-(*this could be an external file when thats possible*)
+
+
+(* this could be an external file when thats possible *)
 structure jQueryWrapper =
 struct
     val w = "jQueryWrapper"
-    fun $ (selector:string) = let
+    fun $ (selector) = let
             val req = JSONReqStr w "select" [JSON.String selector]
-            val _ = PolyMLext.send(req)
-            val response = PolyMLext.recv2()
-            val _ = PolyMLext.evaluate "eval" ("val _ = (temp:="^response^");")
-        in !temp end
+            val _ = send(req)
+        in parse_element_list (recv()) end
 end
 open jQueryWrapper;
 
-(*this is the actual application of the custom wrapper*)
-fun setColorGreen (e:elem) = style e "color" (SOME "green");
-fun setColorOrange (e:elem) = style e "color" (SOME "#FF6600");
+
+
+(* this is the actual application of the custom wrapper *)
+fun setColorGreen (e) = let in setStyle e "color" "green"; e end
+fun setColorOrange (e) = let in setStyle e "color" "#FF6600"; e end
 
 val greenElements = $("p.green");
 val orangeElements = $("p.orange");

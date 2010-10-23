@@ -10,45 +10,79 @@ function Memory() {
     this.init();
 }
 Memory.prototype = {
-    addReference : function(element) {
-        if (element==null) {
+    
+    /*
+        The references are identified by an integer index and a string name
+        of a namespace, i.e. idx|namespace. This means namespace names can't
+        contain character |. Namespace names also can't contain comma (,)
+        because lists of elements are tokenized by comma.
+    */
+    
+    /*
+        Term 'reference' is used here to describe both the string identifier
+        of the reference and the JavaScript reference (pointer). That is done
+        for the exception handling. e.g. exceptions raised here will produce
+        more readable messages like "TypeError: reference is undefined"
+    */
+    
+    parse_id : function(reference) {
+        var y = reference.split("|");
+        return {idx:y[0], ns: y[1]};
+    },
+    create_id : function(idx, ns) {
+        return (idx + "|" + ns);
+    },
+    
+    addReference : function(reference) {
+        if (reference==null) {
+            //this will be converted to "NONE: string option"
             return "null";
         } else {
-            this.elements[this.currentNamespace].push(element);
-            return (this.elements[this.currentNamespace].length-1)+"";
+            this.references[this.currentNs][this.counter] = reference;
+            //return the index of the reference and increment the index
+            return this.create_id(this.counter++, this.currentNs)
         }
     },
-    getReference : function(n) {
-        return this.elements[this.currentNamespace][n];
+    getReference : function(reference) {
+        var y = this.parse_id(reference);
+        if (this.references[y.ns]===undefined) throw "namespace " + y.ns + " undefined";
+        var ref = this.references[y.ns][y.idx];
+        if (ref===undefined) throw "reference undefined";
+        return ref;
     },
-    removeReference : function(n) {
-        //TODO: this is not good, because if reference from the middle of
-        //array is removed then the identifiers will not work anymore
-        this.elements[this.currentNamespace].splice(n,1);
+    removeReference : function(reference) {
+        var y = this.parse_id(reference);
+        delete this.references[y.ns][y.idx];
     },
-    clearMemory : function(ns) {
-        if (ns==null) {
-            this.init();
-        } else {
-            delete this.elements[ns];
-            this.currentNamespace = "main";
+    
+    switchDefaultNs : function() {
+        this.currentNs = "";
+    },
+    switchNs : function(ns) {
+        //create new namespace if it doesn't exist yet
+        if (!this.references[ns]) {
+            this.references[ns] = {};
         }
+        this.currentNs = ns;
     },
-    switchNamespace : function(ns) {
-        if (ns==null) {
-            this.currentNamespace = "main";
-        } else {
-            this.currentNamespace = ns;
-            if (!this.elements[this.currentNamespace]) {
-                this.elements[this.currentNamespace] = [];
-            }
-        }
+    clearDefaultNs : function() {
+        this.references[""] = {};
     },
+    clearNs : function(ns) {
+        this.references[ns] = {};
+    },
+    deleteNs : function(ns) {
+        delete this.references[ns];
+    },
+    
     init : function() {
-        this.elements = {"main":[]};
-        this.currentNamespace = "main";
+        this.references = {"":{}};
+        //the empty string indicates the main namespace.
+        //this namespace can not be deleted
+        this.currentNs = "";
         this.listeners = {};
         this.timers = {};
+        this.counter = 0;
     }
 }
 
@@ -63,21 +97,21 @@ DOMWrappers.prototype = {
     },
     getElementsByTagName: function(request) {
         var elems = document.getElementsByTagName(request.arg1);
-        var response = "[";
+        var response = "";
         for (var i=0, len=elems.length; i<len; i++) {
-            response += "\""+this.Memory.addReference(elems[i])+"\",";
+            response += this.Memory.addReference(elems[i])+",";
         }
-        response = response.substr(0, response.length-1)+"]";
+        response = response.substr(0, response.length-1);
         return response;
     },
     childNodes: function(request) {
         var element = this.Memory.getReference(request.arg1);
         var elems = element.childNodes;
-        var response = "[";
+        var response = "";
         for (var i=0, len=elems.length; i<len; i++) {
-            response += "\""+this.Memory.addReference(elems[i])+"\",";
+            response += this.Memory.addReference(elems[i])+",";
         }
-        response = response.substr(0, response.length-1)+"]";
+        response = response.substr(0, response.length-1);
         return response;
     },
     parentNode: function(request) {
@@ -100,17 +134,7 @@ DOMWrappers.prototype = {
         var element = this.Memory.getReference(request.arg1);
         return this.Memory.addReference(element.previousSibling);
     },
-    /*
-    innerHTML: function(request) {
-        var element = this.Memory.getReference(request.arg1);
-        if (request.arg2) {
-            element.innerHTML = request.arg2;
-            return "";
-        } else {
-            return element.innerHTML;
-        }
-    },
-    */
+
     getInnerHTML: function(request) {
         var element = this.Memory.getReference(request.arg1);
         return element.innerHTML;
@@ -120,22 +144,12 @@ DOMWrappers.prototype = {
         element.innerHTML = request.arg2;
         return null;
     },
-    /*
-    value: function(request) {
-        var element = this.Memory.getReference(request.arg1);
-        if (request.arg2) {
-            element.value = request.arg2;
-            return "";
-        } else {
-            return element.value;
-        }
-    },
-    */
     getValue: function(request) {
         var element = this.Memory.getReference(request.arg1);
         return element.value;
     },
     setValue: function(request) {
+        var element = this.Memory.getReference(request.arg1);
         element.value = request.arg2;
         return null;
     },
@@ -145,7 +159,8 @@ DOMWrappers.prototype = {
     },
     setAttribute: function(request) {
         var element = this.Memory.getReference(request.arg1);
-        return element.setAttribute(request.arg2, request.arg3);
+        element.setAttribute(request.arg2, request.arg3);
+        return null;
     },
     removeAttribute: function(request) {
         var element = this.Memory.getReference(request.arg1);
@@ -178,22 +193,12 @@ DOMWrappers.prototype = {
         this.parent.replaceChild(child_new, child_old);
         return null;
     },
-    /*
-    style: function(request) {
-        var element = this.Memory.getReference(request.arg1);
-        if (request.arg3) {
-            element.style[request.arg2] = request.arg3;
-            return "";
-        } else {
-            return element.style[request.arg2];
-        }
-    },
-    */
     getStyle: function(request) {
         var element = this.Memory.getReference(request.arg1);
         return element.style[request.arg2];
     },
     setStyle: function(request) {
+        var element = this.Memory.getReference(request.arg1);
         element.style[request.arg2] = request.arg3;
         return null;
     },
@@ -202,15 +207,16 @@ DOMWrappers.prototype = {
     addEventListener : function(request) {
         var element = this.Memory.getReference(request.arg1);
         var socket = this.socket;
+        
         this.Memory.listeners[request.arg3] = function(event) {
             var data = "";
-            if (request.arg4!=undefined) {
+            if (request.arg4!==undefined) {
                 for (i=0, len=request.arg4.length; i<len; i++) {
                     data += event[request.arg4[i]]+",";
                 }
             }
             var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
-            socket.send(cmd);
+            socket.send("0"+cmd);
         }
         element.addEventListener(
             request.arg2,
@@ -221,6 +227,8 @@ DOMWrappers.prototype = {
     },
     removeEventListener : function(request) {
         var element = this.Memory.getReference(request.arg1);
+        
+        
         element.removeEventListener(
             request.arg2,
             this.Memory.listeners[request.arg3],
@@ -235,13 +243,39 @@ DOMWrappers.prototype = {
         this.addEventListener(request);
         return null;
     },
+    //polling mouse coordinates
+    getMouseCoords : function(request) {
+        if (this.mouseX === undefined) {
+            this.mouseX = 0;
+            this.mouseY = 0;       
+            
+            self = this;
+            var unsafeWin = document.defaultView.wrappedJSObject;
+            var setCoords = function(event) {
+                unsafeWin.removeEventListener('mousemove', setCoords, false)
+                self.mouseX = event.clientX;
+                self.mouseY = event.clientY;
+                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 35);
+            }
+            var poll = function() {
+                unsafeWin.addEventListener('mousemove', setCoords, false);
+            }
+            poll();
+        }
+        
+        return this.mouseX+","+this.mouseY;
+    },
+    cancelMouseCoordsPolling : function(request) {
+        //remove the listener
+        //remove the timeout
+    },
     
     //timers
     setInterval : function(request) {
         var socket = this.socket;
         var f = function() {
             var cmd = 'val _ = handle_timer "'+request.arg2+'"';
-            socket.send(cmd);
+            socket.send("0"+cmd);
         }
         var id = document.defaultView.wrappedJSObject.setInterval(
             f,
@@ -258,23 +292,30 @@ DOMWrappers.prototype = {
         return null;
     },
 
+
     //Memory management
-    clearMemory: function(request) {
-        if (!request.arg1) {
-            request.arg1 = null;
-        }
-        this.Memory.clearMemory(request.arg1);
-        return null;
-    },
-    switchNamespace: function(request) {
-        if (!request.arg1) {
-            request.arg1 = null;
-        }
-        this.Memory.switchNamespace(request.arg1);
-        return null;
-    },
     removeReference: function(request) {
         this.Memory.removeReference(request.arg1);
+        return null;
+    },    
+    switchDefaultNs : function(request) {
+        this.Memory.switchDefaultNs();
+        return null;
+    },
+    switchNs : function(request) {
+        this.Memory.switchNs(request.arg1);
+        return null;
+    },
+    clearDefaultNs : function(request) {
+        this.Memory.clearDefaultNs();
+        return null;
+    },
+    clearNs : function(request) {
+        this.Memory.clearNs(request.arg1);
+        return null;
+    },
+    deleteNs : function(request) {
+        this.Memory.deleteNs(request.arg1);
         return null;
     },
 }
@@ -287,6 +328,7 @@ JSWrapper.prototype = {
         document = this._document;
         
         var response = null;
+        var responsePacket = {};
         
         try {
             var request = this.nativeJSON.decode(req);
@@ -310,24 +352,22 @@ JSWrapper.prototype = {
                 break;
 
             case 2: //DOM function
-                if (this.DOMWrappers[request.f] != undefined) {
+                if (this.DOMWrappers[request.f] !== undefined) {
                     try {
                         response = this.DOMWrappers[request.f](request);
                         if (response === undefined) {
                             throw "undefined";
                         }
+                        responsePacket = {type:"response", message:response, ret:request.r};
                     } catch (e) {
-                        /*
-                        var vDebug = ""; 
-                        for (var prop in e) 
-                        {  
-                           vDebug += "property: "+ prop+ " value: ["+ e[prop]+ "]\n"; 
-                        } 
-                        vDebug += "toString(): " + " value: [" + e.toString() + "]"; 
-                        debug.log(vDebug);
-                        */
-                        
-                        response = {type:"exn", id:1, message:e};
+                        // perhaps some of the debug info could be useful
+                        //var vDebug = ""; 
+                        //for (var prop in e) {  
+                        //   vDebug += "property: "+ prop+ " value: ["+ e[prop]+ "]\n"; 
+                        //} 
+                        //vDebug += "toString(): " + " value: [" + e.toString() + "]"; 
+                        //debug.log(vDebug);
+                        responsePacket = {type:"exn", message:e, ret:request.r};
                     }
                 } else {
                     debug.error(request.f + " is not implemented",
@@ -360,8 +400,9 @@ JSWrapper.prototype = {
                     if (response === undefined) {
                         throw "undefined";
                     }
+                    responsePacket = {type:"response", message:response, ret:request.r};
                 } catch (e) {
-                    response = {type:"exn", id:1, message:e};
+                    responsePacket = {type:"exn", message:e, ret:request.r};
                 }
                 break;
 
@@ -370,13 +411,7 @@ JSWrapper.prototype = {
                     this._document.location.href);
         }
         
-        if (response != null
-            && typeof(response.toString) != undefined
-            && typeof(response) != 'object') {
-                return response.toString();
-        } else {
-            return response;
-        }
+        return responsePacket;
     },
 
     init : function(doc, s, c) {

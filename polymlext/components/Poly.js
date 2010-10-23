@@ -88,7 +88,7 @@ Socket1.prototype = {
     },
 
     onSocketAccepted : function(serverSocket, clientSocket) {
-        this.input = clientSocket.openInputStream(0, 0, 0).
+        this.input = clientSocket.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0).
                         QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.
                         openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
@@ -100,7 +100,6 @@ Socket1.prototype = {
 
     //can't call send before the socket was accepted
     send : function(data) {
-        
         //dump("firefox ---> poly : " + ++counterSent + "\n");
         //var temp = data;
         //if (data=="") { temp = "-EMPTY STRING-"; }
@@ -129,7 +128,7 @@ Socket1.prototype = {
         this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
-        this.socket.init(-1, true, 5);
+        this.socket.init(-1, true, -1);
         this.socket.asyncListen(this);
     },
 
@@ -151,8 +150,7 @@ function Socket2() {
 }
 Socket2.prototype = {
     //can't call send before the socket was accepted
-     send : function(data) {
-        
+     send : function(data) {        
         //dump("firefox ---> poly : " + ++counterSent + "\n");
         //var temp = data;
         //if (data=="") { temp = "-EMPTY STRING-"; }
@@ -171,7 +169,7 @@ Socket2.prototype = {
 
     onSocketAccepted : function(serverSocket, clientSocket) {
         this.output = clientSocket.
-                        openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+                openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
     },
 
     onStopListening : function() {},
@@ -184,7 +182,7 @@ Socket2.prototype = {
         this.output = null;
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
-        this.socket.init(-1, true, 5);
+        this.socket.init(-1, true, -1);
         this.socket.asyncListen(this);
     },
 
@@ -229,14 +227,36 @@ Poly.prototype = {
     },
 
     onRequest : function(request) {
+        /*
+         slightly obscure method. The messages that are sent to poly have to
+         be preappended with "0" or "1" indicating succesful processing of the
+         request or an exception.
+         if the response produces by jswrapper is null
+         (response.response==null) then we send the exception to socket1 else
+         we send it to socket 2. This is needed, because null response means
+         that poly didn't call recv2() but recv()
+        */
+        
         var response = this.jswrapper.process(request);
-        if (response!=null) {
-            if (response.hasOwnProperty('type') && response.type=='exn') {
-                this.socket2.send(response.id+response.message);
-            } else {
-                this.socket2.send("0"+response);
+        
+        if (!response.hasOwnProperty("type")) {
+            return;
+        }
+        
+        if (response.type == "response") {
+            if (response.ret) {
+                if (typeof(response.message.toString) !== undefined) {
+                    response.message = response.message.toString();
+                }
+                this.socket2.send("0"+response.message);
             }
-            
+        } else {
+            //exception
+            if (response.ret) {
+                this.socket2.send("1"+response.message);
+            } else {
+                this.socket1.send("1"+response.message);
+            }
         }
     },
 
@@ -246,7 +266,7 @@ Poly.prototype = {
         for (var i=0, len=scripts.length; i<len; i++) {
             if (scripts[i].getAttribute("type")=="application/x-polyml") {
                 var code = scripts[i].innerHTML;
-                this.socket1.send(code);
+                this.socket1.send("0"+code);
             }
         }
     },

@@ -1,11 +1,18 @@
-PolyML.SaveState.loadState "isaplib/heaps/all.polyml-heap";
+(* just in case cleanup before building the heap *)
+PolyML.fullGC();
 
+(* load needed libs  *)
+PolyML.SaveState.loadState "isaplib/heaps/all.polyml-heap";
+use "json.sml";
+
+(* 'open' the print function *)
 val print = TextIO.print;
 
-use "json.sml";
 
 structure PolyMLext (*: POLYMLEXT*)
 = struct
+
+    exception DOMExn of string
 
     val socket1 = ref (NONE : Socket.active INetSock.stream_sock option)
     val socket2 = ref (NONE : Socket.active INetSock.stream_sock option)
@@ -13,18 +20,14 @@ structure PolyMLext (*: POLYMLEXT*)
     val PREFIX_SIZE = 9;
     val CHUNK_SIZE = 65536;
     
-    val counterSent = ref 0;
-    val counterReceived = ref 0;
-
     exception Error of string
-    exception DOMExn of string
 
     fun the (reference) = Option.valOf (!reference)
 
     fun make_socket (port) =
         let
             val client = INetSock.TCP.socket()
-            val me = valOf (NetHostDB.getByName "localhost")
+            val me = valOf (NetHostDB.getByName "localhost") (* NetHostDB.fromString "127.0.0.1" *)
             val localhost = NetHostDB.addr me
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
@@ -32,7 +35,7 @@ structure PolyMLext (*: POLYMLEXT*)
             client
         end
     
-    fun recv_loop (0, _) = ""
+    fun recv_loop (0,_) = ""
         | recv_loop (length, socket) =
           let
               val len = if (length<CHUNK_SIZE)
@@ -51,27 +54,14 @@ structure PolyMLext (*: POLYMLEXT*)
                     Socket.recvVec(socket, PREFIX_SIZE))
             val length = valOf (Int.fromString prefix)
             val data = recv_loop(length, socket)
-            
-            (*val _ = counterReceived := !counterReceived + 1*)
-            (*val _ = print "=====================\n"*)
-            (*val _ = print "poly <--- firefox : "*)
-            (*val _ = print (Int.toString (!counterReceived))*)
-            (*val _ = print "\n"*)
-            (*val _ = print "=====================\n"*)
-            (*val _ = if (data="") then print "-EMPTY STRING-" else print data*)
-            (*val _ = print "\n\n"*)
-        in
-            data
-        end
-
-    fun recv1 () = recv_ (the socket1)
-    fun recv2 () = let
-        val m = recv_ (the socket2)
-        val t = valOf (Int.fromString (String.substring (m, 0, 1)))
-        val m = String.substring (m, 1, (String.size m)-1)
+            val t = valOf (Int.fromString (String.substring (data, 0, 1)))
+            val m = String.substring (data, 1, (String.size data)-1)
         in
             if t=0 then m else raise DOMExn (m)
         end
+
+    fun recv1 () = recv_ (the socket1)    
+    fun recv2 () = recv_ (the socket2)
 
     fun expand (str, 9) = str
               | expand (str, x) = expand (str^" ", x+1);
@@ -97,13 +87,6 @@ structure PolyMLext (*: POLYMLEXT*)
             val prefix = expand (prefix, size prefix)
             val prefixed_data = prefix^data
             val length = size prefixed_data
-            
-            (*val _ = counterSent := !counterSent + 1*)
-            (*val _ = print "poly ---> firefox : "*)
-            (*val _ = print (Int.toString (!counterSent))*)
-            (*val _ = print "\n"*)
-            (*val _ = print data*)
-            (*val _ = print "\n\n"*)
         in
             send_loop(0, length, prefixed_data)
         end
@@ -175,6 +158,7 @@ structure PolyMLext (*: POLYMLEXT*)
                            else
                            JSON.empty
                            |> JSON.add ("type", JSON.Int 0)
+                           |> JSON.add ("r", JSON.Int 0)
                            |> JSON.add ("output", (JSON.String output_str))
             val json_obj = if worked
                 then json_obj
@@ -195,22 +179,18 @@ structure PolyMLext (*: POLYMLEXT*)
         let
             val _ = (socket1 := (SOME (make_socket socket1port)))
             val _ = (socket2 := (SOME (make_socket socket2port)))
+            (* disable access to this structure *)
+            val _ = map PolyML.Compiler.forgetStructure["PolyMLext"];
             val _ = loop()
             val _ = close_sock (the socket1)
             val _ = close_sock (the socket2)
         in
-            (*PolyML.fullGC();*)
-            (*map PolyML.Compiler.forgetStructure["PolyMLext"];*)
             (*OS.Process.exit OS.Process.success*)
             ()
         end
 
 end;
 
-(* TODO *)
-(* this is used for parsing strings to lists *)
-(* there surely is a better way to do that not using global variables *)
-val temp = ref ([]:string list);
-
+(* Browser / DOM goodies *)
 use "console.sml";
 use "dom.sml";

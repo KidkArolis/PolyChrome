@@ -51,7 +51,7 @@ var Utils = {
         //if the user has manually given the path return true
         var prefService = Components
                 .classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch)        
+                .getService(Components.interfaces.nsIPrefBranch)
         var path = prefService.getCharPref(
                 "extensions.PolyMLext.PolyMLPath");
         if (path!="") {

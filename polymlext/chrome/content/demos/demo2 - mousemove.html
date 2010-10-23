@@ -6,12 +6,12 @@
 
 <script type="application/x-polyml">
 open DOM;
-val b = valOf (getElementById document "body");
-val e = valOf (getElementById document "abc");
+val b = valOf (getElementById "body");
+val e = valOf (getElementById "abc");
 fun u (eventData) =
     let
         val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
-        val _ = innerHTML e (SOME (x^","^y));
+        val _ = setInnerHTML e (x^","^y);
     in () end;
 onMouseMove b (EventHandler u);
 </script>
