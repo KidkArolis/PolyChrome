@@ -208,11 +208,13 @@ DOMWrappers.prototype = {
         var element = this.Memory.getReference(request.arg1);
         var socket = this.socket;
         
-        this.Memory.listeners[request.arg3] = function(event) {
-            var data = "";
+        this.Memory.listeners[request.arg3] = {};
+        this.Memory.listeners[request.arg3]['e'] = element;
+        this.Memory.listeners[request.arg3]['f'] = function(event) {
+            var data = '';
             if (request.arg4!==undefined) {
                 for (i=0, len=request.arg4.length; i<len; i++) {
-                    data += event[request.arg4[i]]+",";
+                    data += event[request.arg4[i]]+',';
                 }
             }
             var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
@@ -220,26 +222,24 @@ DOMWrappers.prototype = {
         }
         element.addEventListener(
             request.arg2,
-            this.Memory.listeners[request.arg3],
+            this.Memory.listeners[request.arg3]['f'],
             false
         );
         return null;
     },
     removeEventListener : function(request) {
-        var element = this.Memory.getReference(request.arg1);
-        
-        
+        var element = this.Memory.listeners[request.arg2]['e'];
         element.removeEventListener(
-            request.arg2,
-            this.Memory.listeners[request.arg3],
+            request.arg1,
+            this.Memory.listeners[request.arg2]['f'],
             false
         );
-        delete this.Memory.listeners[request.arg3];
+        delete this.Memory.listeners[request.arg2];
         return null;
     },
     //an example of a custom event function
     onMouseMove : function(request) {
-        request.arg4 = ["clientX", "clientY"];
+        request.arg4 = ['clientX', 'clientY'];
         this.addEventListener(request);
         return null;
     },
@@ -360,7 +360,7 @@ JSWrapper.prototype = {
                         }
                         responsePacket = {type:"response", message:response, ret:request.r};
                     } catch (e) {
-                        // perhaps some of the debug info could be useful
+                        //perhaps some of the debug info could be useful
                         //var vDebug = ""; 
                         //for (var prop in e) {  
                         //   vDebug += "property: "+ prop+ " value: ["+ e[prop]+ "]\n"; 
@@ -368,6 +368,7 @@ JSWrapper.prototype = {
                         //vDebug += "toString(): " + " value: [" + e.toString() + "]"; 
                         //debug.log(vDebug);
                         responsePacket = {type:"exn", message:e, ret:request.r};
+                        debug.error(e.message + " Line: " + e.lineNumber + " File:" + e.fileName);
                     }
                 } else {
                     debug.error(request.f + " is not implemented",

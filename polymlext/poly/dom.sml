@@ -79,9 +79,9 @@ struct
     
     (* memory *)
     (* we'll keep event handlers here *)
-    val eventHandlerTab = ref (Tab.empty : (element * eventType * eventHandler) Tab.T)
+    val eventHandlerTab = ref (Tab.empty : (eventType * eventHandler) Tab.T)
     fun handle_event (id:string) (eventData:string) = let
-            val (_, _, EventHandler f) = Tab.get (!eventHandlerTab) (Name.mk id)
+            val (_, EventHandler f) = Tab.get (!eventHandlerTab) (Name.mk id)
         in f(eventData) end
     
     (* we'll keep timer callbacks here *)
@@ -218,7 +218,7 @@ struct
 
     (* events *)    
     fun addEventListener (elem as (Element e)) (et:eventType) (f:eventHandler) = let
-            val entry = (elem, et, f)
+            val entry = (et, f)
             val (id, tab) = Tab.add (Name.default_name, entry) (!eventHandlerTab)
             val _ = (eventHandlerTab := tab)
             val req = JSONReqStr2 "addEventListener" false [JSON.String e,
@@ -228,17 +228,17 @@ struct
         in EventListener id end
     
     fun removeEventListener (EventListener id) = let
-            val (Element e, et, _) = (Tab.get (!eventHandlerTab) id) handle UNDEF => (raise PolyMLext.DOMExn "Undefined listener");
+            val (et, _) = (Tab.get (!eventHandlerTab) id)
+                          handle UNDEF => (raise PolyMLext.DOMExn "Undefined listener");
             val tab = Tab.delete id (!eventHandlerTab)
             val _ = (eventHandlerTab := tab)
-            val req = JSONReqStr2 "removeEventListener" false [JSON.String e,
-                                                               JSON.String (string_of_eventtype et),
+            val req = JSONReqStr2 "removeEventListener" false [JSON.String (string_of_eventtype et),
                                                                JSON.String (Name.string_of_name id)]
             val _ = send(req)
         in () end
         
     fun onMouseMove (elem as (Element e)) (f:eventHandler) = let
-            val entry = (elem, mousemove, f)
+            val entry = (mousemove, f)
             val (id, tab) = Tab.add (Name.default_name, entry) (!eventHandlerTab)
             val _ = (eventHandlerTab := tab)
             val req = JSONReqStr2 "onMouseMove" false [JSON.String e,
