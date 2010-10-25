@@ -348,7 +348,7 @@ JSWrapper.prototype = {
                 break;
 
             case 1: //errors
-                this.console.log(request.output + "\n");
+                this.console.error(request.output + "\n");
                 break;
 
             case 2: //DOM function

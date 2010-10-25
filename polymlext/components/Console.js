@@ -23,6 +23,11 @@ Console.prototype = {
         }
     },
     
+    error : function(m) {
+        this.content += m;
+        this.consoleUI.update(this);
+    },
+    
     historyAdd : function(m) {
         this.historyResetPointer();
         if (m!="" && this.historyOlder() != m) {

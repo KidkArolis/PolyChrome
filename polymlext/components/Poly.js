@@ -12,8 +12,9 @@ var counterSent = 0;
 var CHUNK_SIZE = 65536;
 var PREFIX_SIZE = 9;
 
-function Socket1(eventTarget) {
+function Socket1(eventTarget, document) {
     this.init(eventTarget);
+    this._document = document;
 }
 Socket1.prototype = {
     //how many bytes are still left to read
@@ -24,19 +25,7 @@ Socket1.prototype = {
     reading : false,
     //scriptableInputStream
     sin : null,
-    
-    /*
-    onInputStreamReady : function(input) {
-        this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
-        this.sin.init(input);
-        var r = this.sin.read(PREFIX_SIZE);
-        this.request = this.sin.read(parseInt(r));
-        this.eventTarget.onRequest(this.request);
-        this.input.asyncWait(this,0,PREFIX_SIZE,this.tm.mainThread);
-    },
-    */
-    
+       
     onInputStreamReady : function(input) {
         if (!this.reading) {
             this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
@@ -128,7 +117,9 @@ Socket1.prototype = {
         this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
+        
         this.socket.init(-1, true, -1);
+        debug.log(this.socket.port);
         this.socket.asyncListen(this);
     },
 
@@ -280,7 +271,7 @@ Poly.prototype = {
         this.console.init(this);
         debug = Cc["@ed.ac.uk/poly/debug-console;1"]
                 .getService().wrappedJSObject;
-        this.socket1 = new Socket1(this);
+        this.socket1 = new Socket1(this, doc);
         this.socket2 = new Socket2();
         this.startPoly();
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
