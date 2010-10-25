@@ -1,9 +1,15 @@
-var debug;
+var debug = Cc["@ed.ac.uk/poly/debug-console;1"].getService().wrappedJSObject;
+Cu.import("resource://polymlext/Utils.jsm");
 
 var PolyMLext = (function() {
     var consoleUI;
     var polyPages = [];
-    var theWelcomeLink = "";
+    
+    var links = {
+        'about' : 'chrome://polymlext/content/about.html',
+        'demos' : 'chrome://polymlext/content/demos',
+        'construct' : 'chrome://polymlext/content/theConstruct.html'
+    };
 
     var lookForPolyMLCode = function(doc) {
         var scripts = doc.getElementsByTagName("script");
@@ -32,7 +38,6 @@ var PolyMLext = (function() {
     var onPageLoad = function(aEvent) {
         if (aEvent.originalTarget.nodeName == "#document") {
             var doc = aEvent.originalTarget;
-            //checking if it's about page...
             if (isAboutPage(doc)) {
                 processAboutPage(doc);
             }
@@ -47,40 +52,39 @@ var PolyMLext = (function() {
                 polyPages[i].poly.destroy();
                 polyPages[i].poly = null;
                 polyPages.splice(i, 1);
-                break;
+                return;
             }
         }
     }
 
     var bindPageLoad = function() {
         var browser = document.getElementById("appcontent");
-        if(browser) {
+        if (browser) {
             browser.addEventListener("load", onPageLoad, true);
         }
     }
 
     var bindContextMenu = function() {
-        var demosLink = Utils.getExtensionPath();
-        demosLink += '/chrome/content/demos';
-        document.getElementById("polymlext-demos-button")
+        //demos
+        document.getElementById("polymlextDemosButton")
             .addEventListener("click", function() {
-            gBrowser.selectedTab = gBrowser.addTab(demosLink);
+                Utils.openAndReuseOneTabPerURL(links.demos);
         }, false);
         
         //The Construct (The Matrix reference :)
-        var theConstructLink = Utils.getExtensionPath();
-        theConstructLink += '/chrome/content/theConstruct.html';
-        document.getElementById("polymlext-the-construct-button")
+        document.getElementById("polymlextTheConstructButton")
             .addEventListener("click", function() {
-                gBrowser.selectedTab = gBrowser.addTab(theConstructLink);
+                gBrowser.selectedTab = gBrowser.addTab(links.construct);
             }, false);
-            
+        
+        //about
         document.getElementById("polymlextAboutButton")
             .addEventListener("click", function() {
                 displayAboutPage();
             }, false);
     }
 
+    //for syncing the console to the page displayed
     var bindTabSelect = function() {
         gBrowser.tabContainer.addEventListener("TabSelect", function() {
             for (var i=0, len=polyPages.length; i<len; ++i) {
@@ -94,7 +98,6 @@ var PolyMLext = (function() {
     }
     
     var showPolyNotFoundIcon = function() {
-        
         document.getElementById("polymlextConsoleButton")
                 .setAttribute("hidden", true);
         document.getElementById("polymlextNoPolyButton")
@@ -106,34 +109,30 @@ var PolyMLext = (function() {
     }
     
     var displayAboutPage = function() {
-        
-        gBrowser.selectedTab = gBrowser.addTab(theWelcomeLink);
+        /*gBrowser.selectedTab = gBrowser.addTab(aboutLink);*/
+        Utils.openAndReuseOneTabPerURL(links.about);
     }
+    
     var processAboutPage = function(doc) {
-        var polyFound = Utils.findPoly();
-        if (!polyFound) {
+        if (!PolyMLext.polyFound) {
             doc.getElementById("polymlNotFound").style["display"] = "block";
         }
     }
+    
     var isAboutPage = function(doc) {
-        return doc.location.href.substr(-1*theWelcomeLink.length)
-               ==theWelcomeLink
+        return doc.location.href==links.about;
     }
 
     var init = function () {
-        Components.utils.import("resource://polymlext/Utils.jsm");
-        debug = Cc["@ed.ac.uk/poly/debug-console;1"]
-                .getService().wrappedJSObject;
-                
-        theWelcomeLink = Utils.getExtensionPath();
-        theWelcomeLink += '/chrome/content/about.html';
+        PolyMLext.polyFound = Utils.findPoly();
         
-        var polyFound = Utils.findPoly();
-        if (polyFound) {
+        //if PolyML is found on the computer, initialize a bunch of stuff
+        if (PolyMLext.polyFound) {
             consoleUI = Cc["@ed.ac.uk/poly/console-ui;1"]
                     .getService().wrappedJSObject;
             var browserUI = document;
             consoleUI.init(browserUI);
+            
             bindPageLoad();
             bindTabSelect();
             bindContextMenu();
@@ -141,9 +140,11 @@ var PolyMLext = (function() {
             showPolyNotFoundIcon();
         }
         
+        //checking if it's first time launch
+        //which case an about page is displayed
         var prefService = Components
                 .classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch)
+                .getService(Ci.nsIPrefBranch)
         var firstLaunch = prefService.getBoolPref(
                 "extensions.PolyMLext.FirstLaunch");
         if (firstLaunch) {

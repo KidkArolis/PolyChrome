@@ -1,6 +1,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 //global variable to be used by anyone in this component, it is initialized
 //in the Poly.init()
@@ -117,9 +118,7 @@ Socket1.prototype = {
         this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
         this.socket = Cc["@mozilla.org/network/server-socket;1"].
                 createInstance(Ci.nsIServerSocket);
-        
         this.socket.init(-1, true, -1);
-        debug.log(this.socket.port);
         this.socket.asyncListen(this);
     },
 
@@ -263,7 +262,7 @@ Poly.prototype = {
     },
 
     init : function(doc, console) {
-        Components.utils.import("resource://polymlext/Utils.jsm");
+        Cu.import("resource://polymlext/Utils.jsm");
         this.process = null;
         this._document = doc;
         this.console = Cc["@ed.ac.uk/poly/console;1"]
@@ -282,7 +281,7 @@ Poly.prototype = {
 
 
 // turning Poly Class into an XPCOM component
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 function Poly() {
     this.wrappedJSObject = this;
 }
