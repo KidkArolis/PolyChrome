@@ -13,9 +13,140 @@ var counterSent = 0;
 var CHUNK_SIZE = 65536;
 var PREFIX_SIZE = 9;
 
+function Evaluator(poly) {
+    this.init(poly);
+}
+Evaluator.prototype = {
+    
+    downloadFile : function(src) {
+        var filename = src.substring(src.lastIndexOf("/")+1);
+        var ext = filename.substr(-4).toLowerCase();
+        if (ext==".sml" || ext==".zip") {
+            this.downloads.pending++;
+            if (ext==".sml") {
+                var type = 1;
+            } else {
+                var type = 2
+            }
+            
+            var self = this;
+            var onComplete = function() {
+                self.downloads.complete++;
+                if (self.downloads.pending==self.downloads.complete) {
+                    self.processQueue();
+                }
+            }
+            var status = Utils.downloadFile(src,
+                                this.poly.document.baseURI,
+                                this.poly.sandbox.absolutePath + filename,
+                                onComplete);
+            if (status) {
+                return {
+                    type:type,
+                    filename:filename
+                }
+            } else {
+                this.poly.console.error("Could not download file: " + src);
+            }
+            
+        }
+        return null;
+    },
+
+    start : function() {
+        var scripts = this.poly.document.getElementsByTagName("script");
+        
+        //this shouldn't normally happen, because we already know there
+        //are PolyML scripts in the document, but to be cautious if someone
+        //removes them by the time this is reached
+        if (scripts==null) return;
+        
+        for (var i=0, len=scripts.length; i<len; i++) {
+            if (scripts[i].getAttribute("type")=="application/x-polyml") {
+                var src = scripts[i].getAttribute("src");
+                if (src==null) {
+                    //grab the code from the html
+                    var code = scripts[i].innerHTML;
+                    var p = {type:0, code:code};
+                    this.queue.push(p);
+                } else {
+                    var p = this.downloadFile(src);
+                    if (p!=null) {
+                        this.queue.push(p);
+                    }
+                }
+            }
+        }
+        
+        //if there were no downloads involved then process the queue
+        //otherwise the processQueue call will be issued by last download
+        //progress listener
+        if (this.downloads.pending==0) {
+            this.processQueue();
+        }
+    },
+    
+    processQueue : function() {
+        for (var i in this.queue) {
+            var p = this.queue[i];
+            switch (p.type) {
+                case 0:
+                    this.poly.socket1.send("0"+p.code);
+                    break;
+                case 1:
+                    this.poly.socket1.send('0PolyML.use "' + p.filename + '";');
+                    break;
+                case 2:
+                    //have to wait for the download to finish before doing this
+                    var path = this.poly.sandbox.absolutePath;
+                    var status = Utils.extractZip(path + p.filename, path);
+                    if (!status) {
+                        this.poly.console.error("Could not extract zip file: " + src);
+                    }
+                    break;
+            }
+        }
+        this.queue = [];
+    },
+    
+    init : function(poly) {
+        this.poly = poly;
+        this.downloads = {pending:0, complete:0}
+        this.queue = [];
+    }
+}
+
+function Sandbox(socket, doc) {
+    this.init(socket, doc);
+}
+Sandbox.prototype = {
+    absolutePath : null,
+    hash : null,
+    
+    init : function(socket, doc) {    
+        //create a new directory with random name      
+        while (true) {
+            this.hash = Utils.md5(Math.random().toString()).substring(0,8);
+            this.absolutePath = Utils.getExtensionPath()
+                            +"/sandboxes/"
+                            +this.hash
+                            +"/";
+            if (!Utils.fileExists(this.absolutePath)) {
+                break;
+            }
+        }
+        Utils.createDir(this.absolutePath);
+    },
+    
+    destroy : function() {
+        Utils.removeDir(this.absolutePath);
+    }
+}
+
+
 function Socket1(eventTarget, document) {
     this.init(eventTarget);
-    this._document = document;
+    this.document = document;
 }
 Socket1.prototype = {
     //how many bytes are still left to read
@@ -37,7 +168,7 @@ Socket1.prototype = {
                 //wanted
                 var r = this.sin.read(PREFIX_SIZE);
             } catch (e) {
-                debug.error(e, this._document.location.href);
+                debug.error(e, this.document.location.href);
                 return;
             }
             this.bytesLeft = parseInt(r);            
@@ -50,7 +181,7 @@ Socket1.prototype = {
             try {
                 var chunk = this.sin.read(this.bytesNextChunk);
             } catch (e) {
-                debug.error(e, this._document.location.href);
+                debug.error(e, this.document.location.href);
                 return;
             }
             this.request += chunk;
@@ -188,8 +319,10 @@ Socket2.prototype = {
 
 Poly.prototype = {
     startPoly : function () {        
-        var binpath = Utils.getExtensionPath() + '/poly/bin/polyml';
-        var args = [this.socket1.port(), this.socket2.port()];
+        var binpath = Utils.getExtensionPath() + "/poly/bin/polyml";
+        var args = [this.socket1.port(),
+                    this.socket2.port(),
+                    this.sandbox.absolutePath];
         if (Utils.isDevelopmentMode()) {
             args.push("dev");
         }
@@ -198,7 +331,7 @@ Poly.prototype = {
     
     stopPoly : function() {
         var binpath = Utils.getExtensionPath() +
-                '/poly/bin/stop_child_processes.sh';
+                "/poly/bin/stop_child_processes.sh";
         var args = [this.process.pid];
         var process = Utils.startProcess(binpath, args);
     },
@@ -214,11 +347,12 @@ Poly.prototype = {
         this.socket1.destroy();
         this.socket2.destroy();
         this.console.destroy();
+        this.sandbox.destroy();
     },
 
     onRequest : function(request) {
         /*
-         slightly obscure method. The messages that are sent to poly have to
+         a slightly obscure method. The messages that are sent to poly have to
          be preappended with "0" or "1" indicating succesful processing of the
          request or an exception.
          if the response produces by jswrapper is null
@@ -251,20 +385,13 @@ Poly.prototype = {
     },
 
     onReady : function() {
-        var scripts = this._document.getElementsByTagName("script");
-        if (scripts==null) return;
-        for (var i=0, len=scripts.length; i<len; i++) {
-            if (scripts[i].getAttribute("type")=="application/x-polyml") {
-                var code = scripts[i].innerHTML;
-                this.socket1.send("0"+code);
-            }
-        }
+        this.evaluator.start();
     },
 
     init : function(doc, console) {
         Cu.import("resource://polymlext/Utils.jsm");
         this.process = null;
-        this._document = doc;
+        this.document = doc;
         this.console = Cc["@ed.ac.uk/poly/console;1"]
                 .createInstance().wrappedJSObject;
         this.console.init(this);
@@ -272,10 +399,12 @@ Poly.prototype = {
                 .getService().wrappedJSObject;
         this.socket1 = new Socket1(this, doc);
         this.socket2 = new Socket2();
+        this.sandbox = new Sandbox(this.socket1, doc);
+        this.evaluator = new Evaluator(this);
         this.startPoly();
         this.jswrapper = Cc["@ed.ac.uk/poly/jswrapper;1"].
                             createInstance().wrappedJSObject;
-        this.jswrapper.init(this._document, this.socket1, this.console);
+        this.jswrapper.init(this.document, this.socket1, this.console);
     }
 }
 

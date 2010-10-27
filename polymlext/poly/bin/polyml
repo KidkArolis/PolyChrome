@@ -16,9 +16,10 @@ fi
 
 PORT1=$1
 PORT2=$2
-if [ -z "$PORT1" ] || [ -z "$PORT2" ]
+SANDBOX_PATH=$3
+if [ -z "$PORT1" ] || [ -z "$PORT2" ] || [ -z "$SANDBOX_PATH" ]
 then 
-    echo "Usage: $PRG port1 port2" >&2
+    echo "Usage: $PRG port1 port2 sandbox_path" >&2
     exit 2; # fail
 fi
 
@@ -31,12 +32,12 @@ then
 fi
 
 #development mode ignores the heap file
-if [ "$3" == "dev" ]
+if [ "$4" == "dev" ]
 then
     #compile the main.sml
     (echo "OS.FileSys.chDir(\"$HERE/../\");
            PolyML.use \"${THE_POLY_PROGRAM}\";
-           PolyMLext.main($PORT1,$PORT2);"; ${LEDIT}) \
+           PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");"; ${LEDIT}) \
            | ${POLYML_HOME}/bin/poly "$@";
 else
     #build the heap if needed
@@ -50,7 +51,7 @@ else
     #load the heap
     (echo "OS.FileSys.chDir(\"$HERE\");
            PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";
-           PolyMLext.main($PORT1,$PORT2);";${LEDIT}) \
+           PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");";${LEDIT}) \
            | ${POLYML_HOME}/bin/poly "$@";
 fi
 

@@ -109,7 +109,6 @@ var PolyMLext = (function() {
     }
     
     var displayAboutPage = function() {
-        /*gBrowser.selectedTab = gBrowser.addTab(aboutLink);*/
         Utils.openAndReuseOneTabPerURL(links.about);
     }
     
@@ -124,6 +123,10 @@ var PolyMLext = (function() {
     }
 
     var init = function () {
+        //cleanup the sandbox in case the browser was not closed properly
+        Utils.removeDir(Utils.getExtensionPath()+"/sandboxes/");
+        Utils.createDir(Utils.getExtensionPath()+"/sandboxes/");
+        
         PolyMLext.polyFound = Utils.findPoly();
         
         //if PolyML is found on the computer, initialize a bunch of stuff

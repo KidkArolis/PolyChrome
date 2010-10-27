@@ -175,15 +175,22 @@ structure PolyMLext (*: POLYMLEXT*)
             loop()
         end
 
-    fun main (socket1port, socket2port) =
+    fun main (socket1port, socket2port, sandboxPath) =
         let
             val _ = (socket1 := (SOME (make_socket socket1port)))
             val _ = (socket2 := (SOME (make_socket socket2port)))
+            
+            val _ = OS.FileSys.chDir(sandboxPath)
+            
             (* disable access to this structure *)
-            val _ = map PolyML.Compiler.forgetStructure["PolyMLext"];
+            val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]
+            
             val _ = loop()
+            
+            (*
             val _ = close_sock (the socket1)
             val _ = close_sock (the socket2)
+            *)
         in
             (*OS.Process.exit OS.Process.success*)
             ()

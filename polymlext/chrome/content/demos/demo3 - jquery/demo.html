@@ -6,27 +6,11 @@
 
 <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
 <script type="text/javascript" src="jQueryWrapper.js"></script>
-
-<script type="type/javascript">
-
-</script>
+<script type="application/x-polyml" src="jQueryWrapper.sml"></script>
 
 <script type="application/x-polyml">
-open DOM
-
-
-(* this could be an external file when thats possible *)
-structure jQueryWrapper =
-struct
-    val w = "jQueryWrapper"
-    fun $ (selector) = let
-            val req = JSONReqStr w "select" [JSON.String selector]
-            val _ = send(req)
-        in parse_element_list (recv()) end
-end
+open DOM;
 open jQueryWrapper;
-
-
 
 (* this is the actual application of the custom wrapper *)
 fun setColorGreen (e) = let in setStyle e "color" "green"; e end
@@ -37,7 +21,6 @@ val orangeElements = $("p.orange");
 
 map setColorGreen greenElements;
 map setColorOrange orangeElements;
-
 </script>
 
 <style type= "text/css">
