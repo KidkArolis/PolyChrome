@@ -254,6 +254,10 @@ struct
             val [x,y] = (String.tokens (fn (#",") => true | _ => false) response)
         in (valOf (Int.fromString x), valOf (Int.fromString y)) end
     
+    fun cancelMouseCoordsPolling () = let
+            val req = JSONReqStr2 "cancelMouseCoordsPolling" false []
+        in send(req) end
+    
     (*timers*)
     fun setInterval (f:timerHandler) (time:int) = let
             val entry = (time, f)

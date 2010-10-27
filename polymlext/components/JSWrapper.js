@@ -245,20 +245,24 @@ DOMWrappers.prototype = {
     },
     //polling mouse coordinates
     getMouseCoords : function(request) {
+        this.mouseCoordsPollingActive = true;
         if (this.mouseX === undefined) {
             this.mouseX = 0;
             this.mouseY = 0;       
             
             self = this;
             var unsafeWin = document.defaultView.wrappedJSObject;
-            var setCoords = function(event) {
-                unsafeWin.removeEventListener('mousemove', setCoords, false)
+            this.setCoords = function(event) {
+                unsafeWin.removeEventListener("mousemove", self.setCoords, false)
                 self.mouseX = event.clientX;
                 self.mouseY = event.clientY;
                 self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 35);
+                debug.log("fired");
             }
             var poll = function() {
-                unsafeWin.addEventListener('mousemove', setCoords, false);
+                if (self.mouseCoordsPollingActive) {
+                    unsafeWin.addEventListener("mousemove", self.setCoords, false);
+                }
             }
             poll();
         }
@@ -266,8 +270,13 @@ DOMWrappers.prototype = {
         return this.mouseX+","+this.mouseY;
     },
     cancelMouseCoordsPolling : function(request) {
-        //remove the listener
-        //remove the timeout
+        this.mouseCoordsPollingActive = false;
+        var unsafeWin = document.defaultView.wrappedJSObject;
+        if (this.mouseCoordsTimeout != null) {
+            unsafeWin.clearTimeout(this.mouseCoordsTimeout);
+        }
+        unsafeWin.removeEventListener("mousemove", this.setCoords, false);
+        return null;
     },
     
     //timers

@@ -46,9 +46,8 @@ Evaluator.prototype = {
                     filename:filename
                 }
             } else {
-                this.poly.console.error("Could not download file: " + src);
+                this.poly.console.error("Could not download file: " + src + "\n");
             }
-            
         }
         return null;
     },
@@ -101,7 +100,7 @@ Evaluator.prototype = {
                     var path = this.poly.sandbox.absolutePath;
                     var status = Utils.extractZip(path + p.filename, path);
                     if (!status) {
-                        this.poly.console.error("Could not extract zip file: " + src);
+                        this.poly.console.error("Could not extract zip file: " + p.filename + "\n");
                     }
                     break;
             }

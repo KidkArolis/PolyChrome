@@ -264,13 +264,26 @@ var Utils = {
                 target.append(aPart);
             });
             return target;
-        }
+        }       
        
         let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                          createInstance(Ci.nsIZipReader);
-        zipReader.open(zipFile);
-       
+
         try {
+            zipReader.open(zipFile);
+        } catch (e) {
+            debug.error("extractZip: failed to open the zip file " +
+                          zipPath + ",\nexception = " + e);
+            return false;
+        }
+           
+        /*
+        if (!zipReader.test(null)) {
+            return false;
+        }
+        */
+       
+        try {          
             // create directories first
             let entries = zipReader.findEntries("*/");
             while (entries.hasMore()) {
@@ -282,8 +295,8 @@ var Utils = {
                                    FileUtils.PERMS_DIRECTORY);
                     }
                     catch (e) {
-                        debug.error("extractFiles: failed to create target directory for " +
-                           "extraction file = " + target.path + ", exception = " + e);
+                        debug.error("extractZip: failed to create target directory for " +
+                           "extraction file = " + target.path + ",\nexception = " + e);
                         return false;
                     }
                 }
