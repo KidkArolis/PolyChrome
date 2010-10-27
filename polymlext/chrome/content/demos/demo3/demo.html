@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <title>jQuery Wrapper demo</title>
+<link type="text/css" rel="stylesheet" href="../demos.css" /> 
+
 
 <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
 <script type="text/javascript" src="jQueryWrapper.js"></script>
@@ -23,35 +25,21 @@ map setColorGreen greenElements;
 map setColorOrange orangeElements;
 </script>
 
-<style type= "text/css">
-    body, html {
-        padding:0;
-        margin:0;
-        font-family: verdana, sans;
-        font-size:12px;
-        text-align:center;
-        padding:30px;
-    }
-    #description {
-        text-align:left;
-    }
-</style>
-
 </head>
 <body>
+<div style="text-align:center">
+    <p class="green">This text should be green color</p>
+    <p class="orange">This text should be orange color</p>
+    <p class="green">This text should be green color</p>
+    <p class="orange">This text should be orange color</p>
+</div>
 
-<p class="green">This text should be green color</p>
-<p class="orange">This text should be orange color</p>
-<p class="green">This text should be green color</p>
-<p class="orange">This text should be orange color</p>
-
-<hr />
 <div id="description">
-<p>Demo description:</p>
-<ul>
-<li>Custom wrapper consisting of a JS snippet and Poly snippet is used here to use functions from jQuery library.</li>
-<li>Notice how a list with elements is returned to Poly.</li>
-</ul>
+    <h1>Demo description:</h1>
+    <ul>
+        <li>Custom wrapper consisting of a JS snippet and Poly snippet is used here to use functions from jQuery library.</li>
+        <li>Notice how a list with elements is returned to Poly.</li>
+    </ul>
 </div>
 
 </body>

@@ -7,7 +7,7 @@ var PolyMLext = (function() {
     
     var links = {
         'about' : 'chrome://polymlext/content/about.html',
-        'demos' : 'chrome://polymlext/content/demos',
+        'demos' : 'chrome://polymlext/content/demos/index.html',
         'construct' : 'chrome://polymlext/content/theConstruct.html'
     };
 
