@@ -10,17 +10,22 @@ var error = PolyMLext.error;
 PolyMLext.Poly = function(document, console) {
     this.document = document;
     this.console = console;
-    
-    this.socket1 = new Socket1(this);
-    this.socket2 = new Socket2();
-    this.sandbox = new Sandbox(this.socket1, this.document);
-    this.evaluator = new Evaluator(this);
-    this.startPolyProcess();
-    this.jswrapper = new PolyMLext.JSWrapper(this);
 }
 PolyMLext.Poly.prototype = {
     process : null,
     document : null,
+    enabled : false,
+    
+    init : function() {
+        this.enabled = true;
+        this.console.setStatus({s:"PolyML loading..."});
+        this.socket1 = new Socket1(this);
+        this.socket2 = new Socket2();
+        this.sandbox = new Sandbox(this.socket1, this.document);
+        this.evaluator = new Evaluator(this);
+        this.startPolyProcess();
+        this.jswrapper = new PolyMLext.JSWrapper(this);
+    },
     
     startPolyProcess : function () {        
         var binpath = Utils.getExtensionPath() + "/poly/bin/polyml";
@@ -194,6 +199,7 @@ Evaluator.prototype = {
             }
         }
         this.queue = [];
+        this.poly.console.setStatus({s:"PolyML app"});
     },
     
     destroy : function() {}

@@ -13,10 +13,10 @@ PolyMLext.BrowserUI = function() {
             .classes["@mozilla.org/preferences-service;1"]
             .getService(Ci.nsIPrefBranch)
     var firstLaunch = prefService.getBoolPref(
-            "extensions.PolyMLext.FirstLaunch");
+            "extensions.PolyMLext.firstLaunch");
     if (firstLaunch) {
         this.displayAboutPage();
-        prefService.setBoolPref("extensions.PolyMLext.FirstLaunch", false);
+        prefService.setBoolPref("extensions.PolyMLext.firstLaunch", false);
     }
     
     this.console = new ConsoleUI(this);
@@ -50,12 +50,35 @@ PolyMLext.BrowserUI.prototype = {
         //demos
         e("polymlext-button-demos").addEventListener("click", function() {
                 Utils.openAndReuseOneTabPerURL(self.links.demos);
-        }, false);
+            }, false);
         
         //The Construct (The Matrix reference :)
         e("polymlext-button-construct").addEventListener("click", function() {
                 gBrowser.selectedTab = gBrowser.addTab(self.links.construct);
             }, false);
+        
+        //always enable
+        var prefService = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefBranch)
+        var alwaysEnabled = prefService.getBoolPref(
+            "extensions.PolyMLext.alwaysEnabled");
+        if (alwaysEnabled) {
+            e("polymlext-button-alwaysEnable").setAttribute("checked", true);
+        } else {
+            e("polymlext-button-alwaysEnable").setAttribute("checked", false);
+        }
+        e("polymlext-button-alwaysEnable").addEventListener("click",
+            function() {
+                var prefService = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefBranch)
+                var alwaysEnabled = prefService.getBoolPref(
+                    "extensions.PolyMLext.alwaysEnabled");
+                e("polymlext-button-alwaysEnable").setAttribute(
+                        "checked", !alwaysEnabled);
+                prefService.setBoolPref(
+                        "extensions.PolyMLext.alwaysEnabled", !alwaysEnabled);
+            }, false);
+        
         
         //about
         e("polymlext-button-about").addEventListener("click", function() {
@@ -106,10 +129,19 @@ PolyMLext.BrowserUI.prototype = {
         gBrowser.tabContainer.addEventListener("TabMove",
                                                this.callbacks.onTabMove,
                                                false);
+        
+        //bind the click to load the app button
+        e("polymlext-icon-statusindicator").addEventListener("click",
+            this.callbacks.onPolyEnable, false);
     },
     
     setStatus : function(s) {
-        e("polymlext-icon-statusindicator").value = s;
+        e("polymlext-icon-statusindicator").value = s.s;
+        if (s.error) {
+            e("polymlext-icon-statusindicator").style["color"] = "red";
+        } else {
+            e("polymlext-icon-statusindicator").style["color"] = "black";
+        }
     }
 };
 
@@ -131,17 +163,21 @@ ConsoleUI.prototype = {
     },
     
     select : function(console) {
-        e("polymlext-icon-statusindicator").setAttribute("hidden", false);
         this.activeConsole = console;
+        
+        PolyMLext.BrowserUI.setStatus(this.activeConsole.status);
+        e("polymlext-icon-statusindicator").setAttribute("hidden", false);
         e("polymlext-console-logarea").value = this.activeConsole.content;
         this.scrollDown();
         if (this.activeConsole.enabled) {
-            if (this.activeConsole.minimized) {
-                this.hideConsole();
-            } else {
-                this.showConsole();
-            }
+            if (this.activeConsole.poly.enabled) {
+                if (this.activeConsole.minimized) {
+                    this.hideConsole();
+                } else {
+                    this.showConsole();
+                }
             this.setButtonColor("red");
+            }
         } else {
             this.disable();
         }
@@ -159,6 +195,9 @@ ConsoleUI.prototype = {
     
     toggleConsole : function(event) {
         if (this.activeConsole == null) {
+            return;
+        }
+        if (!this.activeConsole.poly.enabled) {
             return;
         }
         if (event!=null && event.button!=0) {

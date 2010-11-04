@@ -47,10 +47,12 @@ var PolyMLext = (function() {
                     onDocumentLoad : PolyMLext.lookForPolyMLCode,
                     onTabSelect : PolyMLext.onTabSelect,
                     onTabClose : PolyMLext.onTabClose,
-                    onTabMove : PolyMLext.onTabMove
+                    onTabMove : PolyMLext.onTabMove,
+                    onPolyEnable : PolyMLext.onPolyEnable
                 });
             } else {
                 PolyMLext.BrowserUI.noPoly();
+                PolyMLext.BrowserUI.setStatus({s:"PolyML not found"});
             }
         },
     
@@ -61,35 +63,48 @@ var PolyMLext = (function() {
                 if (scripts[i].getAttribute("type")=="application/x-polyml") {
                     var tab = Utils.getTabForDocument(doc);
                     var id = "";
-                    if (tab.hasAttribute("polymlext-tabid")) {                        
+                    if (tab.hasAttribute("polymlext-tabid")) {
                         id = tab.getAttribute("polymlext-tabid");
                         var poly = new PolyMLext.Poly(
                                 doc, PolyMLext.polyCollection[id].console);
+                        //the same tab means we don't care about the
+                        //"alwaysEnabled" preference
+                        poly.init();
                         PolyMLext.polyCollection[id].poly = poly;
                         PolyMLext.polyCollection[id].console.poly = poly;
                         if (doc == content.document) {
                             PolyMLext.polyCollection[id].console.select();
                         }
-                    } else {                       
+                    } else {
                         //create new id
                         while (true) {
-                            id = Utils.randomString();
-                            if (!(id in PolyMLext.polyCollection)) {
-                                break;
+                                id = Utils.randomString();
+                                if (!(id in PolyMLext.polyCollection)) {
+                                    break;
+                                }
                             }
-                        }
                         tab.setAttribute("polymlext-tabid", id);
+                        
                         var console = new PolyMLext.Console();
-                        if (doc == content.document) {
-                            console.select();
-                        }
                         var poly = new PolyMLext.Poly(doc, console);
-                        console.poly = poly;
                         console.poly = poly;
                         PolyMLext.polyCollection[id] = {
                             poly:poly,
                             console:console
                         };
+                        
+                        //check if PolyML is enabled
+                        var prefService = Components
+                                .classes["@mozilla.org/preferences-service;1"]
+                                .getService(Ci.nsIPrefBranch)
+                        var alwaysEnabled = prefService.getBoolPref(
+                                "extensions.PolyMLext.alwaysEnabled");
+                        if (alwaysEnabled) {
+                            poly.init();
+                        }
+                        if (doc == content.document) {
+                            console.select();
+                        }
                     }
                     //add event listener for page unload
                     doc.defaultView.addEventListener(
@@ -109,6 +124,13 @@ var PolyMLext = (function() {
                 PolyMLext.polyCollection[id].poly = null;
                 PolyMLext.BrowserUI.console.off();
             }
+        },
+        
+        onPolyEnable : function(event) {
+            var tab = gBrowser.selectedTab;
+            var id = tab.getAttribute("polymlext-tabid");
+            PolyMLext.polyCollection[id].poly.init();
+            PolyMLext.polyCollection[id].console.select();
         },
         
         onTabSelect : function(event) {

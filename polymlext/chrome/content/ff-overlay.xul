@@ -23,6 +23,11 @@
 					/>
 			<menuitem id="polymlext-button-demos" label="Demos"
 					tooltiptext="Demonstrations of PolyMLext features" />
+			<menuseparator />
+			<menuitem id="polymlext-button-alwaysEnable" label="Always Enable"
+					tooltiptext="Execute PolyML applications without explicit 
+permission" />
+			<menuseparator />
 			<menuitem id="polymlext-button-about" label="About" />
 		</menupopup>
 	</popupset>
@@ -38,8 +43,8 @@
 				context="polymlext-contextmenu" />
 		<statusbarpanel id="polymlext-button-nopoly" hidden="true"
 						class="statusbarpanel-iconic"
-						tooltiptext="PolyML was not found on this computer
-						(Click for more)"
+						tooltiptext="PolyML was not found on this computer 
+(Click for more)"
 						src="chrome://polymlext/skin/
 						polyml_16x16_gray_no_poly.png" />
 	</statusbar>
