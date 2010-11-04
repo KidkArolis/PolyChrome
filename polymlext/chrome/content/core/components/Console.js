@@ -82,6 +82,10 @@ PolyMLext.Console.prototype = {
         PolyMLext.BrowserUI.console.select(this);
     },
     
+    clear : function() {
+        this.content = "";
+    },
+    
     destroy : function() {},
 };
 

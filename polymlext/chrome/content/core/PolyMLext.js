@@ -72,6 +72,7 @@ var PolyMLext = (function() {
                         poly.init();
                         PolyMLext.polyCollection[id].poly = poly;
                         PolyMLext.polyCollection[id].console.poly = poly;
+                        PolyMLext.polyCollection[id].console.clear();
                         if (doc == content.document) {
                             PolyMLext.polyCollection[id].console.select();
                         }

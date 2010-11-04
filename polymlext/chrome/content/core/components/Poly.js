@@ -189,8 +189,10 @@ Evaluator.prototype = {
                     //have to wait for the download to finish before doing
                     //this
                     var path = this.poly.sandbox.absolutePath;
-                    var status = Utils.extractZip(path + p.filename, path);
-                    if (!status) {
+                    try {
+                        Utils.extractZip(path + p.filename, path);
+                    } catch (e) {
+                        error(e);
                         this.poly.console.error(
                                 "Could not extract zip file: "
                                 + p.filename + "\n");

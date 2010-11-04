@@ -2,21 +2,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-//TODO is there any way of using DebugConsole.js here?
+//use only for debugging
 var consoleService = Cc["@mozilla.org/consoleservice;1"]
             .getService(Components.interfaces.nsIConsoleService);
-var error = function(m, source) {
-    var scriptError = Components.classes["@mozilla.org/scripterror;1"]
-            .createInstance(Components.interfaces.nsIScriptError);
-    var aSourceName = source;
-    var aSourceLine = "";
-    var aLineNumber = "";
-    var aColumnNumber = "";
-    var aFlags = 0x0;
-    var aCategory = "";
-    scriptError.init(m, aSourceName, aSourceLine, aLineNumber, 
-           aColumnNumber, aFlags, aCategory);
-    consoleService.logMessage(scriptError);
+var log = function(m) {
+    this.consoleService.logStringMessage("Utils: " + m + "\n");
 }
 
 var EXPORTED_SYMBOLS = ["Utils"];
@@ -305,12 +295,12 @@ var Utils = {
         let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                          createInstance(Ci.nsIZipReader);
 
+        zipReader.open(zipFile);
+
         try {
             zipReader.open(zipFile);
         } catch (e) {
-            error("extractZip: failed to open the zip file " +
-                          zipPath + ",\nexception = " + e);
-            return false;
+            throw("failed to open the zip file: " + e);
         }
            
         /*
@@ -319,7 +309,7 @@ var Utils = {
         }
         */
        
-        try {          
+        try {
             // create directories first
             let entries = zipReader.findEntries("*/");
             while (entries.hasMore()) {
@@ -331,9 +321,7 @@ var Utils = {
                                    FileUtils.PERMS_DIRECTORY);
                     }
                     catch (e) {
-                        error("extractZip: failed to create target directory for " +
-                           "extraction file = " + target.path + ",\nexception = " + e);
-                        return false;
+                        throw("failed to create target directory: " + e);
                     }
                 }
             }
@@ -350,6 +338,9 @@ var Utils = {
                 zipReader.extract(entryName, target);
                 target.permissions |= FileUtils.PERMS_FILE;
             }
+        }
+        catch (e) {
+            throw("failed to unzip: " + e)
         }
         finally {
             zipReader.close();
