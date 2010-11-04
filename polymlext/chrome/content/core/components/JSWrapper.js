@@ -73,19 +73,18 @@ PolyMLext.JSWrapper.prototype = {
             case 3: //custom wrappers
                 var unsafeWin = document.defaultView.wrappedJSObject;
                 
-                //TODO: perhaps these are not needed with the auto
-                //exception handling
                 if (unsafeWin[request.w] == undefined) {
-                    error(request.w +
-                            " wrapper does not exist",
-                            document.location.href);
+                    var msg = request.w + " JS wrapper was not found";
+                    error(msg, document.location.href);
+                    this.poly.console.error(msg);
                     break;
                 }
                 
                 if (unsafeWin[request.w][request.f] == undefined) {
-                    error(request.w+"."+request.f +
-                        " function does not exist",
-                        document.location.href);
+                    var msg = request.w + "." + request.f
+                            + " JS function was not found";
+                    error(msg, document.location.href);
+                    this.poly.console.error(msg);
                     break;
                 }
                 

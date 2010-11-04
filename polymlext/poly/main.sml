@@ -5,9 +5,8 @@ PolyML.fullGC();
 PolyML.SaveState.loadState "isaplib/heaps/all.polyml-heap";
 use "json.sml";
 
-(* 'open' the print function *)
+(* reopen the print function *)
 val print = TextIO.print;
-
 
 structure PolyMLext (*: POLYMLEXT*)
 = struct
@@ -27,7 +26,7 @@ structure PolyMLext (*: POLYMLEXT*)
     fun make_socket (port) =
         let
             val client = INetSock.TCP.socket()
-            val me = valOf (NetHostDB.getByName "localhost") (* NetHostDB.fromString "127.0.0.1" *)
+            val me = valOf (NetHostDB.getByName "localhost")
             val localhost = NetHostDB.addr me
             val _ = Socket.connect(client,INetSock.toAddr(localhost, port))
             val _ = INetSock.TCP.setNODELAY(client,true)
@@ -60,7 +59,7 @@ structure PolyMLext (*: POLYMLEXT*)
             if t=0 then m else raise DOMExn (m)
         end
 
-    fun recv1 () = recv_ (the socket1)    
+    fun recv1 () = recv_ (the socket1)
     fun recv2 () = recv_ (the socket2)
 
     fun expand (str, 9) = str
@@ -185,15 +184,14 @@ structure PolyMLext (*: POLYMLEXT*)
             (* disable access to this structure *)
             val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]
             
-            val _ = loop()
+            val _ = loop() handle
+                        Interrupt => print "PolyML process stopped.\n";
             
-            (*
+            (* clean up *)
             val _ = close_sock (the socket1)
             val _ = close_sock (the socket2)
-            *)
         in
-            (*OS.Process.exit OS.Process.success*)
-            ()
+            OS.Process.exit OS.Process.success
         end
 
 end;

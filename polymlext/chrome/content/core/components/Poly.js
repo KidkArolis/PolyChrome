@@ -276,7 +276,7 @@ Socket1.prototype = {
                 //wanted
                 var r = this.sin.read(PolyMLext.PREFIX_SIZE);
             } catch (e) {
-                debug.error(e);
+                error(e);
                 return;
             }
             this.bytesLeft = parseInt(r);            
@@ -289,7 +289,7 @@ Socket1.prototype = {
             try {
                 var chunk = this.sin.read(this.bytesNextChunk);
             } catch (e) {
-                debug.error(e);
+                error(e);
                 return;
             }
             this.request += chunk;
