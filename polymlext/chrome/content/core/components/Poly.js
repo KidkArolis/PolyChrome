@@ -225,6 +225,13 @@ Sandbox.prototype = {
 }
 
 
+var Socket = function() {
+    
+}
+Socket.prototype = {
+    
+}
+
 /*
  this socket is used for sending PolyML code to be evaluated. For example
  the code from the document or the event handling code
@@ -374,8 +381,9 @@ Socket2.prototype = {
         //if (data=="") { temp = "-EMPTY STRING-"; }
         //dump(temp + "\n\n");
         
-        var prefix = (data.length.toString() + Array(9).join(" "))
-                .substring(0, 9);
+        var prefix = (data.length.toString() +
+                Array(PolyMLext.PREFIX_SIZE).join(" "))
+                .substring(0, PolyMLext.PREFIX_SIZE);
         var prefixed_data = prefix + data;
         var pos = 0;
         while (pos<prefixed_data.length) {
