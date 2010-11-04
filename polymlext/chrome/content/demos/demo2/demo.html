@@ -7,18 +7,18 @@
 
 <script type="application/x-polyml">
 open DOM;
-val b = valOf (getElementById "body");
+val [b] = (getElementsByTagName "html");
 val e = valOf (getElementById "abc");
 fun u (eventData) =
     let
-        val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
-        val _ = setInnerHTML e (x^","^y);
+        val [x,y] = parseMouseMoveEvent eventData
+        val _ = setInnerHTML e ((Int.toString x)^","^ (Int.toString y));
     in () end;
 onMouseMove b (EventHandler u);
 </script>
 
 <style type= "text/css">
-    #body {
+    body {
       background:#c33;
     }
     #abc {
@@ -26,20 +26,14 @@ onMouseMove b (EventHandler u);
       color:white;
       font-size:18px;
       padding-top:20%;
-      paddin
     }
 </style>
 
 </head>
-<body id="body">
+<body>
 <div id="abc">0</div>
 
-<div id="description">
-    <h1>Demo description:</h1>
-    <ul>
-        <li></li>
-    </ul>
-</div>
+
 </body>
 </html>
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ### EDIT THIS!! ##############################################################
 # make sure this is the profile you will be using the extension with
-ff_profile=/home/karolis/.mozilla/firefox/rt8tmtpt.default
+ff_profile=/home/karolis/.mozilla/firefox/0b8qrrqd.default
 ##############################################################################
 
 THE_POLY_HEAP="polymlext.heap"

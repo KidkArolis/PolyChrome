@@ -148,4 +148,4 @@ fun loop () =
     ()
   end;
 
-val a = setInterval (TimerHandler loop) drawInterval;
+val _ = setInterval (TimerHandler loop) drawInterval;

@@ -1,13 +1,129 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+(function() {
+    
+var log = PolyMLext.log;
+var error = PolyMLext.error;
 
-var debug;
-
+//this will be set to a document, so that all DOM/JS wrappers could access
+//the correct document (and not firefox UI)
 var document;
 
-function Memory() {
-    this.init();
+PolyMLext.JSWrapper = function(poly) {
+    this.poly = poly;
+    this.nativeJSON = Cc["@mozilla.org/dom/json;1"]
+            .createInstance(Ci.nsIJSON);
+    this.Memory = new Memory();
+    this.DOMWrappers = new DOMWrappers(this.Memory, this.poly);
+}
+PolyMLext.JSWrapper.prototype = {
+    process : function(req) {
+        //make document accessible globally in all wrappers
+        document = this.poly.document;
+        
+        var response = null;
+        var responsePacket = {};
+        
+        try {
+            var request = this.nativeJSON.decode(req);
+        } catch (e) {
+            error("Could not decode JSON.\nRequest:\n"+req+"\n",
+                    document.location.href);
+        }
+        
+        if (!request.hasOwnProperty("type")) {
+            error("Unexpected request from Poly",
+                    document.location.href);
+        }
+        
+        switch (request.type) {
+            case 0: //output
+                this.poly.console.log(request.output);
+                break;
+
+            case 1: //errors
+                this.poly.console.error(request.output + "\n");
+                break;
+
+            case 2: //DOM function
+                if (this.DOMWrappers[request.f] !== undefined) {
+                    try {
+                        response = this.DOMWrappers[request.f](request);
+                        if (response === undefined) {
+                            throw "undefined";
+                        }
+                        responsePacket = {
+                            type:"response",
+                            message:response,
+                            ret:request.r
+                        };
+                    } catch (e) {
+                        responsePacket = {
+                            type:"exn",
+                            message:e,
+                            ret:request.r
+                        };
+                        error(e.message + " Line: " + e.lineNumber +
+                                " File:" + e.fileName);
+                    }
+                } else {
+                    error(request.f + " is not implemented",
+                            document.location.href);
+                }
+                break;
+            
+            case 3: //custom wrappers
+                var unsafeWin = document.defaultView.wrappedJSObject;
+                
+                //TODO: perhaps these are not needed with the auto
+                //exception handling
+                if (unsafeWin[request.w] == undefined) {
+                    error(request.w +
+                            " wrapper does not exist",
+                            document.location.href);
+                    break;
+                }
+                
+                if (unsafeWin[request.w][request.f] == undefined) {
+                    error(request.w+"."+request.f +
+                        " function does not exist",
+                        document.location.href);
+                    break;
+                }
+                
+                unsafeWin[request.w].Memory = this.Memory;
+                try {
+                    response = unsafeWin[request.w][request.f](request);
+                    if (response === undefined) {
+                        throw "undefined";
+                    }
+                    responsePacket = {
+                        type:"response",
+                        message:response,
+                        ret:request.r
+                    };
+                } catch (e) {
+                    responsePacket = {type:"exn", message:e, ret:request.r};
+                }
+                break;
+
+            default:
+                error("Unexpected request from Poly",
+                    document.location.href);
+        }
+        
+        return responsePacket;
+    },
+    
+    destroy : function() {}
+}
+
+var Memory = function() {
+    this.references = {"":{}};
+    //the empty string indicates the main namespace.
+    //this namespace can not be deleted
+    this.currentNs = "";
+    this.listeners = {};
+    this.timers = {};
+    this.counter = 0;
 }
 Memory.prototype = {
     
@@ -35,7 +151,7 @@ Memory.prototype = {
     
     addReference : function(reference) {
         if (reference==null) {
-            //this will be converted to "NONE: string option"
+            //this will be converted to "NONE: string option" in PolyML
             return "null";
         } else {
             this.references[this.currentNs][this.counter] = reference;
@@ -45,7 +161,9 @@ Memory.prototype = {
     },
     getReference : function(reference) {
         var y = this.parse_id(reference);
-        if (this.references[y.ns]===undefined) throw "namespace " + y.ns + " undefined";
+        if (this.references[y.ns]===undefined) {
+            throw "namespace " + y.ns + " undefined";
+        }
         var ref = this.references[y.ns][y.idx];
         if (ref===undefined) throw "reference undefined";
         return ref;
@@ -74,21 +192,12 @@ Memory.prototype = {
     deleteNs : function(ns) {
         delete this.references[ns];
     },
-    
-    init : function() {
-        this.references = {"":{}};
-        //the empty string indicates the main namespace.
-        //this namespace can not be deleted
-        this.currentNs = "";
-        this.listeners = {};
-        this.timers = {};
-        this.counter = 0;
-    }
+    destroy : function() {}
 }
 
-function DOMWrappers (memory, socket) {
+var DOMWrappers = function(memory, poly) {
     this.Memory = memory;
-    this.socket = socket;
+    this.poly = poly;
 }
 DOMWrappers.prototype = {
     getElementById : function(request) {
@@ -206,19 +315,18 @@ DOMWrappers.prototype = {
     //events
     addEventListener : function(request) {
         var element = this.Memory.getReference(request.arg1);
-        var socket = this.socket;
-        
+        var poly = this.poly;        
         this.Memory.listeners[request.arg3] = {};
         this.Memory.listeners[request.arg3]['e'] = element;
         this.Memory.listeners[request.arg3]['f'] = function(event) {
             var data = '';
             if (request.arg4!==undefined) {
-                for (i=0, len=request.arg4.length; i<len; i++) {
+                for (var i=0, len=request.arg4.length; i<len; i++) {
                     data += event[request.arg4[i]]+',';
                 }
             }
             var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
-            socket.send("0"+cmd);
+            poly.send("0"+cmd);
         }
         element.addEventListener(
             request.arg2,
@@ -253,15 +361,16 @@ DOMWrappers.prototype = {
             self = this;
             var unsafeWin = document.defaultView.wrappedJSObject;
             this.setCoords = function(event) {
-                unsafeWin.removeEventListener("mousemove", self.setCoords, false)
+                unsafeWin.removeEventListener("mousemove", self.setCoords,
+                        false)
                 self.mouseX = event.clientX;
                 self.mouseY = event.clientY;
-                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 35);
-                debug.log("fired");
+                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 30);
             }
             var poll = function() {
                 if (self.mouseCoordsPollingActive) {
-                    unsafeWin.addEventListener("mousemove", self.setCoords, false);
+                    unsafeWin.addEventListener("mousemove", self.setCoords,
+                            false);
                 }
             }
             poll();
@@ -281,10 +390,10 @@ DOMWrappers.prototype = {
     
     //timers
     setInterval : function(request) {
-        var socket = this.socket;
+        var poly = this.poly;
         var f = function() {
             var cmd = 'val _ = handle_timer "'+request.arg2+'"';
-            socket.send("0"+cmd);
+            poly.send("0"+cmd);
         }
         var id = document.defaultView.wrappedJSObject.setInterval(
             f,
@@ -326,137 +435,7 @@ DOMWrappers.prototype = {
     deleteNs : function(request) {
         this.Memory.deleteNs(request.arg1);
         return null;
-    },
-}
-
-
-JSWrapper.prototype = {
-
-    process : function(req) {
-        //make document accessible globally in all wrappers
-        document = this._document;
-        
-        var response = null;
-        var responsePacket = {};
-        
-        try {
-            var request = this.nativeJSON.decode(req);
-        } catch (e) {
-            debug.error("Could not decode JSON.\nRequest:\n"+req+"\n",
-                    this._document.location.href);
-        }
-        
-        if (!request.hasOwnProperty("type")) {
-            debug.error("Unexpected request from Poly",
-                    this._document.location.href);
-        }
-        
-        switch (request.type) {
-            case 0: //output
-                this.console.log(request.output);
-                break;
-
-            case 1: //errors
-                this.console.error(request.output + "\n");
-                break;
-
-            case 2: //DOM function
-                if (this.DOMWrappers[request.f] !== undefined) {
-                    try {
-                        response = this.DOMWrappers[request.f](request);
-                        if (response === undefined) {
-                            throw "undefined";
-                        }
-                        responsePacket = {type:"response", message:response, ret:request.r};
-                    } catch (e) {
-                        //perhaps some of the debug info could be useful
-                        //var vDebug = ""; 
-                        //for (var prop in e) {  
-                        //   vDebug += "property: "+ prop+ " value: ["+ e[prop]+ "]\n"; 
-                        //} 
-                        //vDebug += "toString(): " + " value: [" + e.toString() + "]"; 
-                        //debug.log(vDebug);
-                        responsePacket = {type:"exn", message:e, ret:request.r};
-                        debug.error(e.message + " Line: " + e.lineNumber + " File:" + e.fileName);
-                    }
-                } else {
-                    debug.error(request.f + " is not implemented",
-                            this._document.location.href);
-                }
-                break;
-            
-            case 3: //custom wrappers
-                var unsafeWin = document.defaultView.wrappedJSObject;
-                
-                //TODO: perhaps these are not needed with the auto
-                //exception handling
-                if (unsafeWin[request.w] == undefined) {
-                    debug.error(request.w +
-                            " wrapper does not exist",
-                            this._document.location.href);
-                    break;
-                }
-                
-                if (unsafeWin[request.w][request.f] == undefined) {
-                    debug.error(request.w+"."+request.f +
-                        " function does not exist",
-                        this._document.location.href);
-                    break;
-                }
-                
-                unsafeWin[request.w].Memory = this.Memory;
-                try {
-                    response = unsafeWin[request.w][request.f](request);
-                    if (response === undefined) {
-                        throw "undefined";
-                    }
-                    responsePacket = {type:"response", message:response, ret:request.r};
-                } catch (e) {
-                    responsePacket = {type:"exn", message:e, ret:request.r};
-                }
-                break;
-
-            default:
-                debug.error("Unexpected request from Poly",
-                    this._document.location.href);
-        }
-        
-        return responsePacket;
-    },
-
-    init : function(doc, s, c) {
-        debug = Cc["@ed.ac.uk/poly/debug-console;1"]
-                .getService().wrappedJSObject;
-        
-        this._document = doc;
-        this.socket = s;
-        this.console = c;
-        
-        this.nativeJSON = Cc["@mozilla.org/dom/json;1"]
-                .createInstance(Ci.nsIJSON),
-
-        this.Memory = new Memory();
-        this.DOMWrappers = new DOMWrappers(this.Memory, this.socket);
     }
 }
 
-// turning JSWrapper Class into an XPCOM component
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-function JSWrapper() {
-    this.wrappedJSObject = this;
-}
-prototype2 = {
-  classDescription: "A JSWrapper for PolyML extension. All requests from Poly will be handled through this class.",
-  classID: Components.ID("{2925c41f-4398-4d43-899d-f047bc668d29}"),
-  contractID: "@ed.ac.uk/poly/jswrapper;1",
-  QueryInterface: XPCOMUtils.generateQI(),
-}
-//add the required XPCOM glue into the Poly class
-for (attr in prototype2) {
-    JSWrapper.prototype[attr] = prototype2[attr];
-}
-var components = [JSWrapper];
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
-
+}());

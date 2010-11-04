@@ -1,31 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?xul-overlay href="chrome://polymlext/content/console.xul"?>
+<?xml-stylesheet href="chrome://polymlext/skin/style.css" type="text/css"?>
 
-<overlay id="PolyMLext-statusbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<script src="main.js" />
+<overlay id="polymlext-overlay"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	
+	<script src="core/PolyMLext.js" />
+	<script src="core/components/DebugConsole.js" />
+	<script src="core/components/BrowserUI.js" />
+	<script src="core/components/JSWrapper.js" />
+	<script src="core/components/Poly.js" />
+	<script src="core/components/Console.js" />
 
+	<script type="application/javascript">
+		window.addEventListener("load", PolyMLext.init, false);
+	</script>
+	
 	<popupset id="mainPopupSet">
-		<menupopup id="polymlext-popup" position="after_end">
-		  <menuitem id="polymlextTheConstructButton" label="The Construct" tooltiptext="The Construct - an interactive PolyML instance" />
-		  <menuitem id="polymlextDemosButton" label="Demos" tooltiptext="Demonstrations of using PolyMLext." />
-		  <menuitem id="polymlextAboutButton" label="About" />
-		  <menuseparator/>
-		  <menuitem label="Settings" />
-		  <menuseparator/>
-		  <menuitem label="Report a problem" />
+		<menupopup id="polymlext-contextmenu" position="after_end">
+			<menuitem id="polymlext-button-construct" label="The Construct"
+					tooltiptext="The Construct - an interactive PolyML shell"
+					/>
+			<menuitem id="polymlext-button-demos" label="Demos"
+					tooltiptext="Demonstrations of PolyMLext features" />
+			<menuitem id="polymlext-button-about" label="About" />
 		</menupopup>
 	</popupset>
 
 	<statusbar id="status-bar">
-		<label hidden="true" id="polymlextCodeIndicator" value="PolyML" tooltiptext="This page contains PolyML code" />
-		<statusbarpanel hidden="false" id="polymlextConsoleButton" class="statusbarpanel-iconic" tooltiptext="PolyML console disabled" src="chrome://polymlext/skin/polyml_16x16_gray.png" context="polymlext-popup" />
-		<statusbarpanel hidden="true" id="polymlextNoPolyButton" class="statusbarpanel-iconic" tooltiptext="PolyML was not found on this computer (Click for more)" src="chrome://polymlext/skin/polyml_16x16_gray_no_poly.png" />
+		<label id="polymlext-icon-statusindicator" hidden="true"
+				value="PolyML app"
+				tooltiptext="This page contains PolyML code" />
+		<statusbarpanel id="polymlext-button-console" hidden="false"
+				class="statusbarpanel-iconic"
+				tooltiptext="PolyML console disabled"
+				src="chrome://polymlext/skin/polyml_16x16_gray.png"
+				context="polymlext-contextmenu" />
+		<statusbarpanel id="polymlext-button-nopoly" hidden="true"
+						class="statusbarpanel-iconic"
+						tooltiptext="PolyML was not found on this computer
+						(Click for more)"
+						src="chrome://polymlext/skin/
+						polyml_16x16_gray_no_poly.png" />
 	</statusbar>
 	
 	<vbox id="appcontent">
-        <splitter id="polymlextConsoleContentSplitter" collapsed="true"/>
-        <vbox id="polymlextConsoleContentBox" collapsed="true" persist="height" height="100%"></vbox>
-    </vbox>
+		<splitter id="polymlext-console-splitter" collapsed="true"/>
+		<vbox id="polymlext-console-box" collapsed="true"
+				persist="height" height="100%">
+			<hbox role="toolbar">
+				<hbox flex="12">
+					<label id="polymlext-console-title"
+							value="PolyML Console" />
+				</hbox>
+				<splitter collapsed="true"/>
+				<hbox flex="1">
+					<label id="polymlext-console-button-disable"
+							value="Disable"/>
+				</hbox>
+			</hbox>
+		  
+			<hbox>
+				<textbox id="polymlext-console-logarea" multiline="true"
+						rows="12" flex="1" readonly="true" />
+			</hbox>
+		  
+			<!--
+			<vbox>
+				<iframe src="chrome://polymlext/content/logArea.html" flex="1"
+						height="100%" id="logArea" />
+			</vbox>
+			-->
+			
+			<hbox id="polymlext-console-commandline-box">
+				<label id="polymlext-console-commandline-arrow" value=">"/>
+				<textbox id="polymlext-console-commandline-input" flex="1"
+						label="console command line"
+						aria-autocomplete="inline" />
+			</hbox>
+		</vbox>
+	</vbox>
 </overlay>
 

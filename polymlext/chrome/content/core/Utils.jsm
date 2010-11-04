@@ -2,8 +2,22 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var debug = Cc["@ed.ac.uk/poly/debug-console;1"]
-            .getService().wrappedJSObject;
+//TODO is there any way of using DebugConsole.js here?
+var consoleService = Cc["@mozilla.org/consoleservice;1"]
+            .getService(Components.interfaces.nsIConsoleService);
+var error = function(m, source) {
+    var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+            .createInstance(Components.interfaces.nsIScriptError);
+    var aSourceName = source;
+    var aSourceLine = "";
+    var aLineNumber = "";
+    var aColumnNumber = "";
+    var aFlags = 0x0;
+    var aCategory = "";
+    scriptError.init(m, aSourceName, aSourceLine, aLineNumber, 
+           aColumnNumber, aFlags, aCategory);
+    consoleService.logMessage(scriptError);
+}
 
 var EXPORTED_SYMBOLS = ["Utils"];
 
@@ -51,10 +65,7 @@ var Utils = {
         return process;
     },
     
-    findPoly : function() {
-        var debug = Cc["@ed.ac.uk/poly/debug-console;1"]
-                .getService().wrappedJSObject;
-        
+    findPoly : function() {      
         //if the user has manually given the path return true
         var prefService = Components
                 .classes["@mozilla.org/preferences-service;1"]
@@ -152,8 +163,30 @@ var Utils = {
           }
         }
     },
+
+    getTabForDocument : function(doc) {
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                .getService(Ci.nsIWindowMediator);
+        var browserEnumerator = wm.getEnumerator("navigator:browser");
+        while (browserEnumerator.hasMoreElements()) {
+            var browserWin = browserEnumerator.getNext();
+            var tabbrowser = browserWin.gBrowser;
       
+            // Check each tab of this browser instance
+            var numTabs = tabbrowser.browsers.length;
+            for (var index = 0; index < numTabs; index++) {
+                var currentTab = tabbrowser.tabContainer.childNodes[index];
+                var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+                if (doc == currentBrowser.contentDocument) {
+                    return currentTab;
+                }
+            }
+        }
+        return false;
+    },
+    
     createDir : function (dir) {
+        Components.utils.import("resource://gre/modules/FileUtils.jsm");
         var file = Cc["@mozilla.org/file/local;1"]
                 .createInstance(Ci.nsILocalFile);
         file.initWithPath(dir);
@@ -168,7 +201,7 @@ var Utils = {
         var file = Cc["@mozilla.org/file/local;1"]
                 .createInstance(Ci.nsILocalFile);
         file.initWithPath(dir);
-        if( file.exists() || file.isDirectory() ) {
+        if(file.exists() && file.isDirectory()) {
             file.remove(true);
         }
     },
@@ -219,7 +252,9 @@ var Utils = {
             createInstance(Ci.nsIWebBrowserPersist);
     
         persist.progressListener = {
-            onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
+            onProgressChange: function(aWebProgress, aRequest,
+                                       aCurSelfProgress, aMaxSelfProgress,
+                                       aCurTotalProgress, aMaxTotalProgress) {
                 var progress = (aCurTotalProgress/aMaxTotalProgress);
                 if (progress==1) {
                     onComplete();
@@ -229,7 +264,8 @@ var Utils = {
             onStatusChange : function() {}
         }
         
-        // with persist flags if desired See nsIWebBrowserPersist page for more PERSIST_FLAGS.
+        // with persist flags if desired See nsIWebBrowserPersist page for
+        // more PERSIST_FLAGS.
         const nsIWBP = Ci.nsIWebBrowserPersist;
         const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
         persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
@@ -272,7 +308,7 @@ var Utils = {
         try {
             zipReader.open(zipFile);
         } catch (e) {
-            debug.error("extractZip: failed to open the zip file " +
+            error("extractZip: failed to open the zip file " +
                           zipPath + ",\nexception = " + e);
             return false;
         }
@@ -295,7 +331,7 @@ var Utils = {
                                    FileUtils.PERMS_DIRECTORY);
                     }
                     catch (e) {
-                        debug.error("extractZip: failed to create target directory for " +
+                        error("extractZip: failed to create target directory for " +
                            "extraction file = " + target.path + ",\nexception = " + e);
                         return false;
                     }
@@ -319,6 +355,10 @@ var Utils = {
             zipReader.close();
             return true;
         }
+    },
+    
+    randomString : function() {
+        return this.md5(Math.random().toString()).substring(0,8);
     }
 }
 

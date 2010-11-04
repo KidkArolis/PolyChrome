@@ -147,7 +147,7 @@ fun loop () =
     (* limit the fps *)
     val endTime = Time.now();
     val diffTime = (Time.toMilliseconds endTime)-(Time.toMilliseconds nowTime);
-    val _ = if (diffTime<35) then OS.Process.sleep (Time.fromMilliseconds (35 - diffTime)) else ();
+    val _ = if (diffTime<30) then OS.Process.sleep (Time.fromMilliseconds (30 - diffTime)) else ();
   in
     loop ()
   end;

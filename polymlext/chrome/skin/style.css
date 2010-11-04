@@ -1,28 +1,37 @@
-#polymlextCommandBox {
-    border-top: 1px solid #CCCCCC;
-    background-color: #FFFFFF;
-    font-size:13px;
+#polymlext-console-commandline-box {
+	border-top: 1px solid #CCCCCC;
+	background-color: #FFFFFF;
+	font-size:13px;
 }
-#polymlextCommandArrow {
-    margin: 2px 0 2px 7px;
-    font-family: Monaco, monospace;
-    color: #FF0000;
-}
-
-#polymlextCommandLine {
-    -moz-appearance: none;
-    margin: 0;
-    padding: 0 4px;
-    height: 0;
-    border: none;
-    font-family: Monaco, monospace;
-    direction: ltr;
+#polymlext-console-commandline-arrow {
+	margin: 2px 0 2px 7px;
+	font-family: Monaco, monospace;
+	color: #FF0000;
 }
 
-#polymlextCommandLine > .textbox-input-box > .textbox-textarea {
-    overflow: hidden;
+#polymlext-console-commandline-input {
+	-moz-appearance: none;
+	margin: 0;
+	padding: 0 4px;
+	height: 0;
+	border: none;
+	font-family: Monaco, monospace;
+	direction: ltr;
+	margin: 0;
+	padding: 0 4px;
+	border: none;
+	font-family: monospace;
+	font-size:12px;
+	border:none;
+	width:100%;
+	overflow:visible;
+	font-weight:normal;
 }
-#polymlLogArea {
+
+#polymlext-console-commandline-input > .textbox-input-box > .textbox-textarea {
+	overflow: hidden;
+}
+#polymlext-console-logarea {
 	-moz-appearance: none;
 	font-family: Monaco, monospace;
 	font-size:13px;
@@ -32,28 +41,31 @@
 	border-top:1px solid #ccc;
 	background-color: #FFFFFF;
 	color:black;
+	padding: 0 4px;
+	font-family: monospace;
+	font-size:12px;
+	background-color:white;
+	margin:0;
+	overflow:auto;
 }
 
-#polymlext-disableConsole-button {
+#polymlext-console-button-disable {
 	width:80px;
 	padding:2px;
 	font-size:10px;
 	float:right;
+	font-size:13px;
+	text-decoration:underline;
+	text-align:right;
 }
 
-#polymlextCodeIndicator {
+#polymlext-icon-statusindicator {
 	font-size:12px;
 	margin-top:5px;
 	font-weight:bold;
 }
 
-#polymlextConsoleTitle {
+#polymlext-console-title {
 	font-size:13px;
 	font-weight:bold;
-}
-
-#polymlextConsoleDisableButton {
-	font-size:13px;
-	text-decoration:underline;
-	text-align:right;
 }

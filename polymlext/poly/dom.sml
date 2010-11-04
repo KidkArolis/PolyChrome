@@ -42,7 +42,8 @@ struct
         in
             foldl (fn (v, tab) => JSON.add ("arg1", v) tab) x args
         end
-    fun JSONReqStr wrapper_name f r args = JSON.encode (JSONReq wrapper_name f r args)
+    fun JSONReqStr wrapper_name f r args = JSON.encode
+            (JSONReq wrapper_name f r args)
     
 
     (*DOM*)
@@ -64,7 +65,8 @@ struct
         in e(l) end
     *)
     
-    datatype eventType = click | change | keypress | keyup | mouseover | mouseout | mousemove
+    datatype eventType = click | change | keypress | keyup | mouseover
+                       | mouseout | mousemove
 
     fun string_of_eventtype click = "click"
       | string_of_eventtype change = "change"
@@ -99,11 +101,14 @@ struct
             val req = JSONReqStr2 "getElementById" true [JSON.String id]
             val _ = send(req)
             val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
+            val result = case response of
+                            "null" => NONE |
+                                 x => SOME (Element x)
         in result end
         
     fun getElementsByTagName (tag:string) = let
-            val req = JSONReqStr2 "getElementsByTagName" true [JSON.String tag]
+            val req = JSONReqStr2 "getElementsByTagName"
+                    true [JSON.String tag]
             val _ = send(req)
         in parse_element_list (recv()) end
 
@@ -116,7 +121,9 @@ struct
             val req = JSONReqStr2 "parentNode" true [JSON.String e]
             val _ = send(req)
             val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
+            val result = case response of
+                            "null" => NONE |
+                                 x => SOME (Element x)
         in result end
 
     fun firstChild (Element e) = let
@@ -247,12 +254,16 @@ struct
             val _ = send(req)
         in EventListener id end
         
+    fun parseMouseMoveEvent (event) = (String.tokens (fn (#",") => true | _ => false) event)
+            |> map Int.fromString
+            |> map valOf
+        
     fun getMouseCoords () = let
             val req = JSONReqStr2 "getMouseCoords" true []
             val _ = send(req)
             val response = recv()
-            val [x,y] = (String.tokens (fn (#",") => true | _ => false) response)
-        in (valOf (Int.fromString x), valOf (Int.fromString y)) end
+            val [x,y] = parseMouseMoveEvent response
+        in (x, y) end
     
     fun cancelMouseCoordsPolling () = let
             val req = JSONReqStr2 "cancelMouseCoordsPolling" false []
@@ -261,17 +272,19 @@ struct
     (*timers*)
     fun setInterval (f:timerHandler) (time:int) = let
             val entry = (time, f)
-            val (id, tab) = Tab.add (Name.default_name, entry) (!timerHandlerTab)
+            val (id, tab) = Tab.add (Name.default_name, entry)
+                    (!timerHandlerTab)
             val _ = (timerHandlerTab := tab)
-            val req = JSONReqStr2 "setInterval" false [JSON.Int time,
-                                                       JSON.String (Name.string_of_name id)]
+            val req = JSONReqStr2 "setInterval" false
+                    [JSON.Int time, JSON.String (Name.string_of_name id)]
             val _ = send(req)
         in id end
     
     fun clearInterval id = let
             val tab = Tab.delete id (!timerHandlerTab)
             val _ = (timerHandlerTab := tab)
-            val req = JSONReqStr2 "clearInterval" false [JSON.String (Name.string_of_name id)]
+            val req = JSONReqStr2 "clearInterval" false
+                    [JSON.String (Name.string_of_name id)]
             val _ = send(req)
         in () end
     
