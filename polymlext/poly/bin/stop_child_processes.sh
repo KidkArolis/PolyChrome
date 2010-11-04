@@ -28,10 +28,10 @@ do
         done
         if [ "$FORLOOP" = "FALSE" ] ; then
            arraycounter=`expr $arraycounter - 1`
-           ## We want to kill child process id first and then parent id's
+           # We want to kill child process id first and then parent id's
            while [ $arraycounter -ne 0 ]
            do
-             kill -9 "${procid[$arraycounter]}" >/dev/null
+             kill -2 "${procid[$arraycounter]}" > /dev/null
              arraycounter=`expr $arraycounter - 1`
            done
          exit

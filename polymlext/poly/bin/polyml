@@ -5,8 +5,6 @@ POLYML_HOME=$(${HERE}/findpoly.sh)
 THE_POLY_HEAP="polymlext.polyml-heap"
 THE_POLY_PROGRAM="main.sml"
 
-LEDIT=`which cat`;
-
 if [ "$POLYML_HOME" == "" ]
 then
     echo "Can not find PolyML ($$POLYML_HOME was empty)"; exit 3; 
@@ -34,10 +32,12 @@ fi
 #development mode ignores the heap file
 if [ "$4" == "dev" ]
 then
+    echo "test";
     #compile the main.sml
     (echo "OS.FileSys.chDir(\"$HERE/../\");
            PolyML.use \"${THE_POLY_PROGRAM}\";
-           PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");"; ${LEDIT}) \
+           val _ = PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\")
+           handle Interrupt => print \"PolyML process stopped.\n\";") \
            | ${POLYML_HOME}/bin/poly "$@";
 else
     #build the heap if needed
@@ -51,7 +51,8 @@ else
     #load the heap
     (echo "OS.FileSys.chDir(\"$HERE\");
            PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";
-           PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");";${LEDIT}) \
+           val _ = PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\")
+           handle Interrupt => print \"PolyML process stopped.\n\";";) \
            | ${POLYML_HOME}/bin/poly "$@";
 fi
 
