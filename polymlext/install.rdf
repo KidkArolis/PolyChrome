@@ -19,5 +19,6 @@
     </em:targetApplication>
     <em:homepageURL>https://www.assembla.com/spaces/polyml4f/</em:homepageURL>
     <em:iconURL>chrome://PolyMLext/skin/polyml_32x32.png</em:iconURL>
+    <em:updateURL>https://www.assembla.com/code/polymlext/git/node/live/master/polymlext/update.rdf</em:updateURL>
   </Description>
 </RDF>
