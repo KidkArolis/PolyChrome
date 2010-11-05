@@ -3,3 +3,4 @@
 *.polyml-heap
 *.so
 *.xpi
+polymlext/sandboxes/*
