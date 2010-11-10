@@ -24,8 +24,10 @@ fi
 #compile the isaplib
 if [ ! -e "$HERE/../isaplib/heaps/all.polyml-heap" ]
 then
+    # compilation, based on Makefile of IsapLib
     cd "$HERE/../isaplib/"
-    make
+    (echo 'use "ROOT.ML"; PolyML.fullGC (); OS.FileSys.getDir(); PolyML.SaveState.saveState "heaps/all.polyml-heap"; ';) \
+           | "${POLYML_HOME}/bin/poly" "$@";
     cd ../bin
 fi
 
