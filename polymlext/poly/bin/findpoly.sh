@@ -26,11 +26,11 @@ function choosefrom ()
 
 POLYML_IN_PATH="$(type -p poly)"
 if [ -n "$POLYML_IN_PATH" ]; then 
-    POLYML_IN_PATH="$(cd $(dirname $POLYML_IN_PATH); cd ..; pwd)"
+    POLYML_IN_PATH="$(cd "$(dirname $POLYML_IN_PATH)"; cd ..; pwd)"
 fi
 
 [ -d "$ROOT_DIR/../polyml" ] \
-&& LOCAL_POLY_DIR="$(cd $ROOT_DIR/../polyml; pwd)"
+&& LOCAL_POLY_DIR="$(cd "$ROOT_DIR/../polyml"; pwd)"
 
 POLYML_HOME=$(choosefrom \
   "$POLYML_HOME" \
