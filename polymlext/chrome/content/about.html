@@ -55,6 +55,7 @@
         color:#333;
       }
     </style>
+
   </head>
   <body>
     <div id="container">
@@ -100,5 +101,12 @@
         Version 0.1.1
       </div>
     </div>
+    
+    <script type="text/javascript">
+      var element = document.getElementsByTagName("body")[0];
+      var event = document.createEvent("Events");
+      event.initEvent("PolyMLextAboutPageLoaded", true, false);
+      element.dispatchEvent(event);
+    </script>
   </body>
 </html>

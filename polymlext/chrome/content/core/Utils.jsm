@@ -260,6 +260,7 @@ var Utils = {
         
         var listener = {
             onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
+                log("booga");
                 if (aFlag & Ci.nsIWebProgressListener.STATE_STOP) {
                     progressListener.onComplete();
                 }
@@ -268,7 +269,12 @@ var Utils = {
                 //I assume this is called when the download failed
                 progressListener.onError();
             },
-            onProgressChange : function(a, b, c, d, e, f) {},
+            onProgressChange : function(aWebProgress, aRequest,
+                                        aCurSelfProgress, aMaxSelfProgress,
+                                        aCurTotalProgress, aMaxTotalProgres) {
+                var percentComplete = Math.ceil((aCurSelfProgress/aMaxSelfProgress)*100);
+                progressListener.onProgressChange(percentComplete);
+            },
             onLocationChange : function(a, b, c) {},
             onSecurityChange : function(a, b, c) {}
         }

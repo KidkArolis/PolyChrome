@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+#trap "echo \"killing\"; echo $SPAWNED_PROCESS; kill -2 $! > /dev/null; exit 0;" INT TERM EXIT
+#trap "echo \"killing\"; exit 0;" TERM
+
 HERE=$(dirname "$0")
 PRG=$(basename "$0")
 POLYML_HOME=$("$HERE/findpoly.sh")
@@ -26,11 +30,12 @@ if [ ! -e "$HERE/../isaplib/heaps/all.polyml-heap" ]
 then
     # compilation, based on Makefile of IsapLib
     cd "$HERE/../isaplib/"
-    (echo 'use "ROOT.ML"; PolyML.fullGC (); OS.FileSys.getDir(); PolyML.SaveState.saveState "heaps/all.polyml-heap"; ';) \
+    (echo 'use "ROOT.ML"; PolyML.fullGC ();
+           PolyML.SaveState.saveState "heaps/all.polyml-heap";';) \
            | "${POLYML_HOME}/bin/poly" "$@";
     cd ../bin
 fi
-
+LEDIT=`which cat`;
 #development mode ignores the heap file
 if [ "$4" == "dev" ]
 then
@@ -38,7 +43,7 @@ then
     (echo "OS.FileSys.chDir(\"$HERE/../\");
            PolyML.use \"${THE_POLY_PROGRAM}\";
            val _ = PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");") \
-           | ${POLYML_HOME}/bin/poly "$@";
+           | "${POLYML_HOME}/bin/poly" "$@";
 else
     #build the heap if needed
     if [ ! -e "$HERE/$THE_POLY_HEAP" ]
@@ -46,11 +51,11 @@ else
         (echo "OS.FileSys.chDir(\"$HERE/../\");
                PolyML.use \"${THE_POLY_PROGRAM}\";
                PolyML.SaveState.saveState \"bin/${THE_POLY_HEAP}\"";) \
-               | ${POLYML_HOME}/bin/poly "$@";
+               | "${POLYML_HOME}/bin/poly" "$@";
     fi
     #load the heap
     (echo "OS.FileSys.chDir(\"$HERE\");
            PolyML.SaveState.loadState \"${THE_POLY_HEAP}\";
            val _ = PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");";) \
-           | ${POLYML_HOME}/bin/poly "$@";
+           | "${POLYML_HOME}/bin/poly" "$@";
 fi

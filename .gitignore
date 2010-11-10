@@ -4,3 +4,4 @@
 *.so
 *.xpi
 polymlext/sandboxes/*
+*.cfg

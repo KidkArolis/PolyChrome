@@ -18,7 +18,7 @@ PolyMLext.Poly.prototype = {
     
     init : function() {
         this.enabled = true;
-        this.console.setStatus({s:"PolyML loading..."});
+        this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2();
         this.sandbox = new Sandbox(this.socket1, this.document);
@@ -45,7 +45,7 @@ PolyMLext.Poly.prototype = {
         var bin = Utils.getExtensionPath();
         bin.append("poly");
         bin.append("bin");
-        bin.append("stop_child_processes.sh");
+        bin.append("kill.sh");
         var args = [this.process.pid];
         var process = Utils.startProcess(bin, args);
     },
@@ -94,6 +94,7 @@ PolyMLext.Poly.prototype = {
     },
 
     onReady : function() {
+        this.console.setStatusDefault();
         this.evaluator.start();
     },
     
@@ -129,6 +130,9 @@ Evaluator.prototype = {
                 },
                 onError : function() {
                     self.poly.console.error("Could not download file: " + src + "\n");
+                },
+                onProgressChange : function(percentComplete) {
+                    self.poly.console.setStatus({s:"Downloading... "+percentComplete+"%"});
                 }
             }
             var destFile = this.poly.sandbox.getPath();
@@ -176,6 +180,7 @@ Evaluator.prototype = {
     },
     
     processQueue : function() {
+        this.poly.console.setStatus({s: "Compiling..."});
         for (var i in this.queue) {
             var p = this.queue[i];
             switch (p.type) {

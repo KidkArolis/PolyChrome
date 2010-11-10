@@ -19,6 +19,8 @@ PolyMLext.BrowserUI = function() {
         prefService.setBoolPref("extensions.PolyMLext.firstLaunch", false);
     }
     
+    this.setupAboutPage();
+    
     this.console = new ConsoleUI(this);
 }
 PolyMLext.BrowserUI.prototype = {    
@@ -31,17 +33,21 @@ PolyMLext.BrowserUI.prototype = {
         construct   : 'chrome://polymlext/content/theConstruct.html'
     },
     
+    setupAboutPage : function() {
+        var self = this;
+        // The last value is a Mozilla-specific value to indicate untrusted content is allowed to trigger the event.
+        document.addEventListener("PolyMLextAboutPageLoaded",
+                function(e) { self.processAboutPage(e.target.ownerDocument); },
+                false, true);
+    },
+    
     noPoly : function() {
         var self = this;
         e("polymlext-button-console").setAttribute("hidden", true);
         e("polymlext-button-nopoly").setAttribute("hidden", false);
         e("polymlext-button-nopoly").addEventListener("click", function() {
                 self.displayAboutPage();
-            }, false)
-    },
-    
-    displayAboutPage : function() {
-        Utils.openAndReuseOneTabPerURL(this.links.about);
+            }, false);
     },
     
     bindContextMenu : function() {
@@ -85,15 +91,14 @@ PolyMLext.BrowserUI.prototype = {
                 self.displayAboutPage();
             }, false);
     },
-    
     processAboutPage : function(doc) {
         if (!PolyMLext.polyFound) {
             doc.getElementById("polymlNotFound").style["display"] = "block";
         }
     },
     
-    isAboutPage : function(doc) {
-        return doc.location.href == this.links.about;
+    displayAboutPage : function() {
+        Utils.openAndReuseOneTabPerURL(this.links.about);
     },
     
     yesPoly : function(callbacks) {
@@ -108,9 +113,6 @@ PolyMLext.BrowserUI.prototype = {
             browser.addEventListener("load", function(aEvent) {
                 if (aEvent.originalTarget.nodeName == "#document") {
                     var doc = aEvent.originalTarget;
-                    if (self.isAboutPage(doc)) {
-                        self.processAboutPage(doc);
-                    }
                     self.callbacks.onDocumentLoad(doc);
                 }
             }, true);
@@ -129,10 +131,6 @@ PolyMLext.BrowserUI.prototype = {
         gBrowser.tabContainer.addEventListener("TabMove",
                                                this.callbacks.onTabMove,
                                                false);
-        
-        //bind the click to load the app button
-        e("polymlext-icon-statusindicator").addEventListener("click",
-            this.callbacks.onPolyEnable, false);
     },
     
     setStatus : function(s) {
@@ -141,6 +139,22 @@ PolyMLext.BrowserUI.prototype = {
             e("polymlext-icon-statusindicator").style["color"] = "red";
         } else {
             e("polymlext-icon-statusindicator").style["color"] = "black";
+        }
+        
+        //IMPROVE
+        //this is fine for now, but once BrowserUI interactions start getting a
+        //a bit more complex this should be refactored. Hardcoding the label
+        //is not very good, also it's not very good to check the value of the
+        //string as opposed to having some boolean variable for tracking the
+        //enabled-to-click and enabled-already for each tab should
+        if (s.s=="Click to enable PolyML app") {
+            //bind the click to load the app button
+            e("polymlext-icon-statusindicator").addEventListener("click",
+                this.callbacks.onPolyEnable, false);
+        } else {
+            //remove the click to load the app button listener
+            e("polymlext-icon-statusindicator").removeEventListener("click",
+                this.callbacks.onPolyEnable, false);
         }
     }
 };

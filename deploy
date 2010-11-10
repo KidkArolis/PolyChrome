@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 ### EDIT THIS!! ##############################################################
 # make sure this is the profile you will be using the extension with
-ff_profile="/home/karolis/.mozilla/firefox/0b8qrrqd.default/"
+
 ##############################################################################
+
+if [ -f deploy.cfg ];
+    then 
+        . deploy.cfg
+    else
+        echo "You need to create a 'deploy.cfg' file, based on deploy.cfg.template"
+        exit 2
+fi
 
 THE_POLY_HEAP="polymlext.heap"
 
@@ -13,15 +21,15 @@ extension=`pwd`
 
 #update the extension file and move it to firefox profile
 echo "$extension/polymlext" > polymlext@ed.ac.uk
-cp polymlext@ed.ac.uk "$ff_profile/extensions/"
+cp polymlext@ed.ac.uk "$FIREFOX_PROFILE/extensions/"
 rm polymlext@ed.ac.uk
 
 #remove these files to make firefox reregister the updated components
-if [ -e "$ff_profile/xpti.dat" ]; then rm "$ff_profile/xpti.dat"; fi
-if [ -e "$ff_profile/compreg.dat" ]; then rm "$ff_profile/compreg.dat"; fi
+if [ -e "$FIREFOX_PROFILE/xpti.dat" ]; then rm "$FIREFOX_PROFILE/xpti.dat"; fi
+if [ -e "$FIREFOX_PROFILE/compreg.dat" ]; then rm "$FIREFOX_PROFILE/compreg.dat"; fi
 
 #if run is passed as a parameter run firefox
-if [ "$1" == "run" ]; then firefox -jsconsole; fi
+if [ "$1" == "run" ]; then $FIREFOX_BINARY -jsconsole; fi
 
 #if package is passed as a parameter create the xpi package
 if [ "$1" == "package" ]
