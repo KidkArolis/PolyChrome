@@ -87,7 +87,7 @@ PolyMLext.BrowserUI.prototype = {
     },
     
     processAboutPage : function(doc) {
-        if (PolyMLext.polyFound) {
+        if (!PolyMLext.polyFound) {
             doc.getElementById("polymlNotFound").style["display"] = "block";
         }
     },

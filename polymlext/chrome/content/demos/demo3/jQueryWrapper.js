@@ -1,5 +1,5 @@
 var jQueryWrapper = {
-    select : function(request) {
+    select : function(request) {        
         var elements = $(request.arg1);
         response = "";
         if (elements.length>0) {

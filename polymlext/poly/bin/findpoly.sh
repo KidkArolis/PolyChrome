@@ -6,7 +6,7 @@
 # then looks at some standard system-installation directories 
 #   ("/usr/local/polyml", "/usr/share/polyml", "/opt/polyml")
 
-ROOT_DIR="$(cd "$(dirname $0)"; cd ..; pwd)";
+ROOT_DIR="$(cd "$(dirname "$0")"; cd ..; pwd)";
 PRG="$(basename "$0")"
 
 # choose from a collection of things
@@ -25,7 +25,7 @@ function choosefrom ()
 }
 
 POLYML_IN_PATH="$(type -p poly)"
-if [ -n "$POLYML_IN_PATH" ]; then 
+if [ -n "$POLYML_IN_PATH" ]; then
     POLYML_IN_PATH="$(cd $(dirname $POLYML_IN_PATH); cd ..; pwd)"
 fi
 

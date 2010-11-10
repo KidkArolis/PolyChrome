@@ -355,7 +355,7 @@ DOMWrappers.prototype = {
         this.mouseCoordsPollingActive = true;
         if (this.mouseX === undefined) {
             this.mouseX = 0;
-            this.mouseY = 0;       
+            this.mouseY = 0;
             
             self = this;
             var unsafeWin = document.defaultView.wrappedJSObject;
@@ -364,7 +364,7 @@ DOMWrappers.prototype = {
                         false)
                 self.mouseX = event.clientX;
                 self.mouseY = event.clientY;
-                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 30);
+                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 35);
             }
             var poll = function() {
                 if (self.mouseCoordsPollingActive) {

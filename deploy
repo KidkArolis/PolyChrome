@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 ### EDIT THIS!! ##############################################################
 # make sure this is the profile you will be using the extension with
-ff_profile=/home/karolis/.mozilla/firefox/0b8qrrqd.default
+ff_profile="/home/karolis/.mozilla/firefox/0b8qrrqd.default/"
 ##############################################################################
 
 THE_POLY_HEAP="polymlext.heap"
 
 #the directory of the extension
-extension=`dirname $0`
-cd $extension
+extension="$(dirname $0)"
+cd "$extension"
 extension=`pwd`
 
 #update the extension file and move it to firefox profile
 echo "$extension/polymlext" > polymlext@ed.ac.uk
-cp polymlext@ed.ac.uk $ff_profile/extensions/
+cp polymlext@ed.ac.uk "$ff_profile/extensions/"
 rm polymlext@ed.ac.uk
 
 #remove these files to make firefox reregister the updated components
-if [ -e $ff_profile/xpti.dat ]; then rm "$ff_profile/xpti.dat"; fi
-if [ -e $ff_profile/compreg.dat ]; then rm "$ff_profile/compreg.dat"; fi
+if [ -e "$ff_profile/xpti.dat" ]; then rm "$ff_profile/xpti.dat"; fi
+if [ -e "$ff_profile/compreg.dat" ]; then rm "$ff_profile/compreg.dat"; fi
 
 #if run is passed as a parameter run firefox
 if [ "$1" == "run" ]; then firefox -jsconsole; fi
@@ -26,16 +26,21 @@ if [ "$1" == "run" ]; then firefox -jsconsole; fi
 #if package is passed as a parameter create the xpi package
 if [ "$1" == "package" ]
     then
-        #remove the packaged extension
-        if [ -e $extension/polymlext/poly/isaplib/heaps/all.polyml-heap ]; then
-            rm $extension/polymlext/poly/isaplib/heaps/all.polyml-heap;
-        fi
         #remove the isaplib heap
-        if [ -e polymlext.xpi ]; then rm polymlext.xpi; fi
-        #remove the polyml heap
-        if [ -e $extension/polymlext/poly/bin/$THE_POLY_HEAP ]; then
-            rm $extension/polymlext/poly/bin/$THE_POLY_HEAP
+        isaplib_heap="$extension/polymlext/poly/isaplib/heaps/all.polyml-heap"
+        if [ -e "$isaplib_heap" ]; then
+            rm "$isaplib_heap";
         fi
+        #remove the polyml heap
+        polyml_heap="$extension/polymlext/poly/bin/$THE_POLY_HEAP"
+        if [ -e "$polyml_heap" ]; then
+            rm "$polyml_heap"
+        fi
+        #remove the packaged extension
+        if [ -e polymlext.xpi ]; then
+            rm polymlext.xpi;
+        fi
+        
         ZIP=`which zip`
         cd polymlext
         ${ZIP} -r ../polymlext.xpi *

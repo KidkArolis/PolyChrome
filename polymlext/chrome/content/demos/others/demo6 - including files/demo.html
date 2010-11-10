@@ -4,13 +4,18 @@
 <meta charset="utf-8" />
 <title>Hello PolyML</title>
 
-<script type="application/x-polyml" src="overwriting.sml"></script>
-<script type="application/x-polyml" src="test.zip"></script>
+<!--<script type="application/x-polyml" src="overwriting.sml"></script>-->
+<!--<script type="application/x-polyml" src="test.zip"></script>-->
 <script type="application/x-polyml" src="test2.sml"></script>
 <script type="application/x-polyml">
-use "init.sml";
-use "overwriting.sml";
+
+val bar = "here";
+
 </script>
+<!--<script type="application/x-polyml">-->
+<!--use "init.sml";-->
+<!--use "overwriting.sml";-->
+<!--</script>-->
 
 <style type= "text/css">
     body, html {
@@ -25,23 +30,8 @@ use "overwriting.sml";
 </head>
 <body>
 
-<div id="body">
-    <p id="abc" class="first">0</p>
-    <input id="button1" type="button" value="add one" />
-    <input id="button2" type="button" value="subtract one" />
-    <input id="remove1" type="button" value="remove first listener" />
-    <input id="remove2" type="button" value="remove second listener" />
-</div>
+    <p id="abc" class="first">including external files</p>
 
-<hr />
-<div id="description">
-<p>Demo description:</p>
-<ul>
-<li>Accessing DOM elements and changing their values.</li>
-<li>Adding/removing listeners.</li>
-<li>Adding/removing the same listener a few times.</li>
-</ul>
-</div>
 </body>
 </html>
 

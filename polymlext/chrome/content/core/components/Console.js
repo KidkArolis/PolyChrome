@@ -27,7 +27,7 @@ PolyMLext.Console.prototype = {
             this.content += m;
             PolyMLext.BrowserUI.console.update(this);
         }
-        this.setStatus({s:"PolyML app"});
+        this.setStatusDefault();
     },
     
     error : function(m) {
@@ -38,7 +38,13 @@ PolyMLext.Console.prototype = {
     
     setStatus : function(s) {
         this.status = s;
-        PolyMLext.BrowserUI.setStatus(s);
+        PolyMLext.BrowserUI.setStatus(this.status);
+    },
+    
+    setStatusDefault : function() {
+        if (!this.status.error) {
+            this.setStatus({s:"PolyML app"});
+        }
     },
     
     historyAdd : function(m) {

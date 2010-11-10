@@ -28,21 +28,26 @@ PolyMLext.Poly.prototype = {
     },
     
     startPolyProcess : function () {        
-        var binpath = Utils.getExtensionPath() + "/poly/bin/polyml";
+        var bin = Utils.getExtensionPath();
+        bin.append("poly");
+        bin.append("bin");
+        bin.append("polyml");
         var args = [this.socket1.port(),
                     this.socket2.port(),
-                    this.sandbox.absolutePath];
+                    this.sandbox.pathStr];
         if (Utils.isDevelopmentMode()) {
             args.push("dev");
         }
-        this.process = Utils.startProcess(binpath, args, false);
+        this.process = Utils.startProcess(bin, args, false);
     },
     
     stopPolyProcess : function() {
-        var binpath = Utils.getExtensionPath() +
-                "/poly/bin/stop_child_processes.sh";
+        var bin = Utils.getExtensionPath();
+        bin.append("poly");
+        bin.append("bin");
+        bin.append("stop_child_processes.sh");
         var args = [this.process.pid];
-        var process = Utils.startProcess(binpath, args);
+        var process = Utils.startProcess(bin, args);
     },
 
     destroy : function() {
@@ -111,33 +116,28 @@ Evaluator.prototype = {
         var filename = src.substring(src.lastIndexOf("/")+1);
         var ext = filename.substr(-4).toLowerCase();
         if (ext==".sml" || ext==".zip") {
+            ext = ext.substr(1,3);
             this.downloads.pending++;
-            if (ext==".sml") {
-                var type = 1;
-            } else {
-                var type = 2
-            }
             
             var self = this;
-            var onComplete = function() {
-                self.downloads.complete++;
-                if (self.downloads.pending==self.downloads.complete) {
-                    self.processQueue();
+            var listener = {
+                onComplete : function() {
+                    self.downloads.complete++;
+                    if (self.downloads.pending==self.downloads.complete) {
+                        self.processQueue();
+                    }
+                },
+                onError : function() {
+                    self.poly.console.error("Could not download file: " + src + "\n");
                 }
             }
-            var status = Utils.downloadFile(src,
-                                this.poly.document.baseURI,
-                                this.poly.sandbox.absolutePath + filename,
-                                onComplete);
-            if (status) {
-                return {
-                    type:type,
-                    filename:filename
-                }
-            } else {
-                this.poly.console.error(
-                        "Could not download file: " + src + "\n");
-            }
+            var destFile = this.poly.sandbox.getPath();
+            destFile.append(filename);
+            Utils.downloadFile(src, this.poly.document.baseURI, destFile,
+                    listener);
+            
+            //add this 
+            return { type:ext, filename:filename }
         }
         return null;
     },
@@ -182,15 +182,15 @@ Evaluator.prototype = {
                 case 0:
                     this.poly.send("0"+p.code);
                     break;
-                case 1:
+                case "sml":
                     this.poly.send('0PolyML.use "' + p.filename + '";');
                     break;
-                case 2:
-                    //have to wait for the download to finish before doing
-                    //this
-                    var path = this.poly.sandbox.absolutePath;
+                case "zip":
+                    //have to wait for the download to finish before unziping
                     try {
-                        Utils.extractZip(path + p.filename, path);
+                        var zipFile = this.poly.sandbox.getPath();
+                        zipFile.append(p.filename);
+                        Utils.extractZip(zipFile, this.poly.sandbox.getPath())
                     } catch (e) {
                         error(e);
                         this.poly.console.error(
@@ -201,7 +201,7 @@ Evaluator.prototype = {
             }
         }
         this.queue = [];
-        this.poly.console.setStatus({s:"PolyML app"});
+        this.poly.console.setStatusDefault();
     },
     
     destroy : function() {}
@@ -212,23 +212,36 @@ Evaluator.prototype = {
  disk space for downloaded PolyML applications
 */
 var Sandbox = function() {
-    //create a new directory with random name      
+    //create a new directory with random name
     while (true) {
         this.hash = Utils.randomString();
-        this.absolutePath = Utils.getExtensionPath()
-                + "/sandboxes/" + this.hash + "/";
-        if (!Utils.fileExists(this.absolutePath)) {
+        var dir = Utils.getExtensionPath();
+        dir.append("sandboxes");
+        dir.append(this.hash);
+        if (!dir.exists()) {
             break;
         }
     }
-    Utils.createDir(this.absolutePath);
+    Utils.createDir(dir);
+    this.pathStr = dir.path;
+    this._path = dir;
 }
 Sandbox.prototype = {
-    absolutePath : null,
+    pathStr: "",
+    _path : null,
     hash : null,
     
+    getPath : function() {
+        //not using nsIFile.clone() here, because we're always working
+        //with nsIFile rather than nsILocalFile
+        var aFile = Components.classes["@mozilla.org/file/local;1"]
+                .createInstance(Components.interfaces.nsILocalFile);
+        aFile.initWithFile(this._path);
+        return aFile;
+    },
+    
     destroy : function() {
-        Utils.removeDir(this.absolutePath);
+        Utils.removeDir(this.getPath());
     }
 }
 
