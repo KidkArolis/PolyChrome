@@ -13,11 +13,18 @@ structure PolyMLext (*: POLYMLEXT*)
 
     exception DOMExn of string
 
+    (* IMPROVE: make var names reflect socket function *)
+
+    (* code to be evaluated goes through here; e.g. initial embedded code compilation, 
+       event handling, as well as console input   *)
     val socket1 = ref (NONE : Socket.active INetSock.stream_sock option)
+
+    (* responses for JS wrappers go through here *)
     val socket2 = ref (NONE : Socket.active INetSock.stream_sock option)
 
-    val PREFIX_SIZE = 9;
-    val CHUNK_SIZE = 65536;
+    (* constants for socket communication *)
+    val PREFIX_SIZE = 9; (* bytes *)
+    val CHUNK_SIZE = 65536; (* bytes *)
     
     exception Error of string
 
