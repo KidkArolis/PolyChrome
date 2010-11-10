@@ -35,8 +35,10 @@ var PolyMLext = (function() {
             
             //cleanup the sandbox in case the browser was not closed properly
             //TODO this should be moved out to some other object
-            Utils.removeDir(Utils.getExtensionPath()+"/sandboxes/");
-            Utils.createDir(Utils.getExtensionPath()+"/sandboxes/");
+            var sandboxPath = Utils.getExtensionPath();
+            sandboxPath.append("sandboxes");
+            Utils.removeDir(sandboxPath);
+            Utils.createDir(sandboxPath);
             
             PolyMLext.BrowserUI = new PolyMLext.BrowserUI();
             

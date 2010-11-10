@@ -6,7 +6,7 @@
 # then looks at some standard system-installation directories 
 #   ("/usr/local/polyml", "/usr/share/polyml", "/opt/polyml")
 
-ROOT_DIR="$(cd "$(dirname $0)"; cd ..; pwd)";
+ROOT_DIR="$(cd "$(dirname "$0")"; cd ..; pwd)";
 PRG="$(basename "$0")"
 
 # choose from a collection of things
