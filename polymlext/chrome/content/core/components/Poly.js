@@ -31,7 +31,7 @@ PolyMLext.Poly.prototype = {
         var bin = Utils.getExtensionPath();
         bin.append("poly");
         bin.append("bin");
-        bin.append("polyml");
+        bin.append("polyml.sh");
         var args = [this.socket1.port(),
                     this.socket2.port(),
                     this.sandbox.pathStr];
