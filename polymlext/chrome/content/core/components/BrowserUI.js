@@ -6,39 +6,38 @@ var error = PolyMLext.error;
 //shortcut
 var e = function(id) { return document.getElementById(id) }
 
-PolyMLext.BrowserUI = function() {    
+PolyMLext.BrowserUI = function() {
+    
+    this.prefs = {};
+    this.prefs.firstLaunch = Application.prefs
+            .get("extensions.PolyMLext.firstLaunch");
+    this.prefs.alwaysEnabled = Application.prefs
+            .get("extensions.PolyMLext.alwaysEnabled");
+    this.prefs.PolyMLPath = Application.prefs
+            .get("extensions.PolyMLext.PolyMLPath");
+    
     //checking if it's first time launch
     //which case an about page is displayed
-    var prefService = Components
-            .classes["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch)
-    var firstLaunch = prefService.getBoolPref(
-            "extensions.PolyMLext.firstLaunch");
-    if (firstLaunch) {
+    //var firstLaunch = Application.prefs.get("extensions.PolyMLext.firstLaunch");
+    if (this.prefs.firstLaunch.value) {
         this.displayAboutPage();
-        prefService.setBoolPref("extensions.PolyMLext.firstLaunch", false);
+        this.prefs.firstLaunch.value = false;
     }
     
-    this.setupAboutPage();
+
     
     this.console = new ConsoleUI(this);
 }
-PolyMLext.BrowserUI.prototype = {    
+PolyMLext.BrowserUI.prototype = {
     activeConsole : null,
     callbacks : null,
+    
+    prefs : null,
     
     links : {
         about       : 'chrome://polymlext/content/about.html',
         demos       : 'chrome://polymlext/content/demos/index.html',
         construct   : 'chrome://polymlext/content/theConstruct.html'
-    },
-    
-    setupAboutPage : function() {
-        var self = this;
-        // The last value is a Mozilla-specific value to indicate untrusted content is allowed to trigger the event.
-        document.addEventListener("PolyMLextAboutPageLoaded",
-                function(e) { self.processAboutPage(e.target.ownerDocument); },
-                false, true);
     },
     
     noPoly : function() {
@@ -55,7 +54,7 @@ PolyMLext.BrowserUI.prototype = {
         
         //demos
         e("polymlext-button-demos").addEventListener("click", function() {
-                Utils.openAndReuseOneTabPerURL(self.links.demos);
+                self.displayDemosPage();
             }, false);
         
         //The Construct (The Matrix reference :)
@@ -63,26 +62,16 @@ PolyMLext.BrowserUI.prototype = {
                 gBrowser.selectedTab = gBrowser.addTab(self.links.construct);
             }, false);
         
-        //always enable
-        var prefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefBranch)
-        var alwaysEnabled = prefService.getBoolPref(
-            "extensions.PolyMLext.alwaysEnabled");
-        if (alwaysEnabled) {
-            e("polymlext-button-alwaysEnable").setAttribute("checked", true);
-        } else {
-            e("polymlext-button-alwaysEnable").setAttribute("checked", false);
-        }
+        e("polymlext-button-alwaysEnable").setAttribute("checked",
+                this.prefs.alwaysEnabled.value);
+        this.prefs.alwaysEnabled.events.addListener("change", function(aEvent) {
+            e("polymlext-button-alwaysEnable").setAttribute(
+                    "checked", self.prefs.alwaysEnabled.value);
+        });        
         e("polymlext-button-alwaysEnable").addEventListener("click",
             function() {
-                var prefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefBranch)
-                var alwaysEnabled = prefService.getBoolPref(
-                    "extensions.PolyMLext.alwaysEnabled");
-                e("polymlext-button-alwaysEnable").setAttribute(
-                        "checked", !alwaysEnabled);
-                prefService.setBoolPref(
-                        "extensions.PolyMLext.alwaysEnabled", !alwaysEnabled);
+                self.prefs.alwaysEnabled.value =
+                        !self.prefs.alwaysEnabled.value;
             }, false);
         
         
@@ -91,17 +80,16 @@ PolyMLext.BrowserUI.prototype = {
                 self.displayAboutPage();
             }, false);
     },
-    processAboutPage : function(doc) {
-        if (!PolyMLext.polyFound) {
-            doc.getElementById("polymlNotFound").style["display"] = "block";
-        }
-    },
     
     displayAboutPage : function() {
         Utils.openAndReuseOneTabPerURL(this.links.about);
     },
     
-    yesPoly : function(callbacks) {
+    displayDemosPage: function() {
+        Utils.openAndReuseOneTabPerURL(this.links.demos);
+    },
+    
+    yesPoly : function(callbacks) {        
         this.callbacks = callbacks;
         
         this.bindContextMenu();
@@ -147,14 +135,16 @@ PolyMLext.BrowserUI.prototype = {
         //is not very good, also it's not very good to check the value of the
         //string as opposed to having some boolean variable for tracking the
         //enabled-to-click and enabled-already for each tab should
-        if (s.s=="Click to enable PolyML app") {
-            //bind the click to load the app button
-            e("polymlext-icon-statusindicator").addEventListener("click",
-                this.callbacks.onPolyEnable, false);
-        } else {
-            //remove the click to load the app button listener
-            e("polymlext-icon-statusindicator").removeEventListener("click",
-                this.callbacks.onPolyEnable, false);
+        if (PolyMLext.polyFound) {
+            if (s.s=="Click to enable PolyML app") {
+                //bind the click to load the app button
+                e("polymlext-icon-statusindicator").addEventListener("click",
+                    this.callbacks.onPolyEnable, false);
+            } else {
+                //remove the click to load the app button listener
+                e("polymlext-icon-statusindicator").removeEventListener("click",
+                    this.callbacks.onPolyEnable, false);
+            }
         }
     }
 };
@@ -219,10 +209,7 @@ ConsoleUI.prototype = {
         }
         if (this.activeConsole.minimized) {
             this.showConsole();
-            
-            var prefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefBranch)
-            prefService.setBoolPref(
+            Application.prefs.setValue(
                     "extensions.PolyMLext.Console.enabledOnStartup", true);
         } else {
             this.hideConsole();
@@ -276,11 +263,15 @@ ConsoleUI.prototype = {
     showConsole : function() {
         e("polymlext-console-box").setAttribute("collapsed", false);
         e("polymlext-console-splitter").setAttribute("collapsed", false);
+        Application.prefs.setValue(
+                "extensions.PolyMLext.Console.minimizedOnStartup", false);
     },
     
     hideConsole : function() {
         e("polymlext-console-box").setAttribute("collapsed", true);
         e("polymlext-console-splitter").setAttribute("collapsed", true);
+        Application.prefs.setValue(
+                "extensions.PolyMLext.Console.minimizedOnStartup", true);
     },
 
     bindButtons : function() {
@@ -294,11 +285,8 @@ ConsoleUI.prototype = {
                 var LEFT_BUTTON = 0;
                 if (event.button==LEFT_BUTTON) {
                     self.disable();
-                    var prefService = Cc["@mozilla.org/preferences-service;1"]
-                            .getService(Ci.nsIPrefBranch)
-                    prefService.setBoolPref(
-                            "extensions.PolyMLext.Console.enabledOnStartup",
-                            false);
+                    Application.prefs.setValue(
+                        "extensions.PolyMLext.Console.enabledOnStartup", false);
                 }
             }, false);
     },

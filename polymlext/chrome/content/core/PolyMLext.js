@@ -43,8 +43,7 @@ var PolyMLext = (function() {
             PolyMLext.BrowserUI = new PolyMLext.BrowserUI();
             
             //if PolyML is found on the computer, initialize a bunch of stuff
-            PolyMLext.polyFound = Utils.findPoly();
-            if (PolyMLext.polyFound) {
+            if (PolyMLext.findPoly()) {
                 PolyMLext.BrowserUI.yesPoly({
                     onDocumentLoad : PolyMLext.lookForPolyMLCode,
                     onTabSelect : PolyMLext.onTabSelect,
@@ -54,8 +53,40 @@ var PolyMLext = (function() {
                 });
             } else {
                 PolyMLext.BrowserUI.noPoly();
+                //TODO setDefaultStatus?
                 PolyMLext.BrowserUI.setStatus({s:"PolyML not found"});
             }
+            
+            //if PolyML path is modified, we need to restart the browser
+            PolyMLext.BrowserUI.prefs.PolyMLPath.events.addListener("change",
+                function(aEvent) {
+                    if (PolyMLext.findPoly()) {
+                        var c = window.confirm(
+                                "You need to restart the browser to "
+                                + "finish updating PolyML path.\n"
+                                + "Do you wish to do it right now?")
+                        if (c) {
+                            Application.restart();
+                        }
+                    }
+            });
+        },
+        
+        findPoly : function() {
+            if (PolyMLext.BrowserUI.prefs.PolyMLPath.value=="") {
+                //otherwise look for the path using a script
+                var binpath = Utils.getExtensionPath();
+                binpath.append("poly");
+                binpath.append("bin");
+                binpath.append("findpoly.sh");
+                var process = Utils.startProcess(binpath, [], true);
+                PolyMLext.polyFound = (process.exitValue==0);
+            } else {
+                var path = PolyMLext.BrowserUI.prefs.PolyMLPath.value +
+                            "/bin/poly";
+                PolyMLext.polyFound = Utils.fileExists(path);
+            }
+            return PolyMLext.polyFound;
         },
     
         lookForPolyMLCode : function(doc) {

@@ -1,0 +1,86 @@
+ body {
+    margin:0;
+    padding:0;
+    font-family: Arial, sans;
+    font-size:12px;
+    background:white;
+}
+p { line-height:140%; }
+a, a:visited { color: #006600; }
+li { padding:10px; }
+h1 { font-size: 22px; font-family: Georgia; font-weight:normal; background-color:#eef4ff; padding:4px; }
+h2 { font-size: 15px; font-family: Georgia; font-weight:normal; }
+ #container {
+    width:820px;
+    margin:auto;
+    margin-top:30px;
+    margin-bottom:30px;
+    border:1px solid #ccc;
+    -moz-box-shadow:0 0 6px #333;
+    background:white;
+}
+#content {
+    padding:14px 20px;
+}
+#logo {
+    text-align:center;
+    padding-top:18px;
+    padding-bottom:9px;
+    font-family: Georgia;
+    margin-bottom:10px;
+    background-color:#eef4ff;
+}
+#logo span#title {
+    font-size:20px;
+    font-weight:bold;
+    margin:20px;
+}
+#logo img {
+    position:absolute;
+    margin-left:-28px;
+    margin-top:-8px;
+}      
+#polymlNotFound {
+    background:#FFE300;
+    padding:2px;
+    text-align:center;
+    font-size:14px;
+}
+  .section {
+    border-bottom:0px solid #eee;
+    padding-bottom:10px;
+}
+#settings {
+    margin-bottom:10px;
+}
+#settings input[type="submit"] {
+    width:80px;
+    display:block;
+}
+#settings input[type="text"] {
+    font-size:18px;
+    padding:10px;
+}
+#settings .name {
+    width:160px;
+    text-align:right;
+}
+#settings .hint {
+    color:#777;
+}
+#settings td {
+    padding:10px;
+    border-top:1px solid #eee;
+}
+#settings table {
+    width:100%;
+}
+#intro td {
+    padding:10px;
+    border-top:1px solid #eee;
+}
+
+#demos td {
+    padding:10px;
+    border-top:1px solid #eee;
+}

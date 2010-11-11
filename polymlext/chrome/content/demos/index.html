@@ -2,44 +2,62 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>PolyML Extension Demos</title>
-	<link type="text/css" rel="stylesheet" href="demos.css" /> 
+    <title>PolyML Extension</title>
+    <link rel="stylesheet" href="../aboutStyle.css" type="text/css" />
+
   </head>
   <body>
     <div id="container">
-		<div class="section">
-		<h1>PolyMLext Demos</h1>
-		</div>
-		
-		<div class="section">
-			<table>
-				<tr>
-					<td>Event Listeners</td>
-					<td><a href="demo1/demo.html">Demo</a></td>
-					<td><a href="demo1">Show files</a></td>
-				</tr>
-				<tr>
-					<td>Mouse Move</td>
-					<td><a href="demo2/demo.html">Demo</a></td>
-					<td><a href="demo2">Show files</a></td>
-				</tr>
-				<tr>
-					<td>Custom Wrappers: jQuery</td>
-					<td><a href="demo3/demo.html">Demo</a></td>
-					<td><a href="demo3">Show files</a></td>
-				</tr>
-				<tr>
-					<td>Custom Wrappers: Canvas (v1)</td>
-					<td><a href="demo4/canvas - polyml (v1).html">Demo</a></td>
-					<td><a href="demo4">Show files</a></td>
-				</tr>
-				<tr>
-					<td>Custom Wrappers: Canvas (v2)</td>
-					<td><a href="demo4/canvas - polyml (v2).html">Demo</a></td>
-					<td><a href="demo4">Show files</a></td>
-				</tr>
-			</table>
-		</div>
+        
+      <div id="logo">
+        <img src="chrome://PolyMLext/skin/polyml_32x32t.png" />
+        <span id="title">PolyML Extension <span id="version"></span><span>
+      </div>
+      
+      <div id="content">
+
+        <div class="section" id="demos">
+        <h1>PolyMLext Demos</h1>
+            <table>
+                <tr>
+                    <td>Event Listeners</td>
+                    <td><a href="demo1/demo.html">Demo</a></td>
+                    <td><a href="demo1">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Mouse Move</td>
+                    <td><a href="demo2/demo.html">Demo</a></td>
+                    <td><a href="demo2">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Custom Wrappers: jQuery</td>
+                    <td><a href="demo3/demo.html">Demo</a></td>
+                    <td><a href="demo3">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Custom Wrappers: Canvas (v1)</td>
+                    <td><a href="demo4/canvas - polyml (v1).html">Demo</a></td>
+                    <td><a href="demo4">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Custom Wrappers: Canvas (v2)</td>
+                    <td><a href="demo4/canvas - polyml (v2).html">Demo</a></td>
+                    <td><a href="demo4">Show files</a></td>
+                </tr>
+            </table>
+        </div>
     </div>
+      
+      <script type="text/javascript">
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService(Components.interfaces.nsIWindowMediator);  
+        var currentWindow = wm.getMostRecentWindow("navigator:browser");
+        var PolyMLext = currentWindow.PolyMLext;
+        
+        //shortcut
+        var e = function(id) { return document.getElementById(id) }
+        
+        e("version").innerHTML = Application.extensions.get('polymlext@ed.ac.uk').version;
+    </script>
   </body>
 </html>

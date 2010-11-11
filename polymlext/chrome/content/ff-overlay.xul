@@ -28,7 +28,7 @@
 					tooltiptext="Execute PolyML applications without explicit 
 permission" />
 			<menuseparator />
-			<menuitem id="polymlext-button-about" label="About" />
+			<menuitem id="polymlext-button-about" label="Settings / Help" />
 		</menupopup>
 	</popupset>
 

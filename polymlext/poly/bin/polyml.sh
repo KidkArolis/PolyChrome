@@ -5,7 +5,16 @@
 
 HERE=$(dirname "$0")
 PRG=$(basename "$0")
-POLYML_HOME=$("$HERE/findpoly.sh")
+
+CUSTOM_POLYML_PATH=$5
+if [ -z "$CUSTOM_POLYML_PATH" ]
+then
+    POLYML_HOME=$("$HERE/findpoly.sh");
+else
+    echo "Using custom PolyML path";
+    POLYML_HOME="$CUSTOM_POLYML_PATH";
+fi
+
 THE_POLY_HEAP="polymlext.polyml-heap"
 THE_POLY_PROGRAM="main.sml"
 
@@ -14,6 +23,11 @@ then
     echo "Can not find PolyML"; exit 3; 
 else
     echo "Using PolyML: $POLYML_HOME";
+fi
+if [ ! -e "${POLYML_HOME}/bin/poly" ]
+then
+    echo "${POLYML_HOME}/bin/poly does not exist";
+    exit 2;
 fi
 
 PORT1=$1

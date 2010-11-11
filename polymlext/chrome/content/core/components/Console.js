@@ -4,11 +4,10 @@ var log = PolyMLext.log;
 var error = PolyMLext.error;
 
 PolyMLext.Console = function() {
-    var prefService = Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch)
-    this.enabled = prefService.getBoolPref(
-            "extensions.PolyMLext.Console.enabledOnStartup");
-    this.minimized = !this.enabled;
+    this.enabled = Application.prefs.get(
+            "extensions.PolyMLext.Console.enabledOnStartup").value;
+    this.minimized = Application.prefs.get(
+            "extensions.PolyMLext.Console.minimizedOnStartup").value;
     this.cmdHistory = [];
     this.status = {s:"Click to enable PolyML app"}
 }

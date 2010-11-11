@@ -68,26 +68,6 @@ var Utils = {
         return process;
     },
     
-    findPoly : function() {
-        //if the user has manually given the path return true
-        //var prefService = Components
-        //        .classes["@mozilla.org/preferences-service;1"]
-        //        .getService(Ci.nsIPrefBranch);
-        //var path = prefService.getCharPref(
-        //        "extensions.PolyMLext.PolyMLPath");
-        //if (path!="") {
-        //    return true;
-        //}
-        
-        //otherwise look for the path using a script
-        var binpath = Utils.getExtensionPath();
-        binpath.append("poly");
-        binpath.append("bin");
-        binpath.append("findpoly.sh");
-        var process = Utils.startProcess(binpath, [], true);
-        return (process.exitValue==0)
-    },
-    
     /*
      taken from https://developer.mozilla.org/en/Code_snippets/Tabbed_browse
      r#Reusing_tabs
@@ -470,6 +450,17 @@ var Utils = {
         }
     },
     
+    fileExists : function(path) {
+        try {
+            var file = Cc["@mozilla.org/file/local;1"].
+                    createInstance(Ci.nsILocalFile);
+            file.initWithPath(path);
+            return file.exists();
+        } catch (e) {
+            return false;
+        }
+    },
+    
     randomString : function() {
         return this.md5(Math.random().toString()).substring(0,8);
     },
@@ -482,8 +473,13 @@ var Utils = {
                 //value = "  " + this.objToStr(value);
             }
             objstr += "  " + prop + ": " + value + "\n";
-        } 
-        objstr += "} = "+ obj.toString();
+        }
+        if (obj!=null && obj.hasOwnProperty("toString")) {
+            objstr += "} = "+ obj.toString();
+        } else {
+            objstr += "} = "+ obj;
+        }
+        
         return objstr;
     }
 }

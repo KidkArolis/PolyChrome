@@ -34,9 +34,14 @@ PolyMLext.Poly.prototype = {
         bin.append("polyml.sh");
         var args = [this.socket1.port(),
                     this.socket2.port(),
-                    this.sandbox.pathStr];
+                    this.sandbox.pathStr,];
         if (Utils.isDevelopmentMode()) {
             args.push("dev");
+        } else {
+            args.push("production");
+        }
+        if (PolyMLext.BrowserUI.prefs.PolyMLPath!="") {
+            args.push(PolyMLext.BrowserUI.prefs.PolyMLPath.value);
         }
         this.process = Utils.startProcess(bin, args, false);
     },

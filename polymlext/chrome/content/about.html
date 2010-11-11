@@ -4,109 +4,168 @@
     <meta charset="utf-8">
     <title>PolyML Extension</title>
     <script type="application/x-polyml">
-      
+        val _ = Console.print "Welcome to the PolyML extension\n";
     </script>
-    <style type="text/css">
-      body {
-        margin:0;
-        padding:0;
-        font-family: "Trebuchet MS", sans;
-        font-size:14px;
-        background:white;
-      }
-      p { line-height:180%; }
-      h1 { font-size: 24px; }
-      a, a:visited { color: #006600; }
-      li { padding:10px; }
-      #container {
-        width:720px;
-        margin:auto;
-        margin-top:30px;
-        margin-bottom:30px;
-        border:1px solid #ccc;
-        padding:14px 20px;
-        -moz-box-shadow:0 0 6px #333;
-        background:white;
-      }
-      #logo {
-        border-bottom:1px solid #ccc;
-        margin-bottom:20px;
-      }
-      #logo span {
-        font-size:20px;
-        font-weight:bold;
-      }
-      #logo img {
-        display:inline;
-      }      
-      #polymlNotFound {
-        background:#FFE300;
-        padding:8px;
-        text-align:center;
-        font-weight:bold;
-      }
-      .section {
-        border-bottom:1px solid #ccc;
-      }
-      #version {
-        text-align:center;
-        padding-top:20px;
-        font-size:12px;
-        color:#333;
-      }
-    </style>
+    <link rel="stylesheet" href="aboutStyle.css" type="text/css" />
 
   </head>
   <body>
     <div id="container">
-      
+        
       <div id="logo">
-        <img src="../skin/polyml_32x32.png" />
-        <span>PolyML Extension<span>
+        <img src="../skin/polyml_32x32t.png" />
+        <span id="title">PolyML Extension <span id="version"></span><span>
       </div>
       
+      <div id="content">
+
       <div id="polymlNotFound" style="display:none";>
-        <p>PolyML could not be found on this computer.<p>
-        <p>Please visit <a href="http://polyml.org/">http://polyml.org/</a> for further instructions on installing PolyML.
+        <p>PolyML could was not found on this computer.<p>
+        <p>Please visit <a href="http://polyml.org/">http://polyml.org/</a> for instructions on installing PolyML.<p>
+        <p>You can also provide a custom path to the PolyML in the settings section below.</p.
+      </div>
+      
+      <div class="section">
+      <div id="settings">
+        <h1>Settings</h1>
+        <table>
+            <tr>
+                <td class="name"><p>Custom PolyML path<p></td>
+                <td><input type="text" id="prefPolyMLPath"  /></td>
+                <td class="hint">e.g. /usr/bin/poly</td>
+            </tr>
+             <tr>
+                <td class="name"><p>Always Enable PolyML apps<p></td>
+                <td><input type="checkbox" id="prefAlwaysEnabled" /></td>
+                <td class="hint">If checked, PolyML scripts will be executed without asking for confirmation.</td>
+            </tr>
+            </tr>
+                <td></td>
+                <td><input type="submit" id="savePrefs" value="Save" /></td>
+                <td></td>
+            </tr>
+        </table>
+      </div>
+      </div>
+      
+      
+      <div class="section">
+      <div id="intro">
+        <h1>Quick Intro</h1>
+        <h2>The Icon</h2>
+        <p>In the bottom right corner, you can see the PolyMLext icon.
+            <table>
+                <tr>
+                    <td><img src="../skin/polyml_16x16_gray.png" /></td>
+                    <td>Click this to activate the PolyML Console for an active tab. It will only open the console for pages that contain PolyML code. In another pages clicking this icon will not do anything. Presence of PolyML code on the page is indicated by a label "PolyML app" to the left of this icon. Right clicking this icon will provide you with a context menu with useful links.</td>
+                </tr>
+                <tr>
+                    <td><img src="../skin/polyml_16x16.png" /></td>
+                    <td>This means that Console is activated. Clicking this icon will toggle the visibility of the console. Clicking "Disable" in the Console will deactivate the console and the icon will turn gray again. As with the gray icon, right clicking will provide you with the context menu.</td>
+                </tr>
+                <tr>
+                    <td><img src="../skin/polyml_16x16_gray_no_poly.png" /></td>
+                    <td>This indicates that PolyML was not found on the computer. Clicking it will display the settings page where you customize the custom PolyML path or get instructions on installing PolyML.</td>
+                </tr>
+            </table>
+        </p>        
+      
+        <h2>Click To Enable</h2>
+        <p>By default the extension is always disabled and has to be enabled each site by clicking "Click to enable PolyML" in the bottom right corner of the browser. If open another site in the same tab or reload the tab, you will not be asked for confirmation anymore.</p>
+      
+        <h2>The Construct</h2>
+        <p>In the context menu of the extension (which is opened by clicking the PolyMLext icon), you'll see "The Construct" button. This will take you to an empty html document with enabled PolyML, where you can try out different things. It's kind of like opening poly in the terminal for quick experiments.
+      
+        <h2>Console</h2>
+        <p>Console is an interactive top level PolyML shell. It corresponds to the opened document. Try opening up the console right now and enter:</p>
+            <pre>
+    DOM.setStyle (valOf (DOM.getElementById "container")) "background" "orange"
+            </pre>
+      </div>
       </div>
       
       <div class="section">
       <div id="disclaimer">
         <h1>Disclaimer</h1>
         <p>Use PolyMLext at your own risk. It is not safe to browse internet while PolyMLext is enabled.</p>
-        <p>By default the extension is always disabled and has to be enabled for specific sites by right-clicking on the extension icon and clicking "Enable".</p>
       </div>
       </div>
 
       <div class="section">
       <h1>Demos</h1>
-      <p><a href="file:///home/karolis/Dropbox/work/polymlext/polymlext/chrome/content/demos/">Click here to see more demonstrations of PolyML Extension</a></p>
+      <p><a href="javascript:void()" id="linkDemos">Click here to see the demos of PolyML Extension</a></p>
       </div>
       
       <div class="section">
       <h1>Documentation</h1>
       <ul>
-        <li><a href="#">User Manual</a></li>
-        <li><a href="#">SML Application Developer Manual</a></li>
-        <li><a href="#">Extension Developer Manual</a></li>
+        <li><a href="https://www.assembla.com/spaces/polymlext/wiki?id=polymlext&wiki_id=User_Manual" target="_blank">User Manual</a></li>
+        <li><a href="https://www.assembla.com/spaces/polymlext/wiki?id=polymlext&wiki_id=Application_Developer_Guide" target="_blank">SML Application Developer Manual</a></li>
+        <li><a href="https://www.assembla.com/spaces/polymlext/wiki?id=polymlext&wiki_id=Extension_Developer_Guide" target="_blank">Extension Developer Manual</a></li>
       </ul>
       </div>
       
       <div class="section">
-      <h1>Source code and bug tracker</h1>
-      <p><a href="https://www.assembla.com/spaces/polymlext/">https://www.assembla.com/spaces/polymlext/</a></p>
+      <h1>Source Code and Issue Tracker</h1>
+      <p><a href="https://www.assembla.com/spaces/polymlext/" target="_blank">https://www.assembla.com/spaces/polymlext/</a></p>
       </div>
-      
-      <div id="version">
-        Version 0.1.1
       </div>
     </div>
     
     <script type="text/javascript">
-      var element = document.getElementsByTagName("body")[0];
-      var event = document.createEvent("Events");
-      event.initEvent("PolyMLextAboutPageLoaded", true, false);
-      element.dispatchEvent(event);
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService(Components.interfaces.nsIWindowMediator);  
+        var currentWindow = wm.getMostRecentWindow("navigator:browser");
+        
+        var PolyMLext = currentWindow.PolyMLext;
+        
+        //shortcut
+        var e = function(id) { return document.getElementById(id) }
+        
+        var noPolyFound = function() {
+            if (!PolyMLext.polyFound) {
+                e("polymlNotFound").style["display"] = "block";
+            } else {
+                e("polymlNotFound").style["display"] = "none";
+            }
+        }
+        noPolyFound();
+        
+        e("version").innerHTML = Application.extensions
+                .get('polymlext@ed.ac.uk').version;
+        
+        e("linkDemos").addEventListener("click", function() {
+            PolyMLext.BrowserUI.displayDemosPage();
+        }, false);
+        
+        //preferences
+        //always enabled pref
+        var prefAlwaysEnabled = PolyMLext.BrowserUI.prefs.alwaysEnabled;
+        e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
+        prefAlwaysEnabled.events.addListener("change", function(aEvent) {
+            e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
+        });
+        
+        //always enabled
+        var prefPolyMLPath = PolyMLext.BrowserUI.prefs.PolyMLPath;
+        e("prefPolyMLPath").value = prefPolyMLPath.value;
+        prefPolyMLPath.events.addListener("change", function(aEvent) {
+            e("prefAlwaysEnabled").value = prefPolyMLPath.value;
+            PolyMLext.findPoly();
+            noPolyFound();
+        });
+        
+        //save prefs
+        e("savePrefs").addEventListener("click",
+            function() {
+                prefAlwaysEnabled.value = e("prefAlwaysEnabled").checked;
+                //we do a check here not to fire the "change" event initiating
+                //the browser restart if the value wasn't actually changed
+                if (e("prefPolyMLPath").value!=prefPolyMLPath.value) {
+                    prefPolyMLPath.value = e("prefPolyMLPath").value;
+                }
+                return false;
+            }, false);
     </script>
   </body>
 </html>
