@@ -3,11 +3,14 @@ PolyMLext.DebugConsole = function() {
             .getService(Components.interfaces.nsIConsoleService);
 }
 PolyMLext.DebugConsole.prototype = {
+    
+    profilingData : [],
+    
     log : function(m, p) {
         if (typeof(m)=="object") {
             m = Utils.objToStr(m);
         }
-        var prefix = p==null ? "INFO" : p;
+        var prefix = p==null ? "" : p;
         this.consoleService.logStringMessage(prefix + ": " + m + "\n");
     },
     
@@ -24,4 +27,26 @@ PolyMLext.DebugConsole.prototype = {
                aColumnNumber, aFlags, aCategory);
         this.consoleService.logMessage(scriptError);
     },
+    
+    profile : function(message) {
+        this.profilingData.push({
+            timestamp: new Date().getTime(),
+            message: message
+        });
+    },
+    
+    writeProfilingReport : function() {
+        var report = "";
+        var prev = this.profilingData[0].timestamp;
+        for (var i in this.profilingData) {
+            var item = this.profilingData[i];
+            var diff = item.timestamp - prev;
+            prev = item.timestamp;
+            report += diff + "ms " + item.message + "\n";
+        }
+        this.log("Profile:")
+        this.log(report);
+        
+        this.profilingData = [];
+    }
 };

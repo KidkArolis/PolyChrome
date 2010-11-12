@@ -17,6 +17,7 @@ PolyMLext.Poly.prototype = {
     enabled : false,
     
     init : function() {
+        PolyMLext.debug.profile("Initializing Poly");
         this.enabled = true;
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
@@ -25,9 +26,10 @@ PolyMLext.Poly.prototype = {
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jswrapper = new PolyMLext.JSWrapper(this);
+        PolyMLext.debug.profile("Finished initializing Poly");
     },
     
-    startPolyProcess : function () {        
+    startPolyProcess : function () {
         var bin = Utils.getExtensionPath();
         bin.append("poly");
         bin.append("bin");
@@ -56,15 +58,19 @@ PolyMLext.Poly.prototype = {
     },
 
     destroy : function() {
+        PolyMLext.debug.profile("Destroying Poly");
         this.stopPolyProcess();
         this.socket1.destroy();
         this.socket2.destroy();
         this.evaluator.destroy();
         this.sandbox.destroy();
         this.jswrapper.destroy();
+        PolyMLext.debug.profile("Destroying Complete");
+        PolyMLext.debug.writeProfilingReport();
     },
 
     onRequest : function(request) {
+        PolyMLext.debug.profile("Request about to be processed");
         /*
          a slightly obscure method. The messages that are sent to poly have to
          be preappended with "0" or "1" indicating succesful processing of the
@@ -74,14 +80,16 @@ PolyMLext.Poly.prototype = {
          we send it to socket 2. This is needed, because null response means
          that poly didn't call recv2() but recv()
         */
-        
         var response = this.jswrapper.process(request);
+        
+        PolyMLext.debug.profile("Request processed");
         
         if (!response.hasOwnProperty("type")) {
             return;
         }
         
         if (response.type == "response") {
+            PolyMLext.debug.profile("Sending response");
             if (response.ret) {
                 if (typeof(response.message.toString) !== undefined) {
                     response.message = response.message.toString();
@@ -95,6 +103,7 @@ PolyMLext.Poly.prototype = {
             } else {
                 this.sendCode("1"+response.message);
             }
+            PolyMLext.debug.profile("Sending response complete");
         }
     },
 
@@ -297,6 +306,7 @@ Socket1.prototype = {
     output : null,
        
     onInputStreamReady : function(input) {
+        PolyMLext.debug.profile("Receiving incoming request");
         if (!this.reading) {
             this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
@@ -328,6 +338,8 @@ Socket1.prototype = {
                 
                 //dump("firefox <--- poly : " + ++counterReceived + "\n");
                 //dump(this.request + "\n\n");
+                
+                PolyMLext.debug.profile("Incoming request received.");
                 
                 //we're done with reading this request
                 this.poly.onRequest(this.request);
