@@ -240,7 +240,6 @@ var Utils = {
         
         var listener = {
             onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
-                log("booga");
                 if (aFlag & Ci.nsIWebProgressListener.STATE_STOP) {
                     progressListener.onComplete();
                 }

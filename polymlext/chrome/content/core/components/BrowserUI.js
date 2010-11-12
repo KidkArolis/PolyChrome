@@ -299,7 +299,7 @@ ConsoleUI.prototype = {
                 e("polymlext-console-commandline-input").value = "";
                 this.activeConsole.log("> " + command + "\n");
                 this.activeConsole.historyAdd(command);
-                this.activeConsole.poly.send("0"+command);
+                this.activeConsole.poly.sendCode("0"+command);
                 break;
             case this.KEY_UP:
                 e("polymlext-console-commandline-input").value =

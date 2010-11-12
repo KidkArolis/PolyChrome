@@ -93,8 +93,8 @@ struct
         in f() end
         
     
-    fun send (m) = PolyMLext.send m
-    fun recv () = PolyMLext.recv2 ()
+    fun send (m) = PolyMLext.send_request m
+    fun recv () = PolyMLext.recv_response ()
 
     (* element manipulation *)
     fun getElementById (id:string) = let

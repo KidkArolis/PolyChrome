@@ -5,6 +5,6 @@ structure Console = struct
                         |> JSON.add ("type", JSON.Int 0)
                         |> JSON.add ("output", (JSON.String m))
         in
-            PolyMLext.send (JSON.encode json_obj)
+            PolyMLext.send_request (JSON.encode json_obj)
         end
 end;

@@ -325,7 +325,7 @@ DOMWrappers.prototype = {
                 }
             }
             var cmd = 'val _ = handle_event "'+request.arg3+'" "'+data+'"';
-            poly.send("0"+cmd);
+            poly.sendCode("0"+cmd);
         }
         element.addEventListener(
             request.arg2,
@@ -392,7 +392,7 @@ DOMWrappers.prototype = {
         var poly = this.poly;
         var f = function() {
             var cmd = 'val _ = handle_timer "'+request.arg2+'"';
-            poly.send("0"+cmd);
+            poly.sendCode("0"+cmd);
         }
         var id = document.defaultView.wrappedJSObject.setInterval(
             f,

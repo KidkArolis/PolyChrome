@@ -21,7 +21,7 @@ PolyMLext.Poly.prototype = {
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2();
-        this.sandbox = new Sandbox(this.socket1, this.document);
+        this.sandbox = new Sandbox();
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jswrapper = new PolyMLext.JSWrapper(this);
@@ -86,14 +86,14 @@ PolyMLext.Poly.prototype = {
                 if (typeof(response.message.toString) !== undefined) {
                     response.message = response.message.toString();
                 }
-                this.socket2.send("0"+response.message);
+                this.sendResponse("0"+response.message);
             }
         } else {
             //exception
             if (response.ret) {
-                this.socket2.send("1"+response.message);
+                this.sendResponse("1"+response.message);
             } else {
-                this.socket1.send("1"+response.message);
+                this.sendCode("1"+response.message);
             }
         }
     },
@@ -103,8 +103,15 @@ PolyMLext.Poly.prototype = {
         this.evaluator.start();
     },
     
-    send : function(m) {
+    //this is used for sending PolyML code to be evaluated
+    //e.g. embedded code, console commands, event code
+    sendCode : function(m) {
         this.socket1.send(m);
+    },
+    
+    //this is used only for sending responses to Poly JS Wrappers requests
+    sendResponse : function(m) {
+        this.socket2.send(m);
     }
 }
 
@@ -190,10 +197,10 @@ Evaluator.prototype = {
             var p = this.queue[i];
             switch (p.type) {
                 case 0:
-                    this.poly.send("0"+p.code);
+                    this.poly.sendCode("0"+p.code);
                     break;
                 case "sml":
-                    this.poly.send('0PolyML.use "' + p.filename + '";');
+                    this.poly.sendCode('0PolyML.use "' + p.filename + '";');
                     break;
                 case "zip":
                     //have to wait for the download to finish before unziping

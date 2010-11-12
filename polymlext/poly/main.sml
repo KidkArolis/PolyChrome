@@ -66,8 +66,8 @@ structure PolyMLext (*: POLYMLEXT*)
             if t=0 then m else raise DOMExn (m)
         end
 
-    fun recv1 () = recv_ (the socket1)
-    fun recv2 () = recv_ (the socket2)
+    fun recv_code () = recv_ (the socket1)
+    fun recv_response () = recv_ (the socket2)
 
     fun expand (str, 9) = str
               | expand (str, x) = expand (str^" ", x+1);
@@ -87,7 +87,7 @@ structure PolyMLext (*: POLYMLEXT*)
             else send_loop(pos+nbytes, length, data)
         end
     
-    fun send (data) =
+    fun send_request (data) =
         let
             val prefix = Int.toString (size data)
             val prefix = expand (prefix, size prefix)
@@ -170,12 +170,12 @@ structure PolyMLext (*: POLYMLEXT*)
                 then json_obj
                 else JSON.update ("type", JSON.Int 1) json_obj
         in
-            if (output_str="") then () else send (JSON.encode json_obj)
+            if (output_str="") then () else send_request (JSON.encode json_obj)
         end
 
     fun loop () =
         let
-            val code = recv1();
+            val code = recv_code();
             val _ = evaluate "foo" code;
         in
             loop()
