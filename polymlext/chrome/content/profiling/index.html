@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>PolyML Extension Profiling Report</title>
+        <link rel="stylesheet" href="../aboutStyle.css" type="text/css" />
+        
+        <script type="text/javascript" src="chrome://polymlext/content/libs/jQuery/lib/jquery-1.4.4.js"></script>
+        <script type="text/javascript" src="chrome://polymlext/content/libs/raphael/lib/raphael-1.5.2.js"></script>
+        <script type="text/javascript" src="chrome://polymlext/content/libs/raphael/lib/g.raphael-0.4.1.js"></script>
+        <script type="text/javascript" src="chrome://polymlext/content/libs/raphael/lib/g.line-0.4.2.js"></script>
+        <script type="text/javascript" src="DataTables-1.7.4/media/js/jquery.dataTables.js"></script>
+        
+        <style>
+            .center {
+                text-align:center;
+            }
+            .red {
+                color:red;
+            }
+            #profiling-table {
+                width:100%;
+                margin-top:20px;
+                margin-bottom:20px;
+            }
+            #profiling-table td {
+                border-top:1px solid #EEEEEE;
+                padding:2px;
+            }
+            #diff {
+                position:fixed;
+                top:50px;
+                left:20px;
+                background:#eef4ff;
+                font-size:14px;
+                text-align:center;
+                padding:10px;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div id="container">
+    
+            <div id="logo">
+              <img src="../skin/polyml_32x32t.png" />
+              <span id="title">PolyML Extension <span id="version"></span><span>
+            </div>
+      
+            <div id="content">
+                <div class="section">
+                    <h1>Report of the Last Profiling</h1>
+                    
+                    <div id="graph"></div>
+                    
+                    <table id="profiling-table" cellspacing="0">
+                        <tr><td>Loading...</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="diff">
+            <p>Click on any two rows to see the time difference</p>
+            <b></b>
+        </div>
+    
+        <script type="text/javascript">
+            
+            //setup some vars
+            Components.utils.import("resource://polymlext/core/Utils.jsm");
+        
+            var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                    .getService(Components.interfaces.nsIWindowMediator);  
+            var currentWindow = wm.getMostRecentWindow("navigator:browser");
+            
+            var PolyMLext = currentWindow.PolyMLext;
+            
+            
+            //read the profiling file
+            var file = Utils.getExtensionPath();
+            file.append("profiling");
+            file.append("output.txt");
+        
+            // open an input stream from file
+            var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+                                    createInstance(Components.interfaces.nsIFileInputStream);
+            istream.init(file, 0x01, 0444, 0);
+            istream.QueryInterface(Components.interfaces.nsILineInputStream);
+            
+            // read lines into array
+            var line = {}, lines = [], hasmore;
+            do {
+                hasmore = istream.readLine(line);
+                lines.push(line.value);
+            } while(hasmore);
+            
+            istream.close();
+            
+            
+            //build the report table
+            //sort the lines
+            lines.sort();
+            for (var i in lines) {
+                lines[i] = lines[i].split(";");
+            }
+            
+            //compute the longest matching substring of first and last timestamp
+            var first = lines[0][0];
+            var last = lines[lines.length-1][0];
+            var d = 0;
+            for (var i=0; i<last.length; i++) {
+                if (first[i]==last[i]) {
+                    d++;
+                } else {
+                    break;
+                }
+            }
+            PolyMLext.log(d);
+            var prev = lines[0][0];
+            var timestamps = [], differences = [];
+            for (var i=0; i<lines.length; i++) {
+                lines[i].unshift(lines[i][0]-prev);
+                prev = lines[i][1];
+                lines[i][1] = (lines[i][1]/1000+"").substr(d);
+                timestamps[i] = lines[i][1];
+                differences[i] = lines[i][0];
+                
+                var my_id = lines[i][4];
+                var my_time = lines[i][1];
+                var my_type = lines[i][2];
+                var found = false;
+                if (my_type=="B") {
+                    for (var j=0; j<lines.length; j++) {
+                        if (lines[j][4]==my_id && lines[j][2]=="A") {
+                            var diff = Math.abs(my_time-lines[j][1]);
+                            diff = Math.round(diff*1000);
+                            lines[i].push(diff);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    lines[i].push("-");
+                }
+            }
+            
+            $('#profiling-table').dataTable({
+                "aaData": lines,
+                "aoColumns": [
+                    { "sTitle": "Time diff", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            if ( sReturn >  10) {
+                                sReturn = '<span class="red">'+sReturn+'</span>';
+                            }
+                            return sReturn;
+                        }
+                    },
+                    { "sTitle": "Timestamp", "sClass": "center timestamp" },
+                    { "sTitle": "Roundtrip order", "sClass": "center" },
+                    { "sTitle": "Description", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            if ( sReturn == "drawing loop" ) {
+                                sReturn = "<b>"+sReturn+"</b>";
+                            }
+                            return sReturn;
+                        }
+                    },
+                    { "sTitle": "Request ID", "sClass": "center", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            sReturn = '<span class="request-id" data-request-id="'+sReturn+'">'+sReturn+'</span>';
+                            return sReturn;
+                        }
+                    },
+                    { "sTitle": "Time from sending", "sClass": "center", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            if ( sReturn >  10) {
+                                sReturn = '<span class="red">'+sReturn+'</span>';
+                            }
+                            return sReturn;
+                        }
+                    },
+                ],
+                "bPaginate": false,
+                "aaSorting": [ [1,'asc'], [2,'asc'] ],
+            });
+            
+            /*
+            //draw graph
+            // Creates canvas 640 × 480 at 10, 50
+            var r = Raphael("graph");
+            // Creates pie chart at with center at 320, 200,
+            // radius 100 and data: [55, 20, 13, 32, 5, 1, 2]
+            
+            var y = [];
+            for (var i = 0; i < timestamps.length; i++) {
+                y[i] = i;
+            }
+            r.g.linechart(85, 0, 700, 160, y, timestamps, {nostroke: false, axis: "0 0 1 1", smooth: false});
+            r.g.linechart(85, 170, 700, 160, y, differences, {nostroke: false, axis: "0 0 1 1", smooth: false});
+            */
+            
+            
+            var rows = [];
+            //bind table clicks
+            $("#profiling-table tr").click(function(e){
+                rows.push(parseFloat($(this).find(".timestamp").html()));
+                if (rows.length==2) {
+                    var diff = Math.abs(rows[1]-rows[0]);
+                    diff = Math.round(diff*1000)/1000;
+                    $("#diff b").html(diff + "ms");
+                    rows = [];
+                }
+                
+                if (rows.length==1) {
+                    $("#profiling-table tr").css("background-color", "white");
+                }
+                $(this).css("background-color", "yellow");
+                
+                e.stopPropagation();
+            });
+            $("body").click(function() {
+                $("#profiling-table tr").css("background-color", "white");
+            });
+            $("#profiling-table tr").hover(
+                function(e) {
+                    var request_id = $(this).find(".request-id").data("request-id");
+                    $("#profiling-table").find("[data-request-id='" + request_id +"']").parent().parent().css("background-color", "orange");
+                },
+                function(e) {
+                    $("#profiling-table tr").css("background-color", "white");
+                });
+        </script>
+  </body>
+</html>

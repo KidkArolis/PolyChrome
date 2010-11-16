@@ -27,7 +27,7 @@ fun fold_nat f i a =
 (*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 10;
+val QUANTITY = 1;
 
 val frameCount = ref (0:int);
 val fps = ref (0:int);
@@ -129,6 +129,7 @@ fun drawAndUpdateParticle (p:particle) =
 
 fun loop () =
   let
+    val _ = Profiling.profile ";drawing loop;"
     val nowTime = Time.now();
     val diffTime = (Time.toMilliseconds nowTime)-(Time.toMilliseconds (!lastTime));
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
@@ -144,13 +145,14 @@ fun loop () =
     
     val _ = (frameCount := !frameCount+1);
     
+    val _ = Profiling.profile ";drawing done;"
+
     (* limit the fps *)
     val endTime = Time.now();
     val diffTime = (Time.toMilliseconds endTime)-(Time.toMilliseconds nowTime);
-    val _ = if (diffTime<30) then OS.Process.sleep (Time.fromMilliseconds (30 - diffTime)) else ();
+    val _ = if (diffTime<20) then OS.Process.sleep (Time.fromMilliseconds (20 - diffTime)) else ();
   in
     loop ()
   end;
 
-(*val a = setInterval (TimerHandler loop) drawInterval;*)
 loop();

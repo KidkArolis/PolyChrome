@@ -3,6 +3,25 @@
 var log = PolyMLext.log;
 var error = PolyMLext.error;
 
+// PARTIAL WORKAROUND for Function.prototype.bind
+if (!Function.prototype.bind)
+    Function.prototype.bind = function(context /*, arg1, arg2... */) {
+        'use strict';
+        if (typeof this !== 'function') throw new TypeError();
+        var _slice = Array.prototype.slice,
+            _concat = Array.prototype.concat,
+            _arguments = _slice.call(arguments, 1),
+            _this = this,
+            _function = function() {
+                return _this.apply(this instanceof _dummy ? this : context,
+                    _concat.call(_arguments, _slice.call(arguments, 0)));
+            },
+            _dummy = function() {};
+        _dummy.prototype = _this.prototype;
+        _function.prototype = new _dummy();
+        return _function;
+};
+
 /*
  Poly represents the PolyML instance. It's actually an interface to the PolyML
  process. It communicates with it via the sockets.
@@ -17,7 +36,7 @@ PolyMLext.Poly.prototype = {
     enabled : false,
     
     init : function() {
-        PolyMLext.debug.profile("Initializing Poly");
+        PolyMLext.debug.profile(";Initializing Poly;");
         this.enabled = true;
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
@@ -26,7 +45,7 @@ PolyMLext.Poly.prototype = {
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jswrapper = new PolyMLext.JSWrapper(this);
-        PolyMLext.debug.profile("Finished initializing Poly");
+        PolyMLext.debug.profile(";Finished initializing Poly;");
     },
     
     startPolyProcess : function () {
@@ -58,19 +77,16 @@ PolyMLext.Poly.prototype = {
     },
 
     destroy : function() {
-        PolyMLext.debug.profile("Destroying Poly");
+        PolyMLext.debug.writeProfilingReport();
         this.stopPolyProcess();
         this.socket1.destroy();
         this.socket2.destroy();
+        this.jswrapper.destroy();
         this.evaluator.destroy();
         this.sandbox.destroy();
-        this.jswrapper.destroy();
-        PolyMLext.debug.profile("Destroying Complete");
-        PolyMLext.debug.writeProfilingReport();
     },
 
-    onRequest : function(request) {
-        PolyMLext.debug.profile("Request about to be processed");
+    onRequest : function(request, id) {
         /*
          a slightly obscure method. The messages that are sent to poly have to
          be preappended with "0" or "1" indicating succesful processing of the
@@ -82,15 +98,13 @@ PolyMLext.Poly.prototype = {
         */
         var response = this.jswrapper.process(request);
         
-        PolyMLext.debug.profile("Request processed");
-        
         if (!response.hasOwnProperty("type")) {
             return;
         }
         
         if (response.type == "response") {
-            PolyMLext.debug.profile("Sending response");
             if (response.ret) {
+                PolyMLext.debug.profile("C;send response;"+id);
                 if (typeof(response.message.toString) !== undefined) {
                     response.message = response.message.toString();
                 }
@@ -103,7 +117,6 @@ PolyMLext.Poly.prototype = {
             } else {
                 this.sendCode("1"+response.message);
             }
-            PolyMLext.debug.profile("Sending response complete");
         }
     },
 
@@ -205,6 +218,7 @@ Evaluator.prototype = {
         for (var i in this.queue) {
             var p = this.queue[i];
             switch (p.type) {
+                //TODO rename 0 to smth more meaningful
                 case 0:
                     this.poly.sendCode("0"+p.code);
                     break;
@@ -289,6 +303,7 @@ var Socket1 = function(poly) {
     this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
     this.socket = Cc["@mozilla.org/network/server-socket;1"].
             createInstance(Ci.nsIServerSocket);
+    //TODO: args: port (-1 for random free port), loopback, 
     this.socket.init(-1, true, -1);
     this.socket.asyncListen(this);
 }
@@ -305,26 +320,29 @@ Socket1.prototype = {
     input : null,
     output : null,
        
+    requestCounter : 1,
+    
+    READING_FREQ : 1,
+    
     onInputStreamReady : function(input) {
-        PolyMLext.debug.profile("Receiving incoming request");
+        var bytesToWaitFor = 0;
         if (!this.reading) {
-            this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
-            this.sin.init(input);
+            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter);
             try {
                 //TODO also check here, if we really read as much as we
                 //wanted
                 var r = this.sin.read(PolyMLext.PREFIX_SIZE);
+                if (r.length<PolyMLext.PREFIX_SIZE) {
+                    throw "Didn't receive the full prefix.";
+                }
             } catch (e) {
                 error(e);
                 return;
             }
-            this.bytesLeft = parseInt(r);            
+            this.bytesLeft = parseInt(r);
             this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
                                   PolyMLext.CHUNK_SIZE : this.bytesLeft;
-            this.request = "";
             this.reading = true;
-            this.input.asyncWait(this,0,0,this.tm.mainThread);
         } else {
             try {
                 var chunk = this.sin.read(this.bytesNextChunk);
@@ -335,37 +353,92 @@ Socket1.prototype = {
             this.request += chunk;
             this.bytesLeft -= chunk.length;
             if (this.bytesLeft == 0) {
-                
-                //dump("firefox <--- poly : " + ++counterReceived + "\n");
-                //dump(this.request + "\n\n");
-                
-                PolyMLext.debug.profile("Incoming request received.");
-                
                 //we're done with reading this request
-                this.poly.onRequest(this.request);
+                this.poly.onRequest(this.request, this.requestCounter);
+                this.requestCounter += 1;
                 //cleanup
                 this.reading = false;
                 this.request = "";
-                //wait for the next request
-                this.input.asyncWait(this,0,PolyMLext.PREFIX_SIZE,
-                        this.tm.mainThread);
+                var bytesToWaitFor = PolyMLext.PREFIX_SIZE;
             } else {
                 //there is more to read
                 this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
                                       PolyMLext.CHUNK_SIZE : this.bytesLeft;
-                //wait for the next chunk
-                this.input.asyncWait(this,0,0,this.tm.mainThread);
             }
+        }
+        
+        //wait for the next chunk or request
+        if (this.sin.available()>=bytesToWaitFor) {
+            this.onInputStreamReady();
+        } else {
+            this.input.asyncWait(this, 0, bytesToWaitFor, this.tm.mainThread);
+        }
+    },
+    
+    tryReadingInput : function() {
+        if (!this.reading) {            
+            if (this.sin.available()<PolyMLext.PREFIX_SIZE) {
+                setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
+                return;
+            }
+            
+            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter);
+            
+            try {
+                //TODO also check here, if we really read as much as we
+                //wanted
+                var r = this.sin.read(PolyMLext.PREFIX_SIZE);
+                if (r.length<PolyMLext.PREFIX_SIZE) {
+                    throw "Didn't receive the full prefix.";
+                }
+            } catch (e) {
+                error(e);
+                return;
+            }
+            this.bytesLeft = parseInt(r);
+            this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
+                                  PolyMLext.CHUNK_SIZE : this.bytesLeft;
+            this.reading = true;
+        } else {
+            try {
+                var chunk = this.sin.read(this.bytesNextChunk);
+            } catch (e) {
+                error(e);
+                return;
+            }
+            this.request += chunk;
+            this.bytesLeft -= chunk.length;
+            if (this.bytesLeft == 0) {
+                //we're done with reading this request
+                this.poly.onRequest(this.request, this.requestCounter);
+                this.requestCounter += 1;
+                //cleanup
+                this.reading = false;
+                this.request = "";                
+            } else {
+                //there is more to read
+                this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
+                                      PolyMLext.CHUNK_SIZE : this.bytesLeft;
+            }
+        }
+        if (this.sin.available()>0) {
+            this.tryReadingInput();
+        } else {
+            setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
         }
     },
 
     onSocketAccepted : function(serverSocket, clientSocket) {
-        this.input = clientSocket.openInputStream(
-                Ci.nsITransport.OPEN_BLOCKING, 0, 0).
+        this.input = clientSocket.openInputStream(0, 0, 0).
                 QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.openOutputStream(
                 Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+        //TODO explain args
+        this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Ci.nsIScriptableInputStream);
+        this.sin.init(this.input);
         this.input.asyncWait(this,0,PolyMLext.PREFIX_SIZE,this.tm.mainThread);
+        //setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
         this.poly.onReady();
     },
 
@@ -373,11 +446,6 @@ Socket1.prototype = {
 
     //can't call send before the socket was accepted
     send : function(data) {
-        //dump("firefox ---> poly : " + ++counterSent + "\n");
-        //var temp = data;
-        //if (data=="") { temp = "-EMPTY STRING-"; }
-        //dump(temp + "\n\n");
-        
         var prefix = (data.length.toString() +
                 Array(PolyMLext.PREFIX_SIZE).join(" "))
                 .substring(0, PolyMLext.PREFIX_SIZE);
@@ -425,12 +493,7 @@ Socket2.prototype = {
     output : null,
     
     //can't call send before the socket was accepted
-     send : function(data) {        
-        //dump("firefox ---> poly : " + ++counterSent + "\n");
-        //var temp = data;
-        //if (data=="") { temp = "-EMPTY STRING-"; }
-        //dump(temp + "\n\n");
-        
+     send : function(data) {
         var prefix = (data.length.toString() +
                 Array(PolyMLext.PREFIX_SIZE).join(" "))
                 .substring(0, PolyMLext.PREFIX_SIZE);
@@ -448,7 +511,12 @@ Socket2.prototype = {
                 openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
     },
 
-    onStopListening : function() {},
+    onStopListening : function() {
+        //TODO comment
+        if (this.poly) {
+            this.poly.console.error("PolyML process is gone.\n");
+        }
+    },
 
     port : function() {
         return this.socket.port;

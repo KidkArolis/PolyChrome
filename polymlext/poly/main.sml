@@ -8,6 +8,30 @@ use "json.sml";
 (* reopen the print function *)
 val print = TextIO.print;
 
+structure Profiling
+= struct
+    val data = ref ([]:string list)
+    
+    fun profile message = let
+        val time = Int.toString (Time.toMilliseconds (Time.now()))
+        in data := !data @ [time ^ ";" ^ message] end
+        
+    fun profile2 m = ()
+    
+    fun writeTextFile (outfile:string) (data:string) =
+        let
+            val outs = TextIO.openAppend outfile
+            val _ = TextIO.output (outs,data)
+        in
+            ()
+        end
+    
+    fun profilingDataToStr nil = ""
+      | profilingDataToStr (x::l) = ((x ^ "\n") ^ (profilingDataToStr l))
+    
+    fun writeProfilingReport () = (print "Writing profiling report.\n"; writeTextFile "../../profiling/output.txt" (profilingDataToStr (!data)))
+end
+
 structure PolyMLext (*: POLYMLEXT*)
 = struct
 
@@ -25,6 +49,8 @@ structure PolyMLext (*: POLYMLEXT*)
     (* constants for socket communication *)
     val PREFIX_SIZE = 9; (* bytes *)
     val CHUNK_SIZE = 65536; (* bytes *)
+    
+    val requestCounter = ref 0
     
     exception Error of string
 
@@ -56,6 +82,7 @@ structure PolyMLext (*: POLYMLEXT*)
         
     fun recv_ (socket) =
         let
+            val _ = Profiling.profile ("D;recv response;"^(Int.toString (!requestCounter)))
             val prefix = Byte.bytesToString(
                     Socket.recvVec(socket, PREFIX_SIZE))
             val length = valOf (Int.fromString prefix)
@@ -89,6 +116,8 @@ structure PolyMLext (*: POLYMLEXT*)
     
     fun send_request (data) =
         let
+            val _ = (requestCounter := (!requestCounter + 1))
+            val _ = Profiling.profile ("A;sending req;"^(Int.toString (!requestCounter)))
             val prefix = Int.toString (size data)
             val prefix = expand (prefix, size prefix)
             val prefixed_data = prefix^data
@@ -153,8 +182,10 @@ structure PolyMLext (*: POLYMLEXT*)
             val (worked,_) =
               (true, while not (List.null (! in_buffer)) do
                      PolyML.compiler (get, compile_params) ())
-              handle exn => (* something went wrong... *)
-               (false, (put ("Exception - " ^ General.exnMessage exn ^ " raised"); ()
+            handle Interrupt => (* the PolyML process is being killed *)
+                (false, (raise Interrupt; ()))
+                 | exn => (* something went wrong... *)
+                (false, (put ("Exception - " ^ General.exnMessage exn ^ " raised"); ()
                 (* Can do other stuff here: e.g. raise exn *) ));
 
               (* finally, print out any messages in the output buffer *)
@@ -192,7 +223,11 @@ structure PolyMLext (*: POLYMLEXT*)
             val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]
             
             val _ = loop() handle
-                        Interrupt => print "PolyML process stopped.\n";
+                        Interrupt => ()
+                      | Option => ()
+                        
+            val _ = print "PolyML process stopped.\n"
+            val _ = Profiling.writeProfilingReport ()
             
             (* clean up *)
             val _ = close_sock (the socket1)

@@ -5,3 +5,4 @@
 *.xpi
 polymlext/sandboxes/*
 *.cfg
+polymlext/profiling/output.txt
