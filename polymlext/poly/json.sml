@@ -66,9 +66,10 @@ structure JSON = struct
       | enc_value (List value) = enc_list value
       | enc_value (Null) = "null"
       | enc_value (obj) = (encode obj)
-    and enc_list l =
+    and enc_list [] = "[]"
+      | enc_list l =
         let
-            val e = foldl (fn(a,b) => (enc_value a) ^ "," ^ b) "" l
+            val e = foldr (fn(a,b) => (enc_value a) ^ "," ^ b) "" l
         in
             "[" ^ String.substring(e, 0, (String.size e)-1) ^ "]"
         end

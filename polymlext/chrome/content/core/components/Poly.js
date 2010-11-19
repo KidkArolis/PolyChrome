@@ -40,11 +40,11 @@ PolyMLext.Poly.prototype = {
         this.enabled = true;
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
-        this.socket2 = new Socket2();
+        this.socket2 = new Socket2(this);
         this.sandbox = new Sandbox();
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
-        this.jswrapper = new PolyMLext.JSWrapper(this);
+        this.jsffi = new PolyMLext.JSFFI(this);
         PolyMLext.debug.profile(";Finished initializing Poly;");
     },
     
@@ -81,48 +81,52 @@ PolyMLext.Poly.prototype = {
         this.stopPolyProcess();
         this.socket1.destroy();
         this.socket2.destroy();
-        this.jswrapper.destroy();
+        this.jsffi.destroy();
         this.evaluator.destroy();
         this.sandbox.destroy();
     },
 
     onRequest : function(request, id) {
         /*
+         TODO improve comments
          a slightly obscure method. The messages that are sent to poly have to
          be preappended with "0" or "1" indicating succesful processing of the
          request or an exception.
-         if the response produces by jswrapper is null
+         if the response produced by jsffi is null
          (response.response==null) then we send the exception to socket1 else
          we send it to socket 2. This is needed, because null response means
          that poly didn't call recv2() but recv()
         */
-        var response = this.jswrapper.process(request);
+        var response = this.jsffi.process(request);
         
-        if (!response.hasOwnProperty("type")) {
-            return;
-        }
-        
-        if (response.type == "response") {
-            if (response.ret) {
-                PolyMLext.debug.profile("C;send response;"+id);
-                if (typeof(response.message.toString) !== undefined) {
-                    response.message = response.message.toString();
+        switch (response.type) {
+            case "success":
+                if (response.ret) {
+                    PolyMLext.debug.profile("C;send response;"+id);
+                    if (typeof(response.message.toString) !== undefined) {
+                        response.message = response.message.toString();
+                    }
+                    this.sendResponse("0"+response.message);
                 }
-                this.sendResponse("0"+response.message);
-            }
-        } else {
-            //exception
-            if (response.ret) {
-                this.sendResponse("1"+response.message);
-            } else {
-                this.sendCode("1"+response.message);
-            }
+                break;
+            
+            case "exception":
+                if (response.ret) {
+                    this.sendResponse("1"+response.message);
+                } else {
+                    this.sendCode("1"+response.message);
+                }
+                break;
         }
     },
 
     onReady : function() {
         this.console.setStatusDefault();
         this.evaluator.start();
+    },
+    
+    onConnectionLost : function() {
+        this.console.setStatus({s:"PolyML process is gone", e:true});
     },
     
     //this is used for sending PolyML code to be evaluated
@@ -297,8 +301,8 @@ Socket.prototype = {
  this socket is used for sending PolyML code to be evaluated. For example
  the code from the document or the event handling code
 */
-var Socket1 = function(poly) {
-    this.poly = poly;
+var Socket1 = function(eventListener) {
+    this.eventListener = eventListener;
 
     this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
     this.socket = Cc["@mozilla.org/network/server-socket;1"].
@@ -337,6 +341,7 @@ Socket1.prototype = {
                 }
             } catch (e) {
                 error(e);
+                this.eventListener.onConnectionLost();
                 return;
             }
             this.bytesLeft = parseInt(r);
@@ -348,13 +353,14 @@ Socket1.prototype = {
                 var chunk = this.sin.read(this.bytesNextChunk);
             } catch (e) {
                 error(e);
+                this.eventListener.onConnectionLost();
                 return;
             }
             this.request += chunk;
             this.bytesLeft -= chunk.length;
             if (this.bytesLeft == 0) {
                 //we're done with reading this request
-                this.poly.onRequest(this.request, this.requestCounter);
+                this.eventListener.onRequest(this.request, this.requestCounter);
                 this.requestCounter += 1;
                 //cleanup
                 this.reading = false;
@@ -376,7 +382,7 @@ Socket1.prototype = {
     },
     
     tryReadingInput : function() {
-        if (!this.reading) {            
+        if (!this.reading) {
             if (this.sin.available()<PolyMLext.PREFIX_SIZE) {
                 setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
                 return;
@@ -410,7 +416,7 @@ Socket1.prototype = {
             this.bytesLeft -= chunk.length;
             if (this.bytesLeft == 0) {
                 //we're done with reading this request
-                this.poly.onRequest(this.request, this.requestCounter);
+                this.eventListener.onRequest(this.request, this.requestCounter);
                 this.requestCounter += 1;
                 //cleanup
                 this.reading = false;
@@ -439,22 +445,31 @@ Socket1.prototype = {
         this.sin.init(this.input);
         this.input.asyncWait(this,0,PolyMLext.PREFIX_SIZE,this.tm.mainThread);
         //setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
-        this.poly.onReady();
+        this.eventListener.onReady();
     },
 
-    onStopListening : function() {},
+    onStopListening : function() {
+        //TODO comment
+        if (this.eventListener) {
+            this.eventListener.onConnectionLost();
+        }
+    },
 
     //can't call send before the socket was accepted
     send : function(data) {
-        var prefix = (data.length.toString() +
-                Array(PolyMLext.PREFIX_SIZE).join(" "))
-                .substring(0, PolyMLext.PREFIX_SIZE);
-        var prefixed_data = prefix + data;
-        var pos = 0;
-        while (pos<prefixed_data.length) {
-            var chunk = prefixed_data.substr(pos, PolyMLext.CHUNK_SIZE);
-            var nbytes = this.output.write(chunk, chunk.length);
-            pos += nbytes;
+        try {
+            var prefix = (data.length.toString() +
+                    Array(PolyMLext.PREFIX_SIZE).join(" "))
+                    .substring(0, PolyMLext.PREFIX_SIZE);
+            var prefixed_data = prefix + data;
+            var pos = 0;
+            while (pos<prefixed_data.length) {
+                var chunk = prefixed_data.substr(pos, PolyMLext.CHUNK_SIZE);
+                var nbytes = this.output.write(chunk, chunk.length);
+                pos += nbytes;
+            }
+        } catch (e) {
+            this.eventListener.onConnectionLost();
         }
     },
 
@@ -494,15 +509,19 @@ Socket2.prototype = {
     
     //can't call send before the socket was accepted
      send : function(data) {
-        var prefix = (data.length.toString() +
-                Array(PolyMLext.PREFIX_SIZE).join(" "))
-                .substring(0, PolyMLext.PREFIX_SIZE);
-        var prefixed_data = prefix + data;
-        var pos = 0;
-        while (pos<prefixed_data.length) {
-            var chunk = prefixed_data.substr(pos, PolyMLext.CHUNK_SIZE);
-            var nbytes = this.output.write(chunk, chunk.length);
-            pos += nbytes;
+        try {
+            var prefix = (data.length.toString() +
+                    Array(PolyMLext.PREFIX_SIZE).join(" "))
+                    .substring(0, PolyMLext.PREFIX_SIZE);
+            var prefixed_data = prefix + data;
+            var pos = 0;
+            while (pos<prefixed_data.length) {
+                var chunk = prefixed_data.substr(pos, PolyMLext.CHUNK_SIZE);
+                var nbytes = this.output.write(chunk, chunk.length);
+                pos += nbytes;
+            }
+        } catch (e) {
+            this.eventListener.onConnectionLost();
         }
     },
 
@@ -511,12 +530,7 @@ Socket2.prototype = {
                 openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
     },
 
-    onStopListening : function() {
-        //TODO comment
-        if (this.poly) {
-            this.poly.console.error("PolyML process is gone.\n");
-        }
-    },
+    onStopListening : function() {},
 
     port : function() {
         return this.socket.port;

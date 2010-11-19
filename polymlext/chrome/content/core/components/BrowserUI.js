@@ -212,6 +212,8 @@ ConsoleUI.prototype = {
             Application.prefs.setValue(
                     "extensions.PolyMLext.Console.enabledOnStartup", true);
         } else {
+            Application.prefs.setValue(
+                "extensions.PolyMLext.Console.minimizedOnStartup", true);
             this.hideConsole();
         }
         this.activeConsole.enabled = true;
@@ -270,8 +272,6 @@ ConsoleUI.prototype = {
     hideConsole : function() {
         e("polymlext-console-box").setAttribute("collapsed", true);
         e("polymlext-console-splitter").setAttribute("collapsed", true);
-        Application.prefs.setValue(
-                "extensions.PolyMLext.Console.minimizedOnStartup", true);
     },
 
     bindButtons : function() {

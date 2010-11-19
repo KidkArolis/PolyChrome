@@ -7,19 +7,21 @@
 
 <script type="application/x-polyml">
 open DOM;
-val [b] = (getElementsByTagName "html");
-val e = valOf (getElementById "abc");
-fun u (eventData) =
+val html_collection = getElementsByTagName document "html";
+val b = getHTMLCollectionItem html_collection 0;
+val e = valOf (getElementById document "abc");
+fun u (event) =
     let
-        val [x,y] = parseMouseMoveEvent eventData
-        val _ = setInnerHTML e ((Int.toString x)^","^ (Int.toString y));
+        val x = (getClientX event)
+        val y = (getClientY event)
+        val _ = (setInnerHTML e ((Int.toString x)^","^ (Int.toString y)))
     in () end;
-onMouseMove b (EventHandler u);
+addEventListener b mousemove (EventCallback u)
 </script>
 
 <style type= "text/css">
     body {
-      background:#c33;
+      background:#333;
     }
     #abc {
       text-align:center;
@@ -32,8 +34,6 @@ onMouseMove b (EventHandler u);
 </head>
 <body>
 <div id="abc">0</div>
-
-
 </body>
 </html>
 

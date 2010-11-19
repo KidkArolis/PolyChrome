@@ -182,7 +182,10 @@ structure PolyMLext (*: POLYMLEXT*)
             val (worked,_) =
               (true, while not (List.null (! in_buffer)) do
                      PolyML.compiler (get, compile_params) ())
-            handle Interrupt => (* the PolyML process is being killed *)
+            handle
+                   (*SysErr => (* sockets can throw this *)*)
+                (*(false, (raise SysErr; ()))*)
+                 Interrupt => (* the PolyML process is being killed *)
                 (false, (raise Interrupt; ()))
                  | exn => (* something went wrong... *)
                 (false, (put ("Exception - " ^ General.exnMessage exn ^ " raised"); ()
@@ -224,7 +227,7 @@ structure PolyMLext (*: POLYMLEXT*)
             
             val _ = loop() handle
                         Interrupt => ()
-                      | Option => ()
+                      (*| SysErr => ()*)
                         
             val _ = print "PolyML process stopped.\n"
             val _ = Profiling.writeProfilingReport ()
@@ -240,4 +243,5 @@ end;
 
 (* Browser / DOM goodies *)
 use "console.sml";
-use "dom.sml";
+use "jsffi.sml";
+use "dom2.sml";

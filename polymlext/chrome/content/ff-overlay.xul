@@ -8,7 +8,7 @@
 	<script src="core/PolyMLext.js" />
 	<script src="core/components/DebugConsole.js" />
 	<script src="core/components/BrowserUI.js" />
-	<script src="core/components/JSWrapper.js" />
+	<script src="core/components/JSFFI.js" />
 	<script src="core/components/Poly.js" />
 	<script src="core/components/Console.js" />
 

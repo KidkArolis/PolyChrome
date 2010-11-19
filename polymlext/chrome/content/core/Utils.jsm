@@ -473,7 +473,7 @@ var Utils = {
             }
             objstr += "  " + prop + ": " + value + "\n";
         }
-        if (obj!=null && obj.hasOwnProperty("toString")) {
+        if (obj!=null && obj.hasOwnProperty && obj.hasOwnProperty("toString")) {
             objstr += "} = "+ obj.toString();
         } else {
             objstr += "} = "+ obj;
