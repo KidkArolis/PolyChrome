@@ -12,11 +12,11 @@ structure Profiling
 = struct
     val data = ref ([]:string list)
     
-    fun profile message = let
+    fun profile2 message = let
         val time = Int.toString (Time.toMilliseconds (Time.now()))
         in data := !data @ [time ^ ";" ^ message] end
         
-    fun profile2 m = ()
+    fun profile m = ()
     
     fun writeTextFile (outfile:string) (data:string) =
         let
@@ -82,13 +82,13 @@ structure PolyMLext (*: POLYMLEXT*)
         
     fun recv_ (socket) =
         let
-            val _ = Profiling.profile ("D;recv response;"^(Int.toString (!requestCounter)))
             val prefix = Byte.bytesToString(
                     Socket.recvVec(socket, PREFIX_SIZE))
             val length = valOf (Int.fromString prefix)
             val data = recv_loop(length, socket)
             val t = valOf (Int.fromString (String.substring (data, 0, 1)))
             val m = String.substring (data, 1, (String.size data)-1)
+            val _ = Profiling.profile ("D;recv response;"^(Int.toString (!requestCounter))^";"^(Int.toString length))
         in
             if t=0 then m else raise DOMExn (m)
         end
@@ -117,8 +117,8 @@ structure PolyMLext (*: POLYMLEXT*)
     fun send_request (data) =
         let
             val _ = (requestCounter := (!requestCounter + 1))
-            val _ = Profiling.profile ("A;sending req;"^(Int.toString (!requestCounter)))
             val prefix = Int.toString (size data)
+            val _ = Profiling.profile ("A;sending req;"^(Int.toString (!requestCounter))^";"^prefix)
             val prefix = expand (prefix, size prefix)
             val prefixed_data = prefix^data
             val length = size prefixed_data
@@ -244,4 +244,4 @@ end;
 (* Browser / DOM goodies *)
 use "console.sml";
 use "jsffi.sml";
-use "dom2.sml";
+use "dom.sml";

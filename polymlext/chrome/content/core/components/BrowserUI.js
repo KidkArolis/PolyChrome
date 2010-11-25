@@ -9,8 +9,6 @@ var e = function(id) { return document.getElementById(id) }
 PolyMLext.BrowserUI = function() {
     
     this.prefs = {};
-    this.prefs.firstLaunch = Application.prefs
-            .get("extensions.PolyMLext.firstLaunch");
     this.prefs.alwaysEnabled = Application.prefs
             .get("extensions.PolyMLext.alwaysEnabled");
     this.prefs.PolyMLPath = Application.prefs
@@ -18,13 +16,11 @@ PolyMLext.BrowserUI = function() {
     
     //checking if it's first time launch
     //which case an about page is displayed
-    //var firstLaunch = Application.prefs.get("extensions.PolyMLext.firstLaunch");
-    if (this.prefs.firstLaunch.value) {
+    var firstLaunch = Application.prefs.get("extensions.PolyMLext.firstLaunch");
+    if (firstLaunch) {
         this.displayAboutPage();
-        this.prefs.firstLaunch.value = false;
+        firstLaunch.value = false;
     }
-    
-
     
     this.console = new ConsoleUI(this);
 }
@@ -299,7 +295,7 @@ ConsoleUI.prototype = {
                 e("polymlext-console-commandline-input").value = "";
                 this.activeConsole.log("> " + command + "\n");
                 this.activeConsole.historyAdd(command);
-                this.activeConsole.poly.sendCode("0"+command);
+                this.activeConsole.poly.sendCode(command);
                 break;
             case this.KEY_UP:
                 e("polymlext-console-commandline-input").value =

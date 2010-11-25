@@ -33,13 +33,7 @@ var PolyMLext = (function() {
         init : function() {
             PolyMLext.debug = new PolyMLext.DebugConsole();
             
-            //cleanup the sandbox in case the browser was not closed properly
-            //TODO this should be moved out to some other object
-            var sandboxPath = Utils.getExtensionPath();
-            sandboxPath.append("sandboxes");
-            Utils.removeDir(sandboxPath);
-            Utils.createDir(sandboxPath);
-            
+            PolyMLext.Sandbox.prototype.clean();
             PolyMLext.BrowserUI = new PolyMLext.BrowserUI();
             
             //if PolyML is found on the computer, initialize a bunch of stuff
@@ -53,7 +47,6 @@ var PolyMLext = (function() {
                 });
             } else {
                 PolyMLext.BrowserUI.noPoly();
-                //TODO setDefaultStatus?
                 PolyMLext.BrowserUI.setStatus({s:"PolyML not found"});
             }
             

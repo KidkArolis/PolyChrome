@@ -1,72 +1,87 @@
-(*signature JS =*)
+(*signature DOM =*)
 (*sig*)
 (*end*)
 
-structure Name = SStrName;
-structure Tab = Name.NTab;
-
-structure DOMInternal =
+structure JS =
 struct
-    (* should we hide certain functionality from the user *)
+
+    open jsffi
+
+    (* generic functions *)
+    (* TODO, this won't work .. if those attributes are functions *)
+    (* need exec_js_get / exec_js_set *)
+    fun get (obj:fptr) attr = exec_js_get obj attr []
+    fun set (obj:fptr) attr value = exec_js_set obj attr [value]
+
+end
+
+(*
+signature BASIC_FPTR = sig
+    type T
+    val fptr_of : T -> fptr
 end;
+
+signature VAL_ATTR_OBJ = sig
+    type T
+    val setValue : string -> T -> ()
+    val getValue : T -> string
+end
+
+signature DOCUMENT = sig
+    include VAL_ATTR_OBJ
+    val fptr_of : T -> fptr
+end;
+
+functor ValueFUN(S : BASIC_FPTR) : VAL_ATTR_OBJ =
+struct
+    fun setValue x value = exec_js (S.fptr_of x) "value" [arg.string value]
+    fun getValue x = exec_js_r (S.fptr_of x) "value" []
+end;
+*)
 
 structure DOM =
 struct
 
-    exception Error
-
-    (*helpers*)    
-    val DOMWrapperJSON = JSON.empty
-                      |> JSON.add ("type", JSON.Int 2)
-    val CustomWrapperJSON = JSON.empty
-                         |> JSON.add ("type", JSON.Int 3)
-    
-    fun bool_to_int (true) = 1 | bool_to_int (false) = 0
-    
-    (*this one is used internally for all default DOM functions *)
-    fun JSONReq2 f r args =
-        let
-            val x = JSON.add ("f", JSON.String f) DOMWrapperJSON
-                 |> JSON.add ("r", JSON.Int (bool_to_int r))
-        in
-            foldl (fn (v, tab) => JSON.add ("arg1", v) tab) x args
-        end
-    fun JSONReqStr2 f r args = JSON.encode (JSONReq2 f r args)
-    
-    (*this one is used for custom wrappers *)
-    fun JSONReq wrapper_name f r args =
-        let
-            val x = JSON.add ("f", JSON.String f) CustomWrapperJSON
-                 |> JSON.add ("w", JSON.String wrapper_name)
-                 |> JSON.add ("r", JSON.Int (bool_to_int r))
-        in
-            foldl (fn (v, tab) => JSON.add ("arg1", v) tab) x args
-        end
-    fun JSONReqStr wrapper_name f r args = JSON.encode
-            (JSONReq wrapper_name f r args)
-    
-
-    (*DOM*)
-    datatype element = Element of string 
-    datatype eventListener = EventListener of Name.name;
-    
-    
-    fun parse_element_list l =
-            String.tokens (fn (#",") => true | _ => false) l
-            |> map (fn (x) => Element x)
-
+    local open jsffi in
     
     (*
-    fun parse_element (str) = let
-            fun e ([idx, ns]) = Element (idx,ns)
-              | e [idx] = Element (idx, "")
-              | e _ = raise Error
-            val l = String.tokens (fn (#",") => true | _ => false) str
-        in e(l) end
+    structure Document : DOCUMENT =
+    struct 
+        structure B : BASIC_FPTR =
+            datatype T = Document of fptr
+            fun fptr_of (Document fptr) = fptr;
+        end;
+        sturcture V = ValueFUN(B);
+        open V;
+    end;
+    
+    Document.getValue ...
+    
+    HTMLElement.getValue ...
+    
+    
+    datatype HTML_Elem_Kind = InputElem | DivElement;
+    datatype HTMLElement = HTMLElement of HTML_Elem_Kind * fptr
+
+    fun htmlFun (HTMLElement (_,fptr)) = ... fptr ...
     *)
     
-    datatype eventType = click | change | keypress | keyup | mouseover
-                       | mouseout | mousemove
+    datatype HTMLElement = HTMLElement of fptr
+    datatype HTMLCollection = HTMLCollection of fptr
+    datatype Document = Document of fptr
+    datatype Window = Window of fptr
+    datatype EventListener = EventListener of string;
+    datatype Timeout = Timeout of string;
+    datatype Interval = Interval of string;
+    datatype Event = Event of fptr
+    datatype EventType = click | change | keypress | keyup | mouseover | mouseout | mousemove
+    datatype EventCallback = EventCallback of Event -> unit
+    datatype TimerCallback = TimerCallback of unit -> unit;
+    
+    fun parse_element e = case e of "null" => NONE | x => SOME (HTMLElement x)
+    fun parse_element_list l =
+            String.tokens (fn (#",") => true | _ => false) l
+            |> map (fn (x) => HTMLElement x)
 
     fun string_of_eventtype click = "click"
       | string_of_eventtype change = "change"
@@ -75,238 +90,118 @@ struct
       | string_of_eventtype mouseover = "mouseover"
       | string_of_eventtype mouseout = "mouseout"
       | string_of_eventtype mousemove = "mousemove"
-    
-    datatype eventHandler = EventHandler of string -> unit
-    datatype timerHandler = TimerHandler of unit -> unit
-    
-    (* memory *)
-    (* we'll keep event handlers here *)
-    val eventHandlerTab = ref (Tab.empty : (eventType * eventHandler) Tab.T)
-    fun handle_event (id:string) (eventData:string) = let
-            val (_, EventHandler f) = Tab.get (!eventHandlerTab) (Name.mk id)
-        in f(eventData) end
-    
-    (* we'll keep timer callbacks here *)
-    val timerHandlerTab = ref (Tab.empty : (int * timerHandler) Tab.T)
-    fun handle_timer (id:string) = let
-            val (_, TimerHandler f) = Tab.get (!timerHandlerTab) (Name.mk id)
-        in f() end
-        
-    
-    fun send (m) = PolyMLext.send_request m
-    fun recv () = PolyMLext.recv_response ()
-
-    (* element manipulation *)
-    fun getElementById (id:string) = let
-            val req = JSONReqStr2 "getElementById" true [JSON.String id]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of
-                            "null" => NONE |
-                                 x => SOME (Element x)
-        in result end
-        
-    fun getElementsByTagName (tag:string) = let
-            val req = JSONReqStr2 "getElementsByTagName"
-                    true [JSON.String tag]
-            val _ = send(req)
-        in parse_element_list (recv()) end
-
-    fun childNodes (Element e) = let
-            val req = JSONReqStr2 "childNodes" true [JSON.String e]
-            val _ = send(req)
-        in parse_element_list (recv()) end
-
-    fun parentNode (Element e) = let
-            val req = JSONReqStr2 "parentNode" true [JSON.String e]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of
-                            "null" => NONE |
-                                 x => SOME (Element x)
-        in result end
-
-    fun firstChild (Element e) = let
-            val req = JSONReqStr2 "firstChild" true [JSON.String e]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
-        in result end
-
-    fun lastChild (Element e) = let
-            val req = JSONReqStr2 "lastChild" true [JSON.String e]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
-        in result end
-
-    fun nextSibling (Element e) = let
-            val req = JSONReqStr2 "nextSibling" true [JSON.String e]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
-        in result end
-
-    fun previousSibling (Element e) = let
-            val req = JSONReqStr2 "previousSibling" true [JSON.String e]
-            val _ = send(req)
-            val response = recv()
-            val result = case response of "null" => NONE | x => SOME (Element x)
-        in result end
-
-    fun setInnerHTML (Element e) (value) = let
-            val req = JSONReqStr2 "setInnerHTML" false [JSON.String e, JSON.String value]
-        in send(req) end
-        
-    fun getInnerHTML (Element e) = let
-            val req = JSONReqStr2 "getInnerHTML" true [JSON.String e]
-            val _ = send(req)
-        in recv() end
-
-    fun setValue (Element e) (value) = let
-            val req = JSONReqStr2 "setValue" false [JSON.String e, JSON.String value]
-        in send(req) end
-        
-    fun getValue (Element e) = let
-            val req = JSONReqStr2 "getValue" true [JSON.String e]
-            val _ = send(req)
-        in recv() end
-
-    fun getAttribute (Element e) (attr)= let
-            val req = JSONReqStr2 "getAttribute" true [JSON.String e, JSON.String attr]
-            val _ = send(req)
-        in recv() end
-
-    fun setAttribute (Element e) (attr:string) (value:string) = let
-            val req = JSONReqStr2 "setAttribute" false [JSON.String e, JSON.String attr, JSON.String value]
-            val _ = send(req)
+      
+    (* we'll keep event callbacks here *)
+    val eventCallbackTab = ref (Tab.empty : (HTMLElement * EventType * EventCallback) Tab.T)
+    fun handle_event id event = let
+            val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val _ = f (Event event)
+            val _ = Memory.removeReference event (* clean up the memory *)
         in () end
-
-    fun removeAttribute (Element e) (attr:string) = let
-            val req = JSONReqStr2 "removeAttribute" false [JSON.String e, JSON.String attr]
-            val _ = send(req)
-        in () end
-
-    fun createElement (t:string) = let
-            val req = JSONReqStr2 "createElement" true [JSON.String t]
-            val _ = send(req)
-        in Element (recv()) end
-
-    fun createTextNode (text:string) = let
-            val req = JSONReqStr2 "createTextNode" true [JSON.String text]
-            val _ = send(req)
-        in Element (recv()) end
-
-    fun appendChild (Element parent) (Element child) = let
-            val req = JSONReqStr2 "appendChild" false [JSON.String parent, JSON.String child]
-            val _ = send(req)
-        in () end
-
-    fun removeChild (Element parent) (Element child) = let
-            val req = JSONReqStr2 "removeChild" false [JSON.String parent, JSON.String child]
-            val _ = send(req)
-        in () end
-
-    fun replaceChild (Element parent) (Element child_new) (Element child_old) = let
-            val req = JSONReqStr2 "replaceChild" false [JSON.String parent, JSON.String child_new, JSON.String child_old]
-            val _ = send(req)
-        in () end
-
-    fun setStyle (Element e) (attr) (value) = let
-            val req = JSONReqStr2 "setStyle" false [JSON.String e, JSON.String attr, JSON.String value]
-        in send(req) end
     
-    fun getStyle (Element e) (attr) = let
-            val req = JSONReqStr2 "getStyle" true [JSON.String e, JSON.String attr]
-            val _ = send(req)
-        in recv() end
+    (* we'll keep timeout and interval callbacks here *)
+    val timerCallbackTab = ref (Tab.empty : (TimerCallback * fptr * int) Tab.T)
+    fun handle_timeout f_id = let
+            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val _ = f ()
+            (* clean up *)
+            val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
+            val _ = Memory.removeReference f_id
+        in () end
+    fun handle_interval f_id = let
+            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+        in f () end
     
+    val document = Document "document"
+    val window = Window "window"
+    
+    (* window methods *)
+    fun alert (Window w) message = exec_js w "alert" [arg.string message]
+    (* document methods *)
+    fun getElementById (Document d) id = parse_element (exec_js_r d "getElementById" [arg.string id])
+    fun getElementsByTagName (Document d) tag = HTMLCollection (exec_js_r d "getElementsByTagName" [arg.string tag])
+    fun createElement (Document d) tag = HTMLElement (exec_js_r d "createElement" [arg.string tag])
+    fun createTextNode (Document d) text = HTMLElement (exec_js_r d "createTextNode" [arg.string text])
+    (* element methods *)
+    fun childNodes (HTMLElement e) = parse_element_list (exec_js_get e "childNodes" [])
+    fun parentNode (HTMLElement e) = parse_element (exec_js_get e "parentNode" [])
+    fun firstChild (HTMLElement e) = parse_element (exec_js_get e "firstChild" [])
+    fun lastChild (HTMLElement e) = parse_element (exec_js_get e "lastChild" [])
+    fun nextSibling (HTMLElement e) = parse_element (exec_js_get e "nextSibling" [])
+    fun previousSibling (HTMLElement e) = parse_element (exec_js_get e "previousSibling" [])
+    fun setInnerHTML (HTMLElement e) value = exec_js_set e "innerHTML" [arg.string value]
+    fun getInnerHTML (HTMLElement e) = exec_js_get e "innerHTML" []
+    fun setValue (HTMLElement e) value = exec_js_set e "value" [arg.string value]
+    fun getValue (HTMLElement e) = exec_js_get e "value" []
+    fun getAttribute (HTMLElement e) attr = exec_js_r e "getAttribute" [arg.string attr]
+    fun setAttribute (HTMLElement e) attr value = exec_js e "setAttribute" [arg.string attr, arg.string value]
+    fun removeAttribute (HTMLElement e) attr = exec_js e "removeAttribute" [arg.string attr]
+    fun appendChild (HTMLElement parent) (HTMLElement child) = exec_js parent "appendChild" [arg.reference child]
+    fun removeChild (HTMLElement parent) (HTMLElement child) = exec_js parent "removeChild" [arg.reference child]
+    fun replaceChild (HTMLElement parent) (HTMLElement child_new) (HTMLElement child_old) = exec_js parent "replaceChild" [arg.reference child_new, arg.reference child_old]
+    fun setStyle (HTMLElement e) attr value = exec_js_set e ("style."^attr) [arg.string value]
+    fun getStyle (HTMLElement e) attr = exec_js_get e ("style."^attr) []
 
-
-    (* events *)    
-    fun addEventListener (elem as (Element e)) (et:eventType) (f:eventHandler) = let
-            val entry = (et, f)
-            val (id, tab) = Tab.add (Name.default_name, entry) (!eventHandlerTab)
-            val _ = (eventHandlerTab := tab)
-            val req = JSONReqStr2 "addEventListener" false [JSON.String e,
-                                                            JSON.String (string_of_eventtype et),
-                                                            JSON.String (Name.string_of_name id)]
-            val _ = send(req)
+    (* events *)
+    fun getClientX (Event e) = valOf (Int.fromString (exec_js_get e "clientX" []))
+    fun getClientY (Event e) = valOf (Int.fromString (exec_js_get e "clientY" []))
+    fun addEventListener (HTMLElement e) et f = let
+            val callback = "val _ = DOM.handle_event {id} {arg} ;"
+            val id = Memory.addFunctionReference callback
+            val entry = (HTMLElement e, et, f)
+            val _ = (eventCallbackTab := Tab.ins (Name.mk id, entry) (!eventCallbackTab))
+            val _ = exec_js e "addEventListener" [arg.string (string_of_eventtype et), arg.reference id, arg.bool false]
         in EventListener id end
-    
     fun removeEventListener (EventListener id) = let
-            val (et, _) = (Tab.get (!eventHandlerTab) id)
+            val (HTMLElement e, et, _) = (Tab.get (!eventCallbackTab) (Name.mk id))
                           handle UNDEF => (raise PolyMLext.DOMExn "Undefined listener");
-            val tab = Tab.delete id (!eventHandlerTab)
-            val _ = (eventHandlerTab := tab)
-            val req = JSONReqStr2 "removeEventListener" false [JSON.String (string_of_eventtype et),
-                                                               JSON.String (Name.string_of_name id)]
-            val _ = send(req)
-        in () end
-        
-    fun onMouseMove (elem as (Element e)) (f:eventHandler) = let
-            val entry = (mousemove, f)
-            val (id, tab) = Tab.add (Name.default_name, entry) (!eventHandlerTab)
-            val _ = (eventHandlerTab := tab)
-            val req = JSONReqStr2 "onMouseMove" false [JSON.String e,
-                                                       JSON.String (string_of_eventtype mousemove),
-                                                       JSON.String (Name.string_of_name id)]
-            val _ = send(req)
-        in EventListener id end
-        
-    fun parseMouseMoveEvent (event) = (String.tokens (fn (#",") => true | _ => false) event)
-            |> map Int.fromString
-            |> map valOf
-        
-    fun getMouseCoords () = let
-            val req = JSONReqStr2 "getMouseCoords" true []
-            val _ = send(req)
-            val response = recv()
-            val [x,y] = parseMouseMoveEvent response
-        in (x, y) end
-    
-    fun cancelMouseCoordsPolling () = let
-            val req = JSONReqStr2 "cancelMouseCoordsPolling" false []
-        in send(req) end
-    
-    (*timers*)
-    fun setInterval (f:timerHandler) (time:int) = let
-            val entry = (time, f)
-            val (id, tab) = Tab.add (Name.default_name, entry)
-                    (!timerHandlerTab)
-            val _ = (timerHandlerTab := tab)
-            val req = JSONReqStr2 "setInterval" false
-                    [JSON.Int time, JSON.String (Name.string_of_name id)]
-            val _ = send(req)
-        in id end
-    
-    fun clearInterval id = let
-            val tab = Tab.delete id (!timerHandlerTab)
-            val _ = (timerHandlerTab := tab)
-            val req = JSONReqStr2 "clearInterval" false
-                    [JSON.String (Name.string_of_name id)]
-            val _ = send(req)
+            val _ = (eventCallbackTab := (Tab.delete (Name.mk id) (!eventCallbackTab)))
+            val _ = exec_js e "removeEventListener" [arg.string (string_of_eventtype et), arg.reference id, arg.bool false]
+            val _ = Memory.removeReference id
         in () end
     
-
-    (*Memory management*)
-    fun removeReference (Element e) = let
-            val req = JSONReqStr2 "removeReference" false [JSON.String e]
-        in send(req) end
-    fun switchDefaultNs () = let
-            val req = JSONReqStr2 "switchDefaultNs" false []
-        in send(req) end
-    fun switchNs (ns) = let
-            val req = JSONReqStr2 "switchNs" false [JSON.String ns]
-        in send(req) end
-    fun clearDefaultNs () = let
-            val req = JSONReqStr2 "clearDefaultNs" false []
-        in send(req) end
-    fun clearNs (ns) = let
-            val req = JSONReqStr2 "clearNs" false [JSON.String ns]
-        in send(req) end
-    fun deleteNs (ns) = let
-            val req = JSONReqStr2 "deleteNs" false [JSON.String ns]
-        in send(req) end
+    (* timers *)
+    fun setTimeout (Window w) f time = let
+            val callback = "val _ = DOM.handle_timeout {id} ;"
+            val f_id = Memory.addFunctionReference callback
+            val timeout_id = exec_js_r w "setTimeout" [arg.reference f_id, arg.int time]
+            val entry = (f, timeout_id, time)
+            val _ = (timerCallbackTab := Tab.ins (Name.mk f_id, entry) (!timerCallbackTab))
+        in Timeout f_id end
+    fun clearTimeout (Window w) (Timeout f_id) = let
+            val contains = (Tab.contains (!timerCallbackTab) (Name.mk f_id))
+            val _ = case contains of true => (let
+                val (_, timeout_id, time) = (Tab.get (!timerCallbackTab) (Name.mk f_id))
+                          handle UNDEF => (raise Error);
+                val _ = exec_js w "clearTimeout" [arg.string timeout_id]
+                (* cleanup *)
+                val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
+                val _ = Memory.removeReference f_id
+                in () end
+            )
+            | false => ()
+        in () end
         
+    fun setInterval (Window w) f time = let
+            val callback = "val _ = DOM.handle_interval {id} ;"
+            val f_id = Memory.addFunctionReference callback
+            val interval_id = exec_js_r w "setInterval" [arg.reference f_id, arg.int time]
+            val entry = (f, interval_id, time)
+            val _ = (timerCallbackTab := Tab.ins (Name.mk f_id, entry) (!timerCallbackTab))
+        in Timeout f_id end
+    fun clearInterval (Window w) (Interval f_id) = let
+            val contains = (Tab.contains (!timerCallbackTab) (Name.mk f_id))
+            val _ = case contains of true => (let
+                val (_, interval_id, time) = (Tab.get (!timerCallbackTab) (Name.mk f_id))
+                          handle UNDEF => (raise Error);
+                val _ = exec_js w "clearInterval" [arg.string interval_id]
+                (* cleanup *)
+                val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
+                val _ = Memory.removeReference f_id
+                in () end
+            )
+            | false => ()
+        in () end
+    
+    end
 end;

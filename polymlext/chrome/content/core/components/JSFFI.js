@@ -39,8 +39,9 @@ PolyMLext.JSFFI.prototype = {
             case 1: //errors
                 this.poly.console.error(request.output + "\n");
                 break;
-
+            
             case 2: //JS function
+            case 3: //setting/getting attributes of JS objects
                 try {
                     response = this.executeJS(request);
                     if (response === undefined) {
@@ -52,21 +53,23 @@ PolyMLext.JSFFI.prototype = {
                         ret:request.r
                     };
                 } catch (e) {
+                    var errorMsg = "";
+                    if (typeof(e)=="string") {
+                        errorMsg = e;
+                    } else {
+                        errorMsg = e.message + " Line: " + e.lineNumber +
+                            " File:" + e.fileName + "Stack: " + e.stack;
+                    }
+                    errorMsg += ", while trying to call " + request.f
                     responsePacket = {
                         type:"exception",
-                        message:e,
+                        message:errorMsg,
                         ret:request.r
                     };
-                    if (typeof(e)=="string") {
-                        error(e);
-                    } else {
-                        error(e.message + " Line: " + e.lineNumber +
-                            " File:" + e.fileName);
-                    }
                 }
                 break;
             
-            case 3: //Memory management
+            case 4: //Memory management
                 try {
                     response = this.Memory[request.f](request.arg1);
                     responsePacket = {
@@ -89,6 +92,10 @@ PolyMLext.JSFFI.prototype = {
                 error("Unexpected request from Poly", document.location.href);
         }
         
+        //TODO: not sure this is needed
+        //if (responsePacket.message && responsePacket.message.toString) {
+        //    responsePacket.message = responsePacket.message.toString();
+        //}
         return responsePacket;
     },
     
@@ -104,30 +111,28 @@ PolyMLext.JSFFI.prototype = {
             default:
                 obj = this.Memory.getReference(request.obj);
         }
-        //e.g. convert "Array.prototype.split" into ["Array", "prototype", "split"]
+        //e.g. convert "obj1.obj2.obj3.fun" into ["obj1", "obj2", "obj3", "fun"]
         var f = request.f.split(".");
-        //TODO this is a bad example (cause it doens't work)
-        //incrementally define obj and then set the field
-        //obj = obj["Array"];
-        //obj = obj["prototype"];
-        //this is equivalent to obj = obj.Array.prototype; field = "split"
+        //redefine obj in a loop and then set the field
+        //obj = obj["obj1"];
+        //obj = obj["obj2"];
+        //obj = obj["obj3"];
+        //this is equivalent to obj = obj.obj1.obj2.obj3; field = "fun"
         for (var i=0, len=f.length-1; i<len; i++) {
             obj = obj[f[i]];
         }
         var field = f[f.length-1];
-        switch (typeof(obj[field])) {
-            case "function":
+        switch(request.type) {
+            case 2:
                 var args = this.convertArgsFromPoly(request.args);
                 var returnValue = obj[field].apply(obj, args);
                 break;
-            //other attribute
-            default:
+            case 3:
                 //if no arguments provided return the value of the attribute
                 //otherwise set the value of the attribute
                 var args = this.convertArgsFromPoly(request.args);
                 switch (args.length) {
                     case 0:
-
                         var returnValue = obj[field];
                         break;
                     case 1:
@@ -137,6 +142,7 @@ PolyMLext.JSFFI.prototype = {
                     default:
                         throw "Unexpected request. Too many arguments."
                 }
+                break;
         }
         //do we need to return smth?
         if (request.r) {
@@ -185,7 +191,6 @@ var Memory = function(poly) {
     //the empty string indicates the main namespace.
     //this namespace can not be deleted
     this.currentNs = "";
-    //this.callbacks = {};
     //this counter is currently used for generating the ids in the Memory
     this.counter = 0;
     this.poly = poly;
@@ -228,12 +233,6 @@ Memory.prototype = {
     },
     addFunctionReference : function(callback) {
         var self = this;
-        //closure magic, we attach a new name to this value
-        //so that the callback could find it later
-        //however this WILL fail if there are more than one callback
-        //in this same for loop..
-        //TODO: fix that
-        
         //create a dummy reference to get the id
         var id = this.addReference(function() {});
         callback = callback.split(" ");
@@ -258,7 +257,7 @@ Memory.prototype = {
             }
             //TODO hack..
             cmd = cmd.replace(/-/g, "~");
-            self.poly.sendCode("0"+cmd);
+            self.poly.sendCode(cmd);
         }
         this.replaceReference(id, f);
         return id;
@@ -316,32 +315,3 @@ Memory.prototype = {
 }
 
 }());
-
-
-
-
-
-
-    /*
-    //timers
-    setInterval : function(request) {
-        var poly = this.poly;
-        var f = function() {
-            var cmd = 'val _ = handle_timer "'+request.arg2+'"';
-            poly.sendCode("0"+cmd);
-        }
-        var id = document.defaultView.wrappedJSObject.setInterval(
-            f,
-            parseInt(request.arg1)
-        );
-        this.Memory.timers[request.arg2] = id;
-        return null;
-    },
-    clearInterval : function(request) {
-        document.defaultView.wrappedJSObject.clearInterval(
-            this.Memory.timers[request.arg1]
-        );
-        delete this.Memory.timers[request.arg1];
-        return null;
-    },
-    */

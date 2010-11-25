@@ -1,6 +1,6 @@
 signature JSFFI =
 sig
-    type fptr = string
+    type fptr
     structure Tab : NAME_TAB
     structure Name : SSTR_NAMES
     
@@ -23,6 +23,8 @@ sig
     function to conver the returned string appropriately *)
     val exec_js_r : string -> string -> JSON.T list list -> string
     val exec_js : string -> string -> JSON.T list list -> unit
+    val exec_js_get : string -> string -> JSON.T list list -> string
+    val exec_js_set : string -> string -> JSON.T list list -> unit
     
     (* these are used for keeping the temporary memory, used for
     storing javascript objects, tidy *)
@@ -65,22 +67,24 @@ struct
     fun send (m) = PolyMLext.send_request m
     fun recv () = PolyMLext.recv_response ()
     
-    fun JSONReq obj f r args = JSON.empty
-            |> JSON.add ("type", JSON.Int 2)
+    fun JSONReq t obj f r args = JSON.empty
+            |> JSON.add ("type", JSON.Int t)
             |> JSON.add ("obj", JSON.String obj)
             |> JSON.add ("f", JSON.String f)
             |> JSON.add ("r", JSON.Bool r)
             |> JSON.add ("args", JSON.List (map (fn (x) => JSON.List (x)) args))
-    fun JSONReqStr obj f r args  = JSON.encode (JSONReq obj f r args)
+    fun JSONReqStr t obj f r args  = JSON.encode (JSONReq t obj f r args)
     
-    fun exec_js obj f args = send (JSONReqStr obj f false args)
-    fun exec_js_r obj f args = (send (JSONReqStr obj f true args); recv())
+    fun exec_js obj f args = send (JSONReqStr 2 obj f false args)
+    fun exec_js_r obj f args = (send (JSONReqStr 2 obj f true args); recv())
+    fun exec_js_set obj f args = send (JSONReqStr 3 obj f false args);
+    fun exec_js_get obj f args = (send (JSONReqStr 3 obj f true args); recv())
     
     (*Memory management*)
     fun JSONReq2 f r args =
         let
             val x = JSON.empty
-                 |> JSON.add ("type", JSON.Int 3) 
+                 |> JSON.add ("type", JSON.Int 4) 
                  |> JSON.add ("f", JSON.String f)
                  |> JSON.add ("r", JSON.Bool r)
         in

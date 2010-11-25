@@ -58,6 +58,7 @@ then
            PolyML.use \"${THE_POLY_PROGRAM}\";
            val _ = PolyMLext.main($PORT1,$PORT2,\"$SANDBOX_PATH\");") \
            | "${POLYML_HOME}/bin/poly" "$@";
+    # limiting memory usage of Poly --mutable 100 --immutable 200 --heap 100
 else
     #build the heap if needed
     if [ ! -e "$HERE/$THE_POLY_HEAP" ]

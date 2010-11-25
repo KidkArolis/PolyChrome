@@ -9,24 +9,17 @@ var log = function(m) {
     this.consoleService.logStringMessage("Utils: " + m + "\n");
 }
 
-var downloader;
-
 var EXPORTED_SYMBOLS = ["Utils"];
 
 var Utils = {
     
-    getExtensionPath2 : function() {
+    getExtensionPath : function() {
         var fileLocator = Components
                 .classes["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties);
         var extPath = fileLocator.get("ProfD", Ci.nsILocalFile);
         extPath.append("extensions");
         extPath.append("polymlext@ed.ac.uk");
-        return extPath;
-    },
-    
-    getExtensionPath : function() {
-        var extPath = Utils.getExtensionPath2();
         //polymlext@ed.ac.uk is a file when developing and a directory
         //when installed as an xpi extension
         if (!extPath.isDirectory()) {
@@ -39,7 +32,12 @@ var Utils = {
     },
     
     isDevelopmentMode : function() {
-        var extPath = Utils.getExtensionPath2();
+        var fileLocator = Components
+                .classes["@mozilla.org/file/directory_service;1"]
+                .getService(Ci.nsIProperties);
+        var extPath = fileLocator.get("ProfD", Ci.nsILocalFile);
+        extPath.append("extensions");
+        extPath.append("polymlext@ed.ac.uk");
         //polymlext@ed.ac.uk is a file when developing and a directory
         //when installed as an xpi extension
         return !extPath.isDirectory();
@@ -182,55 +180,6 @@ var Utils = {
         return s;
     },
     
-    downloadFile1 : function(src, base, destFile, onComplete, onError) {
-        var ios = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService);
-                
-        var baseURI = ios.newURI(base, null, null);
-        var srcURI = ios.newURI(src, null, baseURI);
-                
-        var destFileURI = ios.newFileURI(destFile);
-        
-        var listener = {
-            onDownloadStateChange: function(aOldState, aDownload) {
-                if (Ci.nsIDownloadManager.DOWNLOAD_FINISHED == aDownload.state) {
-                    onComplete();
-                    return;
-                }
-                if (Ci.nsIDownloadManager.DOWNLOAD_FAILED == aDownload.state) {
-                    onError();
-                    return;
-                }
-            },
-            onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {},
-            onProgressChange : function() {}
-        }
-        
-        var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                .createInstance(Ci.nsIWebBrowserPersist);
-        persist.persistFlags =
-                Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES
-              | Ci.nsIWebBrowserPersist.PERSIST_FLAGS_FROM_CACHE;
-        
-        var dm = Cc["@mozilla.org/download-manager;1"]
-                .getService(Ci.nsIDownloadManager);
-        dm.addListener(listener);
-        var dl = dm.addDownload(
-                Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                srcURI,
-                destFileURI,
-                "",
-                null,
-                Math.round(Date.now()),
-                null,
-                persist);
-        
-        persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-        
-        // download
-        persist.saveURI(srcURI, null, null, null, "", destFile);
-    },
-    
     downloadFile : function(src, base, targetFile, progressListener) {
         var ios = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService);
@@ -273,113 +222,6 @@ var Utils = {
             //we're already reporting the error in the onStatusChange function
             //above
         }
-    },
-    
-    downloadFile3 : function(src, base, targetFile, onComplete, onError) {
-        var ios = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService);
-                
-        var baseURI = ios.newURI(base, null, null);
-        var srcURI = ios.newURI(src, null, baseURI);
-        
-        srcURI.QueryInterface(Ci.nsIURL)
-        var channel = ios.newChannelFromURI(srcURI);
-
-        //if (targetFile.exists())
-            //targetFile.remove(false);
-        targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0777);
-        
-        var listener = {
-            QueryInterface: function(iid) {
-                if (!iid.equals(nsIDownloadObserver) &&
-                    !iid.equals(nsISupports)) {
-                        throw Components.results.NS_ERROR_NO_INTERFACE;
-                }
-                return this;
-            },
-            onDownloadComplete: function(downloader, request, ctxt, status, file) {
-                //if (!Components.isSuccessCode(status)) {
-                if (!file) {
-                    onError();
-                    throw "Unable to download";
-                }
-                onComplete();
-            }
-        }
-        
-        downloader = Cc["@mozilla.org/network/downloader;1"]
-                .createInstance(Ci.nsIDownloader);
-        downloader.init(listener, targetFile);
-
-        //channel.notificationCallbacks = ;
-
-        //start the download
-        channel.asyncOpen(downloader, null);
-    },
-    
-    downloadFile4 : function(src, base, destFile, onComplete) {
-        var baseURI = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService)
-                .newURI(base, null, null);
-                
-        var srcURI = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService)
-                .newURI(src, null, baseURI);
-        
-        // create a persist
-        var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                .createInstance(Ci.nsIWebBrowserPersist);
-        
-        var listener = {
-            onDownloadStateChange: function(aOldState, aDownload) {
-                log("aaa");
-                if (Ci.nsIDownloadManager.DOWNLOAD_FINISHED == aDownload.state) {
-                    log("done");
-                }
-            },
-            onProgressChange: function(aWebProgress, aRequest,
-                                       aCurSelfProgress, aMaxSelfProgress,
-                                       aCurTotalProgress, aMaxTotalProgress, aDownload) {
-                //log("c" + aDownload.state);
-                log("uff");
-                if ((aMaxTotalProgress-aCurTotalProgress)==0) {
-                    onComplete();
-                }
-            },
-            onStateChange : function(aRequest, aStateFlags, aStatus, aDownload) {
-                log("bbb");
-                log(aDownload.state);
-                if (Ci.nsIDownloadManager.DOWNLOAD_FINISHED == aDownload.state) {
-                    log("done2");
-                }
-            },
-            onStatusChange : function() {}
-        }
-        
-        // with persist flags if desired See nsIWebBrowserPersist page for
-        // more PERSIST_FLAGS.
-        persist.persistFlags =
-                Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES
-              | Ci.nsIWebBrowserPersist.PERSIST_FLAGS_FROM_CACHE;
-        
-        var dm = Cc["@mozilla.org/download-manager;1"]
-                .getService(Ci.nsIDownloadManager);
-        dm.addListener(listener);
-        var dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                        srcURI,
-                        destFile,
-                        "",
-                        null,
-                        Math.round(Date.now() * 1000),
-                        null,
-                        persist);
-        
-        
-        persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-        //persist.progressListener = listener;
-        
-        // download
-        persist.saveURI(srcURI, null, null, null, "", destFile);
     },
     
     /*

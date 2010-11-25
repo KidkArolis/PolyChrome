@@ -36,16 +36,16 @@ PolyMLext.Poly.prototype = {
     enabled : false,
     
     init : function() {
-        PolyMLext.debug.profile(";Initializing Poly;");
+        PolyMLext.debug.profile(";Initializing Poly;;");
         this.enabled = true;
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2(this);
-        this.sandbox = new Sandbox();
+        this.sandbox = new PolyMLext.Sandbox();
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jsffi = new PolyMLext.JSFFI(this);
-        PolyMLext.debug.profile(";Finished initializing Poly;");
+        PolyMLext.debug.profile(";Finished initializing Poly;;");
     },
     
     startPolyProcess : function () {
@@ -87,34 +87,24 @@ PolyMLext.Poly.prototype = {
     },
 
     onRequest : function(request, id) {
-        /*
-         TODO improve comments
-         a slightly obscure method. The messages that are sent to poly have to
-         be preappended with "0" or "1" indicating succesful processing of the
-         request or an exception.
-         if the response produced by jsffi is null
-         (response.response==null) then we send the exception to socket1 else
-         we send it to socket 2. This is needed, because null response means
-         that poly didn't call recv2() but recv()
-        */
         var response = this.jsffi.process(request);
         
+        //Figure out whether to use sendCode or sendResponse, by looking at the
+        //response.ret. This is needed, because poly could have called recv2()
+        //or recv()
         switch (response.type) {
             case "success":
                 if (response.ret) {
-                    PolyMLext.debug.profile("C;send response;"+id);
-                    if (typeof(response.message.toString) !== undefined) {
-                        response.message = response.message.toString();
-                    }
-                    this.sendResponse("0"+response.message);
+                    PolyMLext.debug.profile("C;send response;"+id+";");
+                    this.sendResponse(response.message);
                 }
                 break;
             
             case "exception":
                 if (response.ret) {
-                    this.sendResponse("1"+response.message);
+                    this.sendResponse(response.message, true);
                 } else {
-                    this.sendCode("1"+response.message);
+                    this.sendCode(response.message, true);
                 }
                 break;
         }
@@ -131,13 +121,27 @@ PolyMLext.Poly.prototype = {
     
     //this is used for sending PolyML code to be evaluated
     //e.g. embedded code, console commands, event code
-    sendCode : function(m) {
-        this.socket1.send(m);
+    sendCode : function(m, exception) {
+        //The messages that are sent to poly have to
+        // be preappended with "0" or "1" indicating succesful processing of the
+        // request or an exception.
+        var prefix = "0"
+        if (exception) {
+            prefix = "1";
+        }
+        this.socket1.send(prefix+m);
     },
     
     //this is used only for sending responses to Poly JS Wrappers requests
-    sendResponse : function(m) {
-        this.socket2.send(m);
+    sendResponse : function(m, exception) {
+        //The messages that are sent to poly have to
+        // be preappended with "0" or "1" indicating succesful processing of the
+        // request or an exception.
+        var prefix = "0"
+        if (exception) {
+            prefix = "1";
+        }
+        this.socket2.send(prefix+m);
     }
 }
 
@@ -198,7 +202,7 @@ Evaluator.prototype = {
                 if (src==null) {
                     //grab the code from the html
                     var code = scripts[i].innerHTML;
-                    var p = {type:0, code:code};
+                    var p = {type:"code", code:code};
                     this.queue.push(p);
                 } else {
                     var p = this.downloadFile(src);
@@ -222,12 +226,11 @@ Evaluator.prototype = {
         for (var i in this.queue) {
             var p = this.queue[i];
             switch (p.type) {
-                //TODO rename 0 to smth more meaningful
-                case 0:
-                    this.poly.sendCode("0"+p.code);
+                case "code":
+                    this.poly.sendCode(p.code);
                     break;
                 case "sml":
-                    this.poly.sendCode('0PolyML.use "' + p.filename + '";');
+                    this.poly.sendCode('PolyML.use "' + p.filename + '";');
                     break;
                 case "zip":
                     //have to wait for the download to finish before unziping
@@ -255,7 +258,7 @@ Evaluator.prototype = {
  sandbox deals with the filesystem. it takes care of creating temporary
  disk space for downloaded PolyML applications
 */
-var Sandbox = function() {
+PolyMLext.Sandbox = function() {
     //create a new directory with random name
     while (true) {
         this.hash = Utils.randomString();
@@ -270,7 +273,7 @@ var Sandbox = function() {
     this.pathStr = dir.path;
     this._path = dir;
 }
-Sandbox.prototype = {
+PolyMLext.Sandbox.prototype = {
     pathStr: "",
     _path : null,
     hash : null,
@@ -282,6 +285,14 @@ Sandbox.prototype = {
                 .createInstance(Components.interfaces.nsILocalFile);
         aFile.initWithFile(this._path);
         return aFile;
+    },
+    
+    //completely empties the sandbox dir
+    clean : function() {
+        var sandboxPath = Utils.getExtensionPath();
+        sandboxPath.append("sandboxes");
+        Utils.removeDir(sandboxPath);
+        Utils.createDir(sandboxPath);
     },
     
     destroy : function() {
@@ -307,7 +318,7 @@ var Socket1 = function(eventListener) {
     this.tm = Cc["@mozilla.org/thread-manager;1"].getService();
     this.socket = Cc["@mozilla.org/network/server-socket;1"].
             createInstance(Ci.nsIServerSocket);
-    //TODO: args: port (-1 for random free port), loopback, 
+    //args: port , loopbackOnly, aBackLog
     this.socket.init(-1, true, -1);
     this.socket.asyncListen(this);
 }
@@ -326,15 +337,14 @@ Socket1.prototype = {
        
     requestCounter : 1,
     
-    READING_FREQ : 1,
-    
     onInputStreamReady : function(input) {
         var bytesToWaitFor = 0;
         if (!this.reading) {
-            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter);
+            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
             try {
                 //TODO also check here, if we really read as much as we
-                //wanted
+                //wanted, because asyncWait does not guarantee that it will
+                //callback when PREFIX_SIZE of data is available
                 var r = this.sin.read(PolyMLext.PREFIX_SIZE);
                 if (r.length<PolyMLext.PREFIX_SIZE) {
                     throw "Didn't receive the full prefix.";
@@ -374,64 +384,7 @@ Socket1.prototype = {
         }
         
         //wait for the next chunk or request
-        if (this.sin.available()>=bytesToWaitFor) {
-            this.onInputStreamReady();
-        } else {
-            this.input.asyncWait(this, 0, bytesToWaitFor, this.tm.mainThread);
-        }
-    },
-    
-    tryReadingInput : function() {
-        if (!this.reading) {
-            if (this.sin.available()<PolyMLext.PREFIX_SIZE) {
-                setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
-                return;
-            }
-            
-            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter);
-            
-            try {
-                //TODO also check here, if we really read as much as we
-                //wanted
-                var r = this.sin.read(PolyMLext.PREFIX_SIZE);
-                if (r.length<PolyMLext.PREFIX_SIZE) {
-                    throw "Didn't receive the full prefix.";
-                }
-            } catch (e) {
-                error(e);
-                return;
-            }
-            this.bytesLeft = parseInt(r);
-            this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
-                                  PolyMLext.CHUNK_SIZE : this.bytesLeft;
-            this.reading = true;
-        } else {
-            try {
-                var chunk = this.sin.read(this.bytesNextChunk);
-            } catch (e) {
-                error(e);
-                return;
-            }
-            this.request += chunk;
-            this.bytesLeft -= chunk.length;
-            if (this.bytesLeft == 0) {
-                //we're done with reading this request
-                this.eventListener.onRequest(this.request, this.requestCounter);
-                this.requestCounter += 1;
-                //cleanup
-                this.reading = false;
-                this.request = "";                
-            } else {
-                //there is more to read
-                this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
-                                      PolyMLext.CHUNK_SIZE : this.bytesLeft;
-            }
-        }
-        if (this.sin.available()>0) {
-            this.tryReadingInput();
-        } else {
-            setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
-        }
+        this.input.asyncWait(this, 0, bytesToWaitFor, this.tm.mainThread);
     },
 
     onSocketAccepted : function(serverSocket, clientSocket) {
@@ -439,17 +392,15 @@ Socket1.prototype = {
                 QueryInterface(Ci.nsIAsyncInputStream);
         this.output = clientSocket.openOutputStream(
                 Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-        //TODO explain args
         this.sin = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
         this.sin.init(this.input);
+        //args: nsIInputStreamCallback, aFlags, aRequestedCount, nsIEventTarget 
         this.input.asyncWait(this,0,PolyMLext.PREFIX_SIZE,this.tm.mainThread);
-        //setTimeout(this.tryReadingInput.bind(this), this.READING_FREQ);
         this.eventListener.onReady();
     },
 
     onStopListening : function() {
-        //TODO comment
         if (this.eventListener) {
             this.eventListener.onConnectionLost();
         }
