@@ -1,8 +1,4 @@
-var DOMExtraLib = function(memory, poly) {
-    this.Memory = memory;
-    this.poly = poly;
-}
-DOMExtraLib.prototype = {
+var DOMExtra = {
     //polling mouse coordinates
     getMouseCoords : function(request) {
         this.mouseCoordsPollingActive = true;
@@ -11,17 +7,16 @@ DOMExtraLib.prototype = {
             this.mouseY = 0;
             
             self = this;
-            var unsafeWin = document.defaultView.wrappedJSObject;
             this.setCoords = function(event) {
-                unsafeWin.removeEventListener("mousemove", self.setCoords,
+                window.removeEventListener("mousemove", self.setCoords,
                         false)
                 self.mouseX = event.clientX;
                 self.mouseY = event.clientY;
-                self.mouseCoordsTimeout = unsafeWin.setTimeout(poll, 35);
+                self.mouseCoordsTimeout = window.setTimeout(poll, 25);
             }
             var poll = function() {
                 if (self.mouseCoordsPollingActive) {
-                    unsafeWin.addEventListener("mousemove", self.setCoords,
+                    window.addEventListener("mousemove", self.setCoords,
                             false);
                 }
             }
@@ -32,11 +27,10 @@ DOMExtraLib.prototype = {
     },
     cancelMouseCoordsPolling : function(request) {
         this.mouseCoordsPollingActive = false;
-        var unsafeWin = document.defaultView.wrappedJSObject;
         if (this.mouseCoordsTimeout != null) {
-            unsafeWin.clearTimeout(this.mouseCoordsTimeout);
+            window.clearTimeout(this.mouseCoordsTimeout);
         }
-        unsafeWin.removeEventListener("mousemove", this.setCoords, false);
+        window.removeEventListener("mousemove", this.setCoords, false);
         return null;
     }
 }
