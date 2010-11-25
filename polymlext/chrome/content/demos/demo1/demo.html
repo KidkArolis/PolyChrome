@@ -78,10 +78,10 @@ fun removeToggle2 (_) =
 
 val l1 = addEventListener but1 click (EventCallback (fn(_)=>applyOperation op+));
 removeEventListener l1;
-(*
-doing it again would throw an exception
-removeEventListener l1;
-*)
+
+(*doing it again would throw an exception*)
+(*removeEventListener l1;*)
+
 
 val _ = listener1 := addEventListener but1 click (EventCallback (fn(_)=>applyOperation op+));
 val _ = listener2 := addEventListener but2 click (EventCallback (fn(_)=>applyOperation op-));
@@ -102,12 +102,7 @@ addEventListener rem2 click (EventCallback removeToggle2);
 </div>
 
 <div id="description">
-    <h1>Demo description:</h1>
-    <ul>
-        <li>Accessing DOM elements and changing their values.</li>
-        <li>Adding/removing listeners.</li>
-        <li>Adding/removing the same listener a few times.</li>
-    </ul>
+    <p>Adding/removing/handling event listeners</p>
 </div>
 </body>
 </html>

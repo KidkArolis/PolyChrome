@@ -6,23 +6,17 @@
 <link type="text/css" rel="stylesheet" href="../demos.css" /> 
 
 
-<script type="text/javascript" src="jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="jQueryWrapper.js"></script>
-<script type="application/x-polyml" src="jQueryWrapper.sml"></script>
+<script type="text/javascript" src="chrome://polymlext/content/libs/jQuery/js/jquery-1.4.4.min.js"></script>
+<script type="application/x-polyml" src="chrome://polymlext/content/libs/jQuery/jquery-1.4.4.sml"></script>
 
 <script type="application/x-polyml">
 open DOM;
-open jQueryWrapper;
-
-(* this is the actual application of the custom wrapper *)
-fun setColorGreen (e) = let in setStyle e "color" "green"; e end
-fun setColorOrange (e) = let in setStyle e "color" "#FF6600"; e end
+open jQuery;
 
 val greenElements = $("p.green");
 val orangeElements = $("p.orange");
-
-map setColorGreen greenElements;
-map setColorOrange orangeElements;
+val _ = setCss greenElements "color" " green"
+val _ = setCss orangeElements "color" " orange"
 </script>
 
 </head>
@@ -35,11 +29,7 @@ map setColorOrange orangeElements;
 </div>
 
 <div id="description">
-    <h1>Demo description:</h1>
-    <ul>
-        <li>Custom wrapper consisting of a JS snippet and Poly snippet is used here to use functions from jQuery library.</li>
-        <li>Notice how a list with elements is returned to Poly.</li>
-    </ul>
+    <p>jQuery library</p>
 </div>
 
 </body>

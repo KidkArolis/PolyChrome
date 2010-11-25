@@ -27,14 +27,14 @@ fun fold_nat f i a =
 (*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 1;
+val QUANTITY = 8;
 
 val frameCount = ref (0:int);
 val fps = ref (0:int);
 val lastTime = ref (Time.now():Time.time);
-val fpsDisplay = valOf (getElementById "fps");
+val fpsDisplay = valOf (getElementById document "fps");
 
-val canvas = valOf (getElementById "world");
+val canvas = valOf (getElementById document "world");
 val context = Canvas.getContext canvas "2d";
 datatype particle =
   Particle of {
@@ -79,7 +79,7 @@ onMouseMove canvas (EventHandler mouseMoveHandler);
 
 fun drawAndUpdateParticle (p:particle) =
   let
-    val (mouseX, mouseY) = getMouseCoords();
+    val (mouseX, mouseY) = DOMExtra.getMouseCoords();
     val Particle {
       id = id,
       position = (posx,posy),
@@ -105,9 +105,9 @@ fun drawAndUpdateParticle (p:particle) =
     val targetSize_new = if (round(targetSize))=(round(size_new)) then Real.fromInt((1+(random_range 1 7))) else targetSize;
 
     val _ = Canvas.beginPath context;
-    val _ = Canvas.fillStyle context fillColor;
-    val _ = Canvas.strokeStyle context fillColor;
-    val _ = Canvas.lineWidth context size;
+    val _ = Canvas.setFillStyle context fillColor;
+    val _ = Canvas.setStrokeStyle context fillColor;
+    val _ = Canvas.setLineWidth context size;
     val _ = Canvas.moveTo context posx posy;
     val _ = Canvas.lineTo context posx_new posy_new;
     val _ = Canvas.stroke context;
@@ -129,12 +129,12 @@ fun drawAndUpdateParticle (p:particle) =
 
 fun loop () =
   let
-    val _ = Profiling.profile ";drawing loop;"
+    val _ = Profiling.profile ";drawing loop;;"
     val nowTime = Time.now();
     val diffTime = (Time.toMilliseconds nowTime)-(Time.toMilliseconds (!lastTime));
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
   
-    val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
+    val _ = Canvas.setFillStyle context "rgba(255,255,255,0.05)";
     val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
 
     val new_particles = map drawAndUpdateParticle (!particles);
@@ -145,14 +145,15 @@ fun loop () =
     
     val _ = (frameCount := !frameCount+1);
     
-    val _ = Profiling.profile ";drawing done;"
+    val _ = Profiling.profile "Z;drawing done;;"
 
-    (* limit the fps *)
+    (* limit the fps 
     val endTime = Time.now();
     val diffTime = (Time.toMilliseconds endTime)-(Time.toMilliseconds nowTime);
     val _ = if (diffTime<20) then OS.Process.sleep (Time.fromMilliseconds (20 - diffTime)) else ();
+    *)
   in
-    loop ()
+    ()
   end;
 
-loop();
+while true do loop ()

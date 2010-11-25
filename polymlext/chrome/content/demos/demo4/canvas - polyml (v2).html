@@ -3,15 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <title>PolyML Canvas demo: PolyML version</title>
+
+<script type="text/javascript" src="chrome://polymlext/content/libs/DOMExtra/js/DOMExtra.js"></script>
+<script type="application/x-polyml" src="chrome://polymlext/content/libs/DOMExtra/DOMExtra.sml"></script>
+
+<script type="application/x-polyml" src="chrome://polymlext/content/libs/canvas/canvas.sml"></script>
+<script type="application/x-polyml" src="src/CanvasDemo2.sml"></script>
+<script>
+</script>
+
 </head>
 <body>
 
 <canvas id="world" width="900" height="600" style="border:1px solid #eee;">Your browser does not support the Canvas element.</canvas>
 <div id="fps" style="position:absolute; background-color:black; color:white; top:9px; padding:2px; font-family:courier; font-weight:bold;"></div>
-
-<script type="text/javascript" src="src/CanvasWrapper.js"></script>
-<script type="application/x-polyml" src="src/CanvasWrapper.sml"></script>
-<script type="application/x-polyml" src="src/CanvasDemo2.sml"></script>
 
 </body>
 </html>

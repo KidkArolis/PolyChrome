@@ -37,9 +37,9 @@ val frameCount = ref (0:int);
 val fps = ref (0:int);
 val maxfps = round(1000.0 / Real.fromInt(drawInterval));
 val lastTime = ref (Time.now():Time.time);
-val fpsDisplay = valOf (getElementById "fps");
+val fpsDisplay = valOf (getElementById DOM.document "fps");
 
-val canvas = valOf (getElementById "world");
+val canvas = valOf (getElementById DOM.document "world");
 val context = Canvas.getContext canvas "2d";
 datatype particle =
   Particle of {
@@ -71,13 +71,14 @@ fun newParticle (x) =
 
 val particles = ref (fold_nat (fn x => fn l => newParticle(x) :: l) QUANTITY []);
 
-fun mouseMoveHandler (eventData) = let
-    val [x,y] = String.tokens (fn (#",") => true | _ => false) eventData;
+fun mouseMoveHandler (Event event) = let
+	val x = JS.get event "clientX";
+	val y = JS.get event "clientY";
     val _ = (mouseX := valOf (Int.fromString x));
     val _ = (mouseY := valOf (Int.fromString y));
   in () end;
 
-onMouseMove canvas (EventHandler mouseMoveHandler);
+addEventListener canvas mousemove (EventCallback mouseMoveHandler);
 
 fun drawAndUpdateParticle (p:particle) =
   let
@@ -106,9 +107,9 @@ fun drawAndUpdateParticle (p:particle) =
     val targetSize_new = if (round(targetSize))=(round(size_new)) then Real.fromInt((1+(random_range 1 7))) else targetSize;
 
     val _ = Canvas.beginPath context;
-    val _ = Canvas.fillStyle context fillColor;
-    val _ = Canvas.strokeStyle context fillColor;
-    val _ = Canvas.lineWidth context size;
+    val _ = Canvas.setFillStyle context fillColor;
+    val _ = Canvas.setStrokeStyle context fillColor;
+    val _ = Canvas.setLineWidth context size;
     val _ = Canvas.moveTo context posx posy;
     val _ = Canvas.lineTo context posx_new posy_new;
     val _ = Canvas.stroke context;
@@ -134,7 +135,7 @@ fun loop () =
     val diffTime = (Time.toMilliseconds nowTime)-(Time.toMilliseconds (!lastTime));
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
   
-    val _ = Canvas.fillStyle context "rgba(255,255,255,0.05)";
+    val _ = Canvas.setFillStyle context "rgba(255,255,255,0.05)";
     val _ = Canvas.fillRect context 0 0 (Canvas.canvasWidth context) (Canvas.canvasHeight context);
 
     val new_particles = map drawAndUpdateParticle (!particles);
@@ -148,4 +149,4 @@ fun loop () =
     ()
   end;
 
-val _ = setInterval (TimerHandler loop) drawInterval;
+val _ = setInterval DOM.window (TimerCallback loop) drawInterval;

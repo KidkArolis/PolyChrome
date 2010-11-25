@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>PolyMLext: Raphaël Demo</title>
+<link type="text/css" rel="stylesheet" href="../demos.css" /> 
+
+<style type="text/css">
+    html {
+        height:100%;
+        margin:0;
+        padding:0;
+    }
+    body {
+        background: #333;
+        color: #fff;
+        font: 300 100.1% "Helvetica Neue", Helvetica, "Arial Unicode MS", Arial, sans-serif;
+        text-align:center;
+        height:100%;
+        margin:0;
+        padding:0;
+    }
+    #holder {
+        height: 100%;
+        width: 100%;
+        padding:0;
+    }
+</style>
+
+<script type="text/javascript" src="chrome://polymlext/content/libs/raphael/js/raphael-1.5.2.js"></script>
+</head>
+<body>
+
+<div id="holder"></div>
+
+<script type="text/javascript">
+var computeConnectionPath = function (obj1, obj2) {
+    var bb1 = obj1.getBBox();
+    var bb2 = obj2.getBBox();
+    var p = [{x: bb1.x + bb1.width / 2, y: bb1.y - 1},
+            {x: bb1.x + bb1.width / 2, y: bb1.y + bb1.height + 1},
+            {x: bb1.x - 1, y: bb1.y + bb1.height / 2},
+            {x: bb1.x + bb1.width + 1, y: bb1.y + bb1.height / 2},
+            {x: bb2.x + bb2.width / 2, y: bb2.y - 1},
+            {x: bb2.x + bb2.width / 2, y: bb2.y + bb2.height + 1},
+            {x: bb2.x - 1, y: bb2.y + bb2.height / 2},
+            {x: bb2.x + bb2.width + 1, y: bb2.y + bb2.height / 2}];
+    
+    var d = {};
+    var dis = [];
+    for (var i = 0; i < 4; i++) {
+        for (var j = 4; j < 8; j++) {
+            var dx = Math.abs(p[i].x - p[j].x);
+            var dy = Math.abs(p[i].y - p[j].y);
+            if ((i == j - 4)
+                || (((i != 3 && j != 6)|| p[i].x < p[j].x)
+                    && ((i != 2 && j != 7) || p[i].x > p[j].x)
+                    && ((i != 0 && j != 5) || p[i].y > p[j].y)
+                    && ((i != 1 && j != 4) || p[i].y < p[j].y))) {
+                dis.push(dx + dy);
+                d[dis[dis.length - 1]] = [i, j];
+            }
+        }
+    }
+    if (dis.length == 0) {
+        var res = [0, 4];
+    } else {
+        var res = d[Math.min.apply(Math, dis)];
+    }
+    
+    var x1 = p[res[0]].x;
+    var y1 = p[res[0]].y;
+    var x4 = p[res[1]].x;
+    var y4 = p[res[1]].y;
+    dx = Math.max(Math.abs(x1 - x4) / 2, 10);
+    dy = Math.max(Math.abs(y1 - y4) / 2, 10);
+    var x2 = [x1, x1, x1 - dx, x1 + dx][res[0]];
+    var y2 = [y1 - dy, y1 + dy, y1, y1][res[0]];
+    var x3 = [0, 0, 0, 0, x4, x4, x4 - dx, x4 + dx][res[1]];
+    var y3 = [0, 0, 0, 0, y1 + dy, y1 - dy, y4, y4][res[1]];
+    var path = ["M", x1, y1, "C", x2, y2, x3, y3, x4, y4].join(",");
+    return path;
+}
+var createConnection = function(obj1, obj2) {
+    var path = computeConnectionPath(obj1, obj2);
+    return [r.path(path).attr({stroke: "#fff", fill: "none"}), obj1, obj2];
+}
+var redrawConnection = function(c) {
+    var path = computeConnectionPath(c[1], c[2]);
+    c[0].attr({path: path});
+    return c;
+}
+var start = function () {
+    this.ox = this.type == "rect" ? this.attr("x") : this.attr("cx");
+    this.oy = this.type == "rect" ? this.attr("y") : this.attr("cy");
+    this.animate({"fill-opacity": .4}, 500);
+}
+var move = function (dx, dy) {
+    var att = this.type == "rect" ? {x: this.ox + dx, y: this.oy + dy} : {cx: this.ox + dx, cy: this.oy + dy};
+    this.attr(att);
+    for (var i = connections.length; i--;) {
+        redrawConnection(connections[i]);
+    }
+    r.safari();
+}
+var stop = function () {
+    this.animate({"fill-opacity": 0}, 500);
+}
+var r = Raphael("holder", "100%", "100%");
+var connections = [];
+var shapes = [
+    r.ellipse(190, 100, 30, 20),
+    r.rect(290, 80, 60, 40, 10),
+    r.rect(290, 180, 60, 40, 2),
+    r.ellipse(450, 100, 20, 20)
+];
+for (var i = 0, ii = shapes.length; i < ii; i++) {
+    var color = Raphael.getColor();
+    shapes[i].attr({fill: color, stroke: color, "fill-opacity": 0, "stroke-width": 2, cursor: "move"});
+    shapes[i].drag(move, start, stop);
+}
+connections.push(createConnection(shapes[0], shapes[1]));
+connections.push(createConnection(shapes[1], shapes[2]));
+connections.push(createConnection(shapes[1], shapes[3]));
+connections.push(createConnection(shapes[2], shapes[3]));
+</script>
+
+
+</body>
+</html>
+
