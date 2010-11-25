@@ -1,7 +1,0 @@
-#include "nsISupports.idl"
-
-[scriptable, uuid(8a009893-dd5c-458c-8c97-7785d3c19188)]
-interface nsIPolyMLDOMjs : nsISupports
-{
-  string hello();
-};

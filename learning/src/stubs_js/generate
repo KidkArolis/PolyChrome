@@ -1,1 +1,0 @@
-~/xulrunner-sdk/sdk/bin/xpidl -m typelib -w -v -I ~/xulrunner-sdk/idl -e PolyMLDOMjs.xpt IPolyMLDOMjs.idl
