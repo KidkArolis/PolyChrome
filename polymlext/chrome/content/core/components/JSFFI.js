@@ -3,23 +3,15 @@
 var log = PolyMLext.log;
 var error = PolyMLext.error;
 
-//this will be set to a document, so that all DOM/JS wrappers could access
-//the correct document (and not firefox UI)
-var document;
-var unsafeWin;
-
 PolyMLext.JSFFI = function(poly) {
     this.poly = poly;
     this.nativeJSON = Cc["@mozilla.org/dom/json;1"]
             .createInstance(Ci.nsIJSON);
     this.Memory = new Memory(this.poly);
+
 }
 PolyMLext.JSFFI.prototype = {
     process : function(req) {
-        //make document accessible globally in all wrappers
-        document = this.poly.document;
-        unsafeWin = document.defaultView.wrappedJSObject;
-        
         var response = null;
         var responsePacket = {};
         
@@ -28,7 +20,7 @@ PolyMLext.JSFFI.prototype = {
             var request = this.nativeJSON.decode(req);
         } catch (e) {
             error("Could not decode JSON.\nRequest:\n"+req+"\n",
-                    document.location.href);
+                    this.poly.document.location.href);
         }
         
         switch (request.type) {
@@ -58,7 +50,7 @@ PolyMLext.JSFFI.prototype = {
                         errorMsg = e;
                     } else {
                         errorMsg = e.message + " Line: " + e.lineNumber +
-                            " File:" + e.fileName + "Stack: " + e.stack;
+                            " File:" + e.fileName;
                     }
                     errorMsg += ", while trying to call " + request.f
                     responsePacket = {
@@ -71,47 +63,43 @@ PolyMLext.JSFFI.prototype = {
             
             case 4: //Memory management
                 try {
-                    response = this.Memory[request.f](request.arg1);
+                    response = this.Memory[request.f](request.arg1, request.arg2);
                     responsePacket = {
                         type:"success",
                         message:response,
                         ret:request.r
                     };
                 } catch (e) {
+                    var errorMsg = "";
+                    if (typeof(e)=="string") {
+                        errorMsg = e;
+                    } else {
+                        errorMsg = e.message + " Line: " + e.lineNumber +
+                            " File:" + e.fileName;
+                    }
+                    errorMsg += ", while trying to call " + request.f
                     responsePacket = {
                         type:"exception",
-                        message:e,
+                        message:errorMsg,
                         ret:request.r
                     };
-                    error(e.message + " Line: " + e.lineNumber +
-                            " File:" + e.fileName);
                 }
+                break;
+            
+            case 5: //ready for more callbacks signal
+                this.Memory.dispatchNextCallback();
                 break;
 
             default:
-                error("Unexpected request from Poly", document.location.href);
+                error("Unexpected request from Poly", this.poly.document.location.href);
         }
         
-        //TODO: not sure this is needed
-        //if (responsePacket.message && responsePacket.message.toString) {
-        //    responsePacket.message = responsePacket.message.toString();
-        //}
         return responsePacket;
     },
     
     executeJS : function(request) {
-        var obj;
-        switch (request.obj) {
-            case "window":
-                obj = unsafeWin;
-                break;
-            case "document":
-                obj = document;
-                break;
-            default:
-                obj = this.Memory.getReference(request.obj);
-        }
-        //e.g. convert "obj1.obj2.obj3.fun" into ["obj1", "obj2", "obj3", "fun"]
+        var obj = this.Memory.getReference(request.obj);
+        //convert "obj1.obj2.obj3.fun" into ["obj1", "obj2", "obj3", "fun"]
         var f = request.f.split(".");
         //redefine obj in a loop and then set the field
         //obj = obj["obj1"];
@@ -137,14 +125,13 @@ PolyMLext.JSFFI.prototype = {
                         break;
                     case 1:
                         obj[field] = args[0];
-                        return null;
                         break;
                     default:
                         throw "Unexpected request. Too many arguments."
                 }
                 break;
         }
-        //do we need to return smth?
+        //return smth only if we have to
         if (request.r) {
             return this.convertTypesToPoly(returnValue);
         } else {
@@ -152,18 +139,21 @@ PolyMLext.JSFFI.prototype = {
         }
     },
     
-    convertTypesToPoly : function(items) {
-        switch (typeof(items)) {
+    convertTypesToPoly : function(item) {
+        switch (typeof(item)) {
             case null:
+                break;
+            case "number":
+                item = (item+"").replace(/-/g, "~");
                 break;
             case "function":
             case "object":
-                items = this.Memory.addReference(items);
+                item = this.Memory.addReference(item);
                 break;
             case "array":
-                items = items.map(this.convertTypesToPoly, this);
+                item = item.map(this.convertTypesToPoly, this);
         }
-        return items;
+        return item;
     },
     
     convertArgsFromPoly : function(items) {
@@ -187,13 +177,17 @@ PolyMLext.JSFFI.prototype = {
 }
 
 var Memory = function(poly) {
-    this.references = {"":{}};
+    this.poly = poly;
+    this.references = {};
+    this.clearDefaultNs();
     //the empty string indicates the main namespace.
     //this namespace can not be deleted
     this.currentNs = "";
     //this counter is currently used for generating the ids in the Memory
     this.counter = 0;
-    this.poly = poly;
+    
+    this.polyReady = true;
+    this.callbackQueue = [];
 }
 Memory.prototype = {
     
@@ -210,18 +204,24 @@ Memory.prototype = {
         for the exception handling. e.g. exceptions raised here will produce
         more readable messages like "TypeError: reference is undefined"
     */
-    convertTypesToPoly : function(items) {
-        switch (typeof(items)) {
+    convertArgsToPoly : function(item) {
+        switch (typeof(item)) {
             case null:
+                break;
+            case "number":
+                item = (item+"").replace(/-/g, "~");
+                break;
+            case "string":
+                item = '"'+item+'"';
                 break;
             case "function":
             case "object":
-                items = this.addReference(items);
+                item = '"'+this.addReference(item)+'"';
                 break;
             case "array":
-                items = items.map(this.convertTypesToPoly, this);
+                item = '['+item.map(this.convertArgsToPoly, this)+']';
         }
-        return items;
+        return item;
     },
     
     parse_id : function(reference) {
@@ -231,7 +231,7 @@ Memory.prototype = {
     create_id : function(idx, ns) {
         return (idx + "|" + ns);
     },
-    addFunctionReference : function(callback) {
+    addFunctionReference : function(callback, overwritable) {
         var self = this;
         //create a dummy reference to get the id
         var id = this.addReference(function() {});
@@ -246,18 +246,13 @@ Memory.prototype = {
                 if (callback[i]=="{id}") {
                     cmd += '"' + id + '" ';
                 } else if (callback[i]=="{arg}") {
-                    var carg = self.convertTypesToPoly(arguments[argi++]);
-                    if (typeof(carg)=="string") {
-                        carg = '"'+carg+'"'
-                    }
+                    var carg = self.convertArgsToPoly(arguments[argi++]);
                     cmd += carg + ' ';
                 } else {
                     cmd += callback[i] + ' ';
                 }
             }
-            //TODO hack..
-            cmd = cmd.replace(/-/g, "~");
-            self.poly.sendCode(cmd);
+            self.dispatchCallback(callback, cmd, overwritable);
         }
         this.replaceReference(id, f);
         return id;
@@ -303,14 +298,47 @@ Memory.prototype = {
         this.currentNs = ns;
     },
     clearDefaultNs : function() {
+        //set document and window references
         this.references[""] = {};
+        this.references[""]["document"] = this.poly.document;
+        this.references[""]["window"] = this.poly.document.defaultView.wrappedJSObject;
     },
     clearNs : function(ns) {
+        if (ns=="") {
+            this.clearDefaultNs();
+        }
         this.references[ns] = {};
     },
     deleteNs : function(ns) {
+        if (ns=="") throw "Can't delete the default namespace";
         delete this.references[ns];
     },
+    dispatchCallback : function(original_cmd, cmd, overwritable) {
+        if (this.polyReady) {
+            this.polyReady = false;
+            this.poly.sendCode(cmd);
+        } else {
+            if (overwritable && this.callbackQueue.length>0) {
+                var lastIdx = this.callbackQueue.length-1;
+                if (this.callbackQueue[lastIdx][0] == original_cmd) {
+                    this.callbackQueue[lastIdx] = [original_cmd, cmd];
+                } else {
+                    this.callbackQueue.push([original_cmd, cmd]);
+                }
+            } else {
+                this.callbackQueue.push([original_cmd, cmd]);
+            }
+        }
+    },
+    dispatchNextCallback : function() {
+        if (this.callbackQueue.length==0) {
+            this.polyReady = true;
+        } else {
+            var cmd = this.callbackQueue.shift();
+            this.poly.sendCode(cmd[1]);
+        }
+    },
+    
     destroy : function() {}
 }
 

@@ -18,8 +18,8 @@ struct
                         |> map valOf
         in (x,y) end
     
-    fun getMouseCoords () = parseMouseCoords (exec_js_r "window" "DOMExtra.getMouseCoords" [])   
-    fun cancelMouseCoordsPolling () = exec_js "window" "DOMExtra.cancelMouseCoordsPolling" []
+    fun getMouseCoords () = parseMouseCoords (exec_js_r "window|" "DOMExtra.getMouseCoords" [])   
+    fun cancelMouseCoordsPolling () = exec_js "window|" "DOMExtra.cancelMouseCoordsPolling" []
     
     fun getHTMLCollectionItem (HTMLCollection x) n = HTMLElement (exec_js_get x (Int.toString n) [])
     

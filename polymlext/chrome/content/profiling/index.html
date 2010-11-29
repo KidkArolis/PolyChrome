@@ -104,24 +104,27 @@
             for (var i in lines) {
                 lines[i] = lines[i].split(";");
             }
-            
+            var redSpikes = 0;
             for (var i=0; i<lines.length; i++) {
                 var my_id = lines[i][3];
                 var my_time = lines[i][0];
                 var my_type = lines[i][1];
                 var found = false;
-                /*
+                
                 if (my_type=="B") {
                     for (var j=0; j<lines.length; j++) {
                         if (lines[j][3]==my_id && lines[j][1]=="A") {
                             var diff = Math.abs(my_time-lines[j][0]);
+                            if (diff > 30) {
+                                redSpikes++;
+                            }
                             lines[i].push(diff);
                             found = true;
                             break;
                         }
                     }
                 }
-                */
+                
                 if (!found) {
                     lines[i].push("-");
                 }
@@ -150,8 +153,9 @@
                     { "sTitle": "Size", "sClass": "center" },
                     { "sTitle": "Time from sending", "sClass": "center", "fnRender": function(obj) {
                             var sReturn = obj.aData[ obj.iDataColumn ];
-                            if ( sReturn >  10) {
+                            if ( sReturn >  50) {
                                 sReturn = '<span class="red">'+sReturn+'</span>';
+                                redSpikes++;
                             }
                             return sReturn;
                         }
@@ -185,6 +189,7 @@
             $("body").click(function() {
                 $("#profiling-table tr").css("background-color", "white");
             });
+            */
             $("#profiling-table tr").hover(
                 function(e) {
                     var request_id = $(this).find(".request-id").data("request-id");
@@ -193,7 +198,7 @@
                 function(e) {
                     $("#profiling-table tr").css("background-color", "white");
                 });
-            */
+            
             
             
             
@@ -236,13 +241,14 @@
                         loopCount++;
                 }
             }
-            
             var a = "Avg # of msgs per loop: " + msgCountAvg.toFixed(3);
             var b = "Avg duration of the loop: " + loopDurationAvg.toFixed(3);
             var c = "Avg msg size: " + msgSizeAvg.toFixed(3);
             var d = (msgCountAvg*(1000/loopDurationAvg)).toFixed(0) + " msgs/second";
             var e = (msgCountAvg*msgSizeAvg*(1000/loopDurationAvg)).toFixed(0) + " bytes/second";
-            $("#stats").html(a + "<br />" + b + "<br />" + c + "<br />" + d + "<br />" + e + "<br />");
+            var f = "Red spikes: " + redSpikes;
+            var g = "Total duration: " + (lines[lines.length-1][0]-lines[20][0])/1000 + " seconds";
+            $("#stats").html(a + "<br />" + b + "<br />" + c + "<br />" + d + "<br />" + e + "<br />" + f + "<br />" + g + "<br />");
             
         </script>
   </body>

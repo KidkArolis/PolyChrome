@@ -25,6 +25,8 @@ sig
     val exec_js : string -> string -> JSON.T list list -> unit
     val exec_js_get : string -> string -> JSON.T list list -> string
     val exec_js_set : string -> string -> JSON.T list list -> unit
+    (* this has to be sent to JS after handling each event *)
+    val ready : unit -> unit
     
     (* these are used for keeping the temporary memory, used for
     storing javascript objects, tidy *)
@@ -33,6 +35,7 @@ sig
         val switchNs : string -> unit
         val switchDefaultNs : unit -> unit
         val addFunctionReference : string -> fptr
+        val addFunctionReferenceOW : string -> fptr
         val removeReference : string -> unit
         val deleteNs : string -> unit
         val clearNs : string -> unit
@@ -80,6 +83,11 @@ struct
     fun exec_js_set obj f args = send (JSONReqStr 3 obj f false args);
     fun exec_js_get obj f args = (send (JSONReqStr 3 obj f true args); recv())
     
+    val readySignal = JSON.encode (JSON.empty
+            |> JSON.add ("type", JSON.Int 5)
+            |> JSON.add ("r", JSON.Bool false))
+    fun ready () = send readySignal
+    
     (*Memory management*)
     fun JSONReq2 f r args =
         let
@@ -94,6 +102,11 @@ struct
     structure Memory = struct
         fun addFunctionReference f = let
                 val _ = send(JSONReqStr2 "addFunctionReference" true [JSON.String f])
+            in recv() end
+        (* add a function reference that will be used as a callback and is
+        overwritable in the event queue *)
+        fun addFunctionReferenceOW f = let
+                val _ = send(JSONReqStr2 "addFunctionReference" true [JSON.String f, JSON.Bool true])
             in recv() end
         fun removeReference r = let
                 val req = JSONReqStr2 "removeReference" false [JSON.String r]

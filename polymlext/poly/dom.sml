@@ -5,13 +5,13 @@
 structure JS =
 struct
 
-    open jsffi
+  local open jsffi in
 
-    (* generic functions *)
-    (* TODO, this won't work .. if those attributes are functions *)
-    (* need exec_js_get / exec_js_set *)
-    fun get (obj:fptr) attr = exec_js_get obj attr []
-    fun set (obj:fptr) attr value = exec_js_set obj attr [value]
+  (* generic JS object getters/setters *)
+  fun get (obj:fptr) attr = exec_js_get obj attr []
+  fun set (obj:fptr) attr value = exec_js_set obj attr [value]
+  
+  end
 
 end
 
@@ -97,6 +97,7 @@ struct
             val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
             val _ = f (Event event)
             val _ = Memory.removeReference event (* clean up the memory *)
+            val _ = ready ()
         in () end
     
     (* we'll keep timeout and interval callbacks here *)
@@ -107,13 +108,15 @@ struct
             (* clean up *)
             val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
             val _ = Memory.removeReference f_id
+            val _ = ready ()
         in () end
     fun handle_interval f_id = let
             val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val _ = ready ()
         in f () end
     
-    val document = Document "document"
-    val window = Window "window"
+    val document = Document "document|"
+    val window = Window "window|"
     
     (* window methods *)
     fun alert (Window w) message = exec_js w "alert" [arg.string message]
@@ -145,13 +148,15 @@ struct
     (* events *)
     fun getClientX (Event e) = valOf (Int.fromString (exec_js_get e "clientX" []))
     fun getClientY (Event e) = valOf (Int.fromString (exec_js_get e "clientY" []))
-    fun addEventListener (HTMLElement e) et f = let
+    fun addEventListener_ (HTMLElement e) et f add_function_reference = let
             val callback = "val _ = DOM.handle_event {id} {arg} ;"
-            val id = Memory.addFunctionReference callback
+            val id = add_function_reference callback
             val entry = (HTMLElement e, et, f)
             val _ = (eventCallbackTab := Tab.ins (Name.mk id, entry) (!eventCallbackTab))
             val _ = exec_js e "addEventListener" [arg.string (string_of_eventtype et), arg.reference id, arg.bool false]
         in EventListener id end
+    fun addEventListener e et f = addEventListener_ e et f Memory.addFunctionReference
+    fun addEventListenerOW e et f = addEventListener_ e et f Memory.addFunctionReferenceOW
     fun removeEventListener (EventListener id) = let
             val (HTMLElement e, et, _) = (Tab.get (!eventCallbackTab) (Name.mk id))
                           handle UNDEF => (raise PolyMLext.DOMExn "Undefined listener");

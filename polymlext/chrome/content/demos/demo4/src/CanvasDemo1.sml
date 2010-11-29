@@ -72,13 +72,13 @@ fun newParticle (x) =
 val particles = ref (fold_nat (fn x => fn l => newParticle(x) :: l) QUANTITY []);
 
 fun mouseMoveHandler (Event event) = let
-	val x = JS.get event "clientX";
-	val y = JS.get event "clientY";
+    val x = JS.get event "clientX";
+    val y = JS.get event "clientY";
     val _ = (mouseX := valOf (Int.fromString x));
     val _ = (mouseY := valOf (Int.fromString y));
   in () end;
 
-addEventListener canvas mousemove (EventCallback mouseMoveHandler);
+addEventListenerOW canvas mousemove (EventCallback mouseMoveHandler);
 
 fun drawAndUpdateParticle (p:particle) =
   let

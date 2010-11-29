@@ -129,7 +129,6 @@ fun drawAndUpdateParticle (p:particle) =
 
 fun loop () =
   let
-    val _ = Profiling.profile ";drawing loop;;"
     val nowTime = Time.now();
     val diffTime = (Time.toMilliseconds nowTime)-(Time.toMilliseconds (!lastTime));
     val (_,_,_) = if (diffTime >= 1000) then (fps:=(!frameCount),frameCount:=0,lastTime:=nowTime) else ((),(),());
@@ -144,8 +143,6 @@ fun loop () =
     val _ = setInnerHTML fpsDisplay ((Int.toString (!fps)) ^ "fps");
     
     val _ = (frameCount := !frameCount+1);
-    
-    val _ = Profiling.profile "Z;drawing done;;"
 
     (* limit the fps 
     val endTime = Time.now();

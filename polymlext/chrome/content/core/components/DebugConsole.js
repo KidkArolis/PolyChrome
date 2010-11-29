@@ -28,14 +28,15 @@ PolyMLext.DebugConsole.prototype = {
         this.consoleService.logMessage(scriptError);
     },
     
-    profile2 : function(message) {
+    /* VERY BASIC PROFILING */
+    profile : function(message) {
         this.profilingData.push({
             timestamp: new Date().getTime(),
             message: message
         });
     },
     
-    profile : function(m) {},
+    profile2 : function(m) {},
     
     writeProfilingReport : function() {
         try {

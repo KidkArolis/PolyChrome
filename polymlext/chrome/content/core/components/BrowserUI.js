@@ -17,7 +17,7 @@ PolyMLext.BrowserUI = function() {
     //checking if it's first time launch
     //which case an about page is displayed
     var firstLaunch = Application.prefs.get("extensions.PolyMLext.firstLaunch");
-    if (firstLaunch) {
+    if (firstLaunch.value) {
         this.displayAboutPage();
         firstLaunch.value = false;
     }

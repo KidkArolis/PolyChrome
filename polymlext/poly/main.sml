@@ -8,29 +8,8 @@ use "json.sml";
 (* reopen the print function *)
 val print = TextIO.print;
 
-structure Profiling
-= struct
-    val data = ref ([]:string list)
-    
-    fun profile2 message = let
-        val time = Int.toString (Time.toMilliseconds (Time.now()))
-        in data := !data @ [time ^ ";" ^ message] end
-        
-    fun profile m = ()
-    
-    fun writeTextFile (outfile:string) (data:string) =
-        let
-            val outs = TextIO.openAppend outfile
-            val _ = TextIO.output (outs,data)
-        in
-            ()
-        end
-    
-    fun profilingDataToStr nil = ""
-      | profilingDataToStr (x::l) = ((x ^ "\n") ^ (profilingDataToStr l))
-    
-    fun writeProfilingReport () = (print "Writing profiling report.\n"; writeTextFile "../../profiling/output.txt" (profilingDataToStr (!data)))
-end
+(* very basic profiling *)
+(*use "profiling.sml";*)
 
 structure PolyMLext (*: POLYMLEXT*)
 = struct
@@ -88,7 +67,7 @@ structure PolyMLext (*: POLYMLEXT*)
             val data = recv_loop(length, socket)
             val t = valOf (Int.fromString (String.substring (data, 0, 1)))
             val m = String.substring (data, 1, (String.size data)-1)
-            val _ = Profiling.profile ("D;recv response;"^(Int.toString (!requestCounter))^";"^(Int.toString length))
+            (*val _ = Profiling.profile ("D;recv response;"^(Int.toString (!requestCounter))^";"^(Int.toString length))*)
         in
             if t=0 then m else raise DOMExn (m)
         end
@@ -118,7 +97,7 @@ structure PolyMLext (*: POLYMLEXT*)
         let
             val _ = (requestCounter := (!requestCounter + 1))
             val prefix = Int.toString (size data)
-            val _ = Profiling.profile ("A;sending req;"^(Int.toString (!requestCounter))^";"^prefix)
+            (*val _ = Profiling.profile ("A;sending req;"^(Int.toString (!requestCounter))^";"^prefix)*)
             val prefix = expand (prefix, size prefix)
             val prefixed_data = prefix^data
             val length = size prefixed_data
@@ -230,7 +209,7 @@ structure PolyMLext (*: POLYMLEXT*)
                       (*| SysErr => ()*)
                         
             val _ = print "PolyML process stopped.\n"
-            val _ = Profiling.writeProfilingReport ()
+            (*val _ = Profiling.writeProfilingReport ()*)
             
             (* clean up *)
             val _ = close_sock (the socket1)

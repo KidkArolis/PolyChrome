@@ -19,7 +19,7 @@ fun u (event) =
         val y = (getClientY event)
         val _ = (setInnerHTML e ((Int.toString x)^","^ (Int.toString y)))
     in () end;
-addEventListener b mousemove (EventCallback u)
+addEventListenerOW b mousemove (EventCallback u)
 </script>
 
 <style type= "text/css">

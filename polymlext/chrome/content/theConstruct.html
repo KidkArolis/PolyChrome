@@ -5,23 +5,6 @@
     <title>The Construct</title>
     <script type="application/x-polyml">
       
-      val html_collection = DOM.getElementsByTagName DOM.document "html";
-      val page = DOM.getHTMLCollectionItem html_collection 0;
-      
-      val b = valOf (DOM.getElementById DOM.document "body");
-      DOM.setInnerHTML b "click anywhere";
-      
-      fun t (event) = Console.print ((Int.toString (DOM.getClientX event)) ^ "-" ^ (Int.toString (DOM.getClientY event)) ^ "\n");
-      
-      val id = DOM.addEventListener page DOM.click (DOM.EventCallback t);
-      DOM.removeEventListener id;
-      
-      val tid1 = DOM.setTimeout DOM.window (DOM.TimerCallback (fn () => DOM.alert DOM.window "test1")) 2000;
-      val tid2 = DOM.setInterval DOM.window (DOM.TimerCallback (fn () => DOM.alert DOM.window "test2")) 2000;
-      
-      DOM.clearTimeout DOM.window tid1;
-      DOM.clearTimeout DOM.window tid2;
-      
     </script>
   </head>
   <body id="body">

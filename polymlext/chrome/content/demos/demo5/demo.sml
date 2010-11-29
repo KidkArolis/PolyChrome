@@ -69,8 +69,10 @@ val connections = [
   (createConnection (nth shapes 0) (nth shapes 3))
 ]
 
-fun move shape dx dy = let
-    val _ = Profiling.profile ";drawing loop;;"
+val checkpoint = ref (Time.now())
+
+fun doMove shape dx dy = let
+    val _ = checkpoint := Time.now()
     val shape_type = JS.get (shapeToFptr shape) "type"
     val (x_label, y_label) = case shape_type of "rect" => ("x", "y") | x => ("cx", "cy")
     val ox = JS.get (shapeToFptr shape) "ox"
@@ -80,17 +82,20 @@ fun move shape dx dy = let
     val _ = setAttr shape x_label x
     val _ = setAttr shape y_label y
     val _ = map redrawConnection connections
-    val _ = Profiling.profile "Z;drawing done;;"
+  in () end
+
+fun move shape dx dy = let
+    val _ = if (Time.toMilliseconds (Time.now()-(!checkpoint)) > 0) then (doMove shape dx dy) else ()
   in () end
 fun start shape = let
     val shape_type = JS.get (shapeToFptr shape) "type"
     val (x_label, y_label) = case shape_type of "rect" => ("x", "y") | x => ("cx", "cy")
     val _ = JS.set (shapeToFptr shape) "ox" (jsffi.arg.string (getAttr shape x_label))
     val _ = JS.set (shapeToFptr shape) "oy" (jsffi.arg.string (getAttr shape y_label))
-    (*val _ = animate shape (JSON.empty |> JSON.add ("fill-opacity", JSON.Real 0.4)) 500*)
+    val _ = animate shape (JSON.empty |> JSON.add ("fill-opacity", JSON.Real 0.4)) 500
   in () end
 fun stop shape = let
-    (*val _ = animate shape (JSON.empty |> JSON.add ("fill-opacity", JSON.Real 0.0)) 500*)
+    val _ = animate shape (JSON.empty |> JSON.add ("fill-opacity", JSON.Real 0.0)) 500
   in () end
 
 val _ = map (fn(x) => let

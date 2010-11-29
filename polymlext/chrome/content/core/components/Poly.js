@@ -36,7 +36,7 @@ PolyMLext.Poly.prototype = {
     enabled : false,
     
     init : function() {
-        PolyMLext.debug.profile(";Initializing Poly;;");
+        //PolyMLext.debug.profile(";Initializing Poly;;");
         this.enabled = true;
         this.console.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
@@ -45,7 +45,7 @@ PolyMLext.Poly.prototype = {
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jsffi = new PolyMLext.JSFFI(this);
-        PolyMLext.debug.profile(";Finished initializing Poly;;");
+        //PolyMLext.debug.profile(";Finished initializing Poly;;");
     },
     
     startPolyProcess : function () {
@@ -77,7 +77,7 @@ PolyMLext.Poly.prototype = {
     },
 
     destroy : function() {
-        PolyMLext.debug.writeProfilingReport();
+        //PolyMLext.debug.writeProfilingReport();
         this.stopPolyProcess();
         this.socket1.destroy();
         this.socket2.destroy();
@@ -95,7 +95,7 @@ PolyMLext.Poly.prototype = {
         switch (response.type) {
             case "success":
                 if (response.ret) {
-                    PolyMLext.debug.profile("C;send response;"+id+";");
+                    //PolyMLext.debug.profile("C;send response;"+id+";");
                     this.sendResponse(response.message);
                 }
                 break;
@@ -340,7 +340,7 @@ Socket1.prototype = {
     onInputStreamReady : function(input) {
         var bytesToWaitFor = 0;
         if (!this.reading) {
-            PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
+            //PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
             try {
                 //TODO also check here, if we really read as much as we
                 //wanted, because asyncWait does not guarantee that it will
