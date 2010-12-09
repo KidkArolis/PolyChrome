@@ -27,7 +27,7 @@ fun fold_nat f i a =
 (*the actual Canvas demo*)
 val RADIUS = 1.0;
 val RADIUS_SCALE = 120.0;
-val QUANTITY = 8;
+val QUANTITY = 10;
 
 val frameCount = ref (0:int);
 val fps = ref (0:int);
@@ -144,13 +144,13 @@ fun loop () =
     
     val _ = (frameCount := !frameCount+1);
 
-    (* limit the fps 
+    (* limit the fps *)
     val endTime = Time.now();
     val diffTime = (Time.toMilliseconds endTime)-(Time.toMilliseconds nowTime);
-    val _ = if (diffTime<20) then OS.Process.sleep (Time.fromMilliseconds (20 - diffTime)) else ();
-    *)
+    val _ = if (diffTime<35) then OS.Process.sleep (Time.fromMilliseconds (35 - diffTime)) else ();
+    
   in
-    ()
+    loop ()
   end;
 
-while true do loop ()
+Thread.fork (loop, [])

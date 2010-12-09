@@ -90,8 +90,8 @@ fun move shape dx dy = let
 fun start shape = let
     val shape_type = JS.get (shapeToFptr shape) "type"
     val (x_label, y_label) = case shape_type of "rect" => ("x", "y") | x => ("cx", "cy")
-    val _ = JS.set (shapeToFptr shape) "ox" (jsffi.arg.string (getAttr shape x_label))
-    val _ = JS.set (shapeToFptr shape) "oy" (jsffi.arg.string (getAttr shape y_label))
+    val _ = JS.set (shapeToFptr shape) ("ox", (jsffi.arg.string (getAttr shape x_label)))
+    val _ = JS.set (shapeToFptr shape) ("oy", (jsffi.arg.string (getAttr shape y_label)))
     val _ = animate shape (JSON.empty |> JSON.add ("fill-opacity", JSON.Real 0.4)) 500
   in () end
 fun stop shape = let

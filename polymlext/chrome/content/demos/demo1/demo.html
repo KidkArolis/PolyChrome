@@ -18,8 +18,8 @@ val but2 = valOf (getElementById document "button2");
 val rem1 = valOf (getElementById document "remove1");
 val rem2 = valOf (getElementById document "remove2");
 
-setAttribute rem1 "listener" "on";
-setAttribute rem2 "listener" "on";
+setAttribute rem1 ("listener", "on");
+setAttribute rem2 ("listener", "on");
 
 val listener1 = ref ((EventListener ""):EventListener);
 val listener2 = ref ((EventListener ""):EventListener);
@@ -48,8 +48,8 @@ fun removeToggle1 (_) =
                     click
                     (EventCallback (fn(_)=>applyOperation op+)));
       val _ = if (a="on")
-              then setAttribute e "listener" "off"
-              else setAttribute e "listener" "on";
+              then setAttribute e ("listener", "off")
+              else setAttribute e ("listener", "on")
     in
       ()
     end;
@@ -68,8 +68,8 @@ fun removeToggle2 (_) =
                     click
                     (EventCallback (fn(_)=>applyOperation op-)));
       val _ = if (a="on")
-              then setAttribute e "listener" "off"
-              else setAttribute e "listener" "on";
+              then setAttribute e ("listener", "off")
+              else setAttribute e ("listener", "on");
     in
       ()
     end;

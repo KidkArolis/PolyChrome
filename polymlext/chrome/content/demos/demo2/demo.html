@@ -11,7 +11,7 @@
 <script type="application/x-polyml">
 open DOM;
 val html_collection = getElementsByTagName document "html";
-val b = DOMExtra.getHTMLCollectionItem html_collection 0;
+val b = getHTMLCollectionItem html_collection 0;
 val e = valOf (getElementById document "abc");
 fun u (event) =
     let
