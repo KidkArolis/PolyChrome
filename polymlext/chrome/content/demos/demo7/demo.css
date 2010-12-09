@@ -1,0 +1,48 @@
+html {
+    background: -moz-linear-gradient(top, #ddd, #ffffff) no-repeat;
+    font-family:"Trebuchet MS";
+    font-size:14px;
+}
+
+#container {
+    width:600px;
+    margin:auto;
+}
+
+#controls {
+    margin-bottom:10px;
+}
+
+#controls label {
+    position:absolute;
+    margin-top:-22px;
+    margin-left:-90px;
+    color:#555;
+}
+
+input {
+	border:none;
+	background: #222 url(overlay-button.png) repeat-x;
+	display: block;
+    float:left;
+    margin:2px;
+    padding:6px 24px;
+	color: white;
+	background-color: #333;
+	text-decoration: none;
+    font-size:16px;
+	-moz-border-radius: 4px;
+	-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.45);
+	text-shadow: 0 -1px 1px rgba(0,0,0,0.45);
+	border-bottom: 1px solid rgba(0,0,0,0.45);
+	cursor: pointer;
+	text-align:center;
+	font-family: Arial, sans-serif;
+}
+input:hover {
+    -moz-box-shadow: 0 0 2px 2px orange;
+}
+
+#paper:hover {
+    -moz-box-shadow: 0 0 2px 2px orange;
+}

@@ -12,7 +12,7 @@ var DOMExtra = {
                         false)
                 self.mouseX = event.clientX;
                 self.mouseY = event.clientY;
-                self.mouseCoordsTimeout = window.setTimeout(poll, 25);
+                self.mouseCoordsTimeout = window.setTimeout(poll, 20);
             }
             var poll = function() {
                 if (self.mouseCoordsPollingActive) {

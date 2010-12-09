@@ -9,18 +9,22 @@ var e = function(id) { return document.getElementById(id) }
 PolyMLext.BrowserUI = function() {
     
     this.prefs = {};
-    this.prefs.alwaysEnabled = Application.prefs
-            .get("extensions.PolyMLext.alwaysEnabled");
-    this.prefs.PolyMLPath = Application.prefs
-            .get("extensions.PolyMLext.PolyMLPath");
+    this.prefs.alwaysEnabled = Application.prefs.get(
+            "extensions.polymlext@ed.ac.uk.alwaysEnabled");
+    this.prefs.PolyMLPath = Application.prefs.get(
+            "extensions.polymlext@ed.ac.uk.PolyMLPath");
     
     //checking if it's first time launch
     //which case an about page is displayed
-    var firstLaunch = Application.prefs.get("extensions.PolyMLext.firstLaunch");
+    var firstLaunch = Application.prefs.get(
+            "extensions.polymlext@ed.ac.uk.firstLaunch");
     if (firstLaunch.value) {
         this.displayAboutPage();
         firstLaunch.value = false;
     }
+    //if (PolyMLext.extension.firstRun) {
+    //    this.displayAboutPage();
+    //}
     
     this.console = new ConsoleUI(this);
 }
@@ -206,10 +210,12 @@ ConsoleUI.prototype = {
         if (this.activeConsole.minimized) {
             this.showConsole();
             Application.prefs.setValue(
-                    "extensions.PolyMLext.Console.enabledOnStartup", true);
+                    "extensions.polymlext@ed.ac.uk.Console.enabledOnStartup",
+                    true);
         } else {
             Application.prefs.setValue(
-                "extensions.PolyMLext.Console.minimizedOnStartup", true);
+                "extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup",
+                true);
             this.hideConsole();
         }
         this.activeConsole.enabled = true;
@@ -262,7 +268,7 @@ ConsoleUI.prototype = {
         e("polymlext-console-box").setAttribute("collapsed", false);
         e("polymlext-console-splitter").setAttribute("collapsed", false);
         Application.prefs.setValue(
-                "extensions.PolyMLext.Console.minimizedOnStartup", false);
+            "extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup", false);
     },
     
     hideConsole : function() {
@@ -282,7 +288,8 @@ ConsoleUI.prototype = {
                 if (event.button==LEFT_BUTTON) {
                     self.disable();
                     Application.prefs.setValue(
-                        "extensions.PolyMLext.Console.enabledOnStartup", false);
+                        "extensions.polymlext@ed.ac.uk.Console.enabledOnStartup",
+                        false);
                 }
             }, false);
     },

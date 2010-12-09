@@ -6,10 +6,19 @@ structure JS =
 struct
 
   local open jsffi in
+  
+  structure arg = jsffi.arg
 
   (* generic JS object getters/setters *)
   fun get (obj:fptr) attr = exec_js_get obj attr []
-  fun set (obj:fptr) attr value = exec_js_set obj attr [value]
+  fun set (obj:fptr) (attr, value) = exec_js_set obj attr [value]
+  
+  (* calling js functions given a fptr to that function *)
+  fun call fptr args = (jsffi.exec_js fptr "" args; jsffi.ready ())
+  fun call_r fptr args = let
+      val r = jsffi.exec_js_r fptr "" args
+      val _ = jsffi.ready ()
+    in r end
   
   end
 
@@ -118,6 +127,8 @@ struct
     val document = Document "document|"
     val window = Window "window|"
     
+    fun fptr_of_HTMLElement (HTMLElement fptr) = fptr
+    
     (* window methods *)
     fun alert (Window w) message = exec_js w "alert" [arg.string message]
     (* document methods *)
@@ -137,13 +148,16 @@ struct
     fun setValue (HTMLElement e) value = exec_js_set e "value" [arg.string value]
     fun getValue (HTMLElement e) = exec_js_get e "value" []
     fun getAttribute (HTMLElement e) attr = exec_js_r e "getAttribute" [arg.string attr]
-    fun setAttribute (HTMLElement e) attr value = exec_js e "setAttribute" [arg.string attr, arg.string value]
+    fun setAttribute (HTMLElement e) (attr, value) = exec_js e "setAttribute" [arg.string attr, arg.string value]
     fun removeAttribute (HTMLElement e) attr = exec_js e "removeAttribute" [arg.string attr]
     fun appendChild (HTMLElement parent) (HTMLElement child) = exec_js parent "appendChild" [arg.reference child]
     fun removeChild (HTMLElement parent) (HTMLElement child) = exec_js parent "removeChild" [arg.reference child]
     fun replaceChild (HTMLElement parent) (HTMLElement child_new) (HTMLElement child_old) = exec_js parent "replaceChild" [arg.reference child_new, arg.reference child_old]
-    fun setStyle (HTMLElement e) attr value = exec_js_set e ("style."^attr) [arg.string value]
+    fun setStyle (HTMLElement e) (attr, value) = exec_js_set e ("style."^attr) [arg.string value]
     fun getStyle (HTMLElement e) attr = exec_js_get e ("style."^attr) []
+    
+    (* extras *)
+    fun getHTMLCollectionItem (HTMLCollection x) n = HTMLElement (exec_js_get x (Int.toString n) [])
 
     (* events *)
     fun getClientX (Event e) = valOf (Int.fromString (exec_js_get e "clientX" []))

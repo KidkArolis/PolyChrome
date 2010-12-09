@@ -28,14 +28,24 @@ var PolyMLext = (function() {
         
         ran : Math.floor(Math.random()*100),
         
+        ready : false,
+        
         //====================================================================
         
         init : function() {
             PolyMLext.debug = new PolyMLext.DebugConsole();
             
+            if(Application.extensions) {
+                PolyMLext.extension = Application.extensions
+                    .get('polymlext@ed.ac.uk');
+            } else if (Application.getExtensions) {
+                Application.getExtensions(function (extensions){
+                    PolyMLext.extension = extensions.get('polymlext@ed.ac.uk');
+                });
+            }
+            
             PolyMLext.Sandbox.prototype.clean();
             PolyMLext.BrowserUI = new PolyMLext.BrowserUI();
-            
             //if PolyML is found on the computer, initialize a bunch of stuff
             if (PolyMLext.findPoly()) {
                 PolyMLext.BrowserUI.yesPoly({
@@ -63,6 +73,17 @@ var PolyMLext = (function() {
                         }
                     }
             });
+            PolyMLext.ready = true;
+        },
+
+        onReady : function(callback) {
+            var init = function () {
+              if (!PolyMLext.ready) {
+                setTimeout(init, 100);
+              } else {
+                callback();
+              }
+            }
         },
         
         findPoly : function() {
@@ -83,7 +104,12 @@ var PolyMLext = (function() {
         },
     
         lookForPolyMLCode : function(doc) {
-            var scripts = doc.getElementsByTagName("script");
+            if (doc.contentType=="application/vnd.mozilla.xul+xml") {
+                var scripts = doc.getElementsByTagName("html:script");
+            } else {
+                var scripts = doc.getElementsByTagName("script");
+            }
+            
             if (scripts==null) { return; }
             for (var i=0, len=scripts.length; i<len; i++) {
                 if (scripts[i].getAttribute("type")=="application/x-polyml") {
@@ -121,11 +147,9 @@ var PolyMLext = (function() {
                         };
                         
                         //check if PolyML is enabled
-                        var prefService = Components
-                                .classes["@mozilla.org/preferences-service;1"]
-                                .getService(Ci.nsIPrefBranch)
-                        var alwaysEnabled = prefService.getBoolPref(
-                                "extensions.PolyMLext.alwaysEnabled");
+                        var alwaysEnabled = Application.prefs.getValue(
+                            "extensions.polymlext@ed.ac.uk.alwaysEnabled",
+                            false);
                         if (alwaysEnabled) {
                             poly.init();
                         }

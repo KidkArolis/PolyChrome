@@ -22,7 +22,7 @@ struct
     
   datatype jQueryObject = jQueryObject of fptr
 
-  fun $ selector = jQueryObject (exec_js_r "window" "jQuery" [arg.string selector])
+  fun $ selector = jQueryObject (exec_js_r "window|" "jQuery" [arg.string selector])
   fun setCss (jQueryObject obj) attr value = exec_js obj "css" [arg.string attr, arg.string value]
   fun getCss (jQueryObject obj) attr = exec_js_r obj "css" [arg.string attr]
 

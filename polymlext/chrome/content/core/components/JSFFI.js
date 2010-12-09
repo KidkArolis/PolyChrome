@@ -21,6 +21,7 @@ PolyMLext.JSFFI.prototype = {
         } catch (e) {
             error("Could not decode JSON.\nRequest:\n"+req+"\n",
                     this.poly.document.location.href);
+            return;
         }
         
         switch (request.type) {
@@ -34,6 +35,7 @@ PolyMLext.JSFFI.prototype = {
             
             case 2: //JS function
             case 3: //setting/getting attributes of JS objects
+            case 6: //new operator
                 try {
                     response = this.executeJS(request);
                     if (response === undefined) {
@@ -98,6 +100,7 @@ PolyMLext.JSFFI.prototype = {
     },
     
     executeJS : function(request) {
+        var returnValue;
         var obj = this.Memory.getReference(request.obj);
         //convert "obj1.obj2.obj3.fun" into ["obj1", "obj2", "obj3", "fun"]
         var f = request.f.split(".");
@@ -113,7 +116,11 @@ PolyMLext.JSFFI.prototype = {
         switch(request.type) {
             case 2:
                 var args = this.convertArgsFromPoly(request.args);
-                var returnValue = obj[field].apply(obj, args);
+                if (field != "") {
+                    returnValue = obj[field].apply(obj, args);
+                } else {
+                    returnValue = obj.apply(null, args);
+                }
                 break;
             case 3:
                 //if no arguments provided return the value of the attribute
@@ -121,7 +128,7 @@ PolyMLext.JSFFI.prototype = {
                 var args = this.convertArgsFromPoly(request.args);
                 switch (args.length) {
                     case 0:
-                        var returnValue = obj[field];
+                        returnValue = obj[field];
                         break;
                     case 1:
                         obj[field] = args[0];
@@ -129,6 +136,19 @@ PolyMLext.JSFFI.prototype = {
                     default:
                         throw "Unexpected request. Too many arguments."
                 }
+                break;
+            case 6:
+                //a trick from http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                var unsafeWin = this.poly.document.defaultView.wrappedJSObject;
+                /*
+                function F(args) {
+                    return obj[field].apply(obj, args);
+                }
+                F.prototype = obj[field].prototype;
+                returnValue = new F(request.args);
+                */
+                var args = this.convertArgsFromPoly(request.args);
+                returnValue = new unsafeWin.createViewport(args[0]);
                 break;
         }
         //return smth only if we have to

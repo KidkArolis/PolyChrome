@@ -11,12 +11,13 @@
         
       <div id="logo">
         <img src="chrome://PolyMLext/skin/polyml_32x32t.png" />
-        <span id="title">PolyML Extension <span id="version"></span><span>
+        <span id="title">PolyML Extension <span id="version"></span></span>
       </div>
       
       <div id="content">
 
         <div class="section" id="demos">
+          
         <h1>PolyMLext Demos</h1>
             <table>
                 <tr>
@@ -36,12 +37,12 @@
                 </tr>
                 <tr>
                     <td>Canvas (v1)</td>
-                    <td><a href="demo4/canvas - polyml (v1).html">Demo</a></td>
+                    <td><a href="demo4/canvas%20-%20polyml%20(v1).html">Demo</a></td>
                     <td><a href="demo4">Show files</a></td>
                 </tr>
                 <tr>
                     <td>Canvas (v2)</td>
-                    <td><a href="demo4/canvas - polyml (v2).html">Demo</a></td>
+                    <td><a href="demo4/canvas%20-%20polyml%20(v2).html">Demo</a></td>
                     <td><a href="demo4">Show files</a></td>
                 </tr>
                 <tr>
@@ -49,20 +50,39 @@
                     <td><a href="demo5/demo.html">Demo</a></td>
                     <td><a href="demo5">Show files</a></td>
                 </tr>
+                <tr>
+                    <td>Reactive Web Programming (using library from SMLtoJs)</td>
+                    <td><a href="demo6/demo.html">Demo</a></td>
+                    <td><a href="demo6">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Poly Life (XUL)</td>
+                    <td><a href="demo7/demo.xul">Demo</a></td>
+                    <td><a href="demo7">Show files</a></td>
+                </tr>
+                <tr>
+                    <td>Poly Life (HTML)</td>
+                    <td><a href="demo7/demo.html">Demo</a></td>
+                    <td><a href="demo7">Show files</a></td>
+                </tr>
             </table>
         </div>
+      </div>
     </div>
       
-      <script type="text/javascript">
-        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                .getService(Components.interfaces.nsIWindowMediator);  
-        var currentWindow = wm.getMostRecentWindow("navigator:browser");
-        var PolyMLext = currentWindow.PolyMLext;
-        
+    <script type="text/javascript">
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+              .getService(Components.interfaces.nsIWindowMediator);  
+      var currentWindow = wm.getMostRecentWindow("navigator:browser");
+      var PolyMLext = currentWindow.PolyMLext;
+      
+      var init = function() {
         //shortcut
         var e = function(id) { return document.getElementById(id) }
-        
-        e("version").innerHTML = Application.extensions.get('polymlext@ed.ac.uk').version;
+        e("version").innerHTML = PolyMLext.extension.version;
+      }
+      
+      PolyMLext.onReady(init);
     </script>
   </body>
 </html>

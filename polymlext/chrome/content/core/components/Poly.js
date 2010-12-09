@@ -72,8 +72,11 @@ PolyMLext.Poly.prototype = {
         bin.append("poly");
         bin.append("bin");
         bin.append("kill.sh");
-        var args = [this.process.pid];
-        var process = Utils.startProcess(bin, args);
+        //check that the process is really there
+        if (this.process) {
+            var args = [this.process.pid];
+            var process = Utils.startProcess(bin, args);
+        }
     },
 
     destroy : function() {
@@ -179,8 +182,12 @@ Evaluator.prototype = {
             }
             var destFile = this.poly.sandbox.getPath();
             destFile.append(filename);
-            Utils.downloadFile(src, this.poly.document.baseURI, destFile,
-                    listener);
+            if (this.poly.document.baseURI) {
+                var base = this.poly.document.baseURI;
+            } else {
+                var base = this.poly.document.documentURI;
+            }
+            Utils.downloadFile(src, base , destFile, listener);
             
             //add this 
             return { type:ext, filename:filename }
@@ -189,12 +196,12 @@ Evaluator.prototype = {
     },
 
     start : function() {
-        var scripts = this.poly.document.getElementsByTagName("script");
-        
-        //this shouldn't normally happen, because we already know there
-        //are PolyML scripts in the document, but to be cautious if someone
-        //removes them by the time this is reached
-        if (scripts==null) return;
+        var scripts = [];
+        if (this.poly.document.contentType=="application/vnd.mozilla.xul+xml") {
+            scripts = this.poly.document.getElementsByTagName("html:script");
+        } else {
+            scripts = this.poly.document.getElementsByTagName("script");
+        }
         
         for (var i=0, len=scripts.length; i<len; i++) {
             if (scripts[i].getAttribute("type")=="application/x-polyml") {
@@ -338,51 +345,52 @@ Socket1.prototype = {
     requestCounter : 1,
     
     onInputStreamReady : function(input) {
-        var bytesToWaitFor = 0;
-        if (!this.reading) {
-            //PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
-            try {
-                //TODO also check here, if we really read as much as we
-                //wanted, because asyncWait does not guarantee that it will
-                //callback when PREFIX_SIZE of data is available
-                var r = this.sin.read(PolyMLext.PREFIX_SIZE);
-                if (r.length<PolyMLext.PREFIX_SIZE) {
-                    throw "Didn't receive the full prefix.";
+        do {
+            var bytesToWaitFor = 0;
+            if (!this.reading) {
+                //PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
+                try {
+                    //TODO also check here, if we really read as much as we
+                    //wanted, because asyncWait does not guarantee that it will
+                    //callback when PREFIX_SIZE of data is available
+                    var r = this.sin.read(PolyMLext.PREFIX_SIZE);
+                    if (r.length<PolyMLext.PREFIX_SIZE) {
+                        throw "Didn't receive the full prefix.";
+                    }
+                } catch (e) {
+                    error(e);
+                    this.eventListener.onConnectionLost();
+                    return;
                 }
-            } catch (e) {
-                error(e);
-                this.eventListener.onConnectionLost();
-                return;
-            }
-            this.bytesLeft = parseInt(r);
-            this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
-                                  PolyMLext.CHUNK_SIZE : this.bytesLeft;
-            this.reading = true;
-        } else {
-            try {
-                var chunk = this.sin.read(this.bytesNextChunk);
-            } catch (e) {
-                error(e);
-                this.eventListener.onConnectionLost();
-                return;
-            }
-            this.request += chunk;
-            this.bytesLeft -= chunk.length;
-            if (this.bytesLeft == 0) {
-                //we're done with reading this request
-                this.eventListener.onRequest(this.request, this.requestCounter);
-                this.requestCounter += 1;
-                //cleanup
-                this.reading = false;
-                this.request = "";
-                var bytesToWaitFor = PolyMLext.PREFIX_SIZE;
-            } else {
-                //there is more to read
+                this.bytesLeft = parseInt(r);
                 this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
                                       PolyMLext.CHUNK_SIZE : this.bytesLeft;
+                this.reading = true;
+            } else {
+                try {
+                    var chunk = this.sin.read(this.bytesNextChunk);
+                } catch (e) {
+                    error(e);
+                    this.eventListener.onConnectionLost();
+                    return;
+                }
+                this.bytesLeft -= chunk.length;
+                this.request += chunk;
+                if (this.bytesLeft == 0) {
+                    //we're done with reading this request
+                    this.eventListener.onRequest(this.request, this.requestCounter);
+                    this.requestCounter += 1;
+                    //cleanup
+                    this.reading = false;
+                    this.request = "";
+                    var bytesToWaitFor = PolyMLext.PREFIX_SIZE;
+                } else {
+                    //there is more to read
+                    this.bytesNextChunk = this.bytesLeft > PolyMLext.CHUNK_SIZE ?
+                                          PolyMLext.CHUNK_SIZE : this.bytesLeft;
+                }
             }
-        }
-        
+        } while (this.sin.available() >= bytesToWaitFor);
         //wait for the next chunk or request
         this.input.asyncWait(this, 0, bytesToWaitFor, this.tm.mainThread);
     },

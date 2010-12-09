@@ -59,7 +59,7 @@ structure JSON = struct
     
 
     fun enc_name (name) = "\"" ^ (Name.string_of_name name) ^ "\":"
-    and enc_value (String value) = "\"" ^ add_slashes value ^ "\""
+    and enc_value (String value) = "\"" ^ String.toCString value ^ "\""
       | enc_value (Int value) = convert_minus (Int.toString value)
       | enc_value (Bool value) = Bool.toString value
       | enc_value (Real value) = Real.toString value

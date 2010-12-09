@@ -4,10 +4,10 @@ var log = PolyMLext.log;
 var error = PolyMLext.error;
 
 PolyMLext.Console = function() {
-    this.enabled = Application.prefs.get(
-            "extensions.PolyMLext.Console.enabledOnStartup").value;
-    this.minimized = Application.prefs.get(
-            "extensions.PolyMLext.Console.minimizedOnStartup").value;
+    this.enabled = Application.prefs.getValue(
+        "extensions.polymlext@ed.ac.uk.Console.enabledOnStartup", false);
+    this.minimized = Application.prefs.getValue(
+        "extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup", true);
     this.cmdHistory = [];
     this.status = {s:"Click to enable PolyML app"}
 }

@@ -1,5 +1,5 @@
-pref("extensions.PolyMLext.Console.enabledOnStartup", false);
-pref("extensions.PolyMLext.Console.minimizedOnStartup", false);
-pref("extensions.PolyMLext.PolyMLPath", "");
-pref("extensions.PolyMLext.firstLaunch", true);
-pref("extensions.PolyMLext.alwaysEnabled", false);
+pref("extensions.polymlext@ed.ac.uk.Console.enabledOnStartup", false);
+pref("extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup", false);
+pref("extensions.polymlext@ed.ac.uk.PolyMLPath", "");
+pref("extensions.polymlext@ed.ac.uk.firstLaunch", true);
+pref("extensions.polymlext@ed.ac.uk.alwaysEnabled", false);

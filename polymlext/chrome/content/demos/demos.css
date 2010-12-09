@@ -3,7 +3,6 @@ body {
     padding:0;
     font-family: "Trebuchet MS", sans;
     font-size:14px;
-    background:white;
 }
 p { line-height:180%; }
 h1 { font-size: 24px; }
@@ -13,7 +12,6 @@ a, a:visited { color: #006600; }
     width:820px;
     margin:auto;
     padding:14px 20px;
-    background:white;
 }
 .section {
     border-bottom:1px solid #ccc;
