@@ -106,56 +106,55 @@ structure PolyMLext (*: POLYMLEXT*)
         end
 
     fun close_sock s =
-        (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
-         Socket.close s)
+      (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
+       Socket.close s)
 
     fun evaluate location_url txt =
-        let
-            (* uses input and output buffers for compilation and output message *)
-            val in_buffer = ref (String.explode txt)
-            val out_buffer = ref ([]: string list);;
-            val current_line = ref 1;
+      let
+        (* uses input and output buffers for compilation and output message *)
+        val in_buffer = ref (String.explode txt)
+        val out_buffer = ref ([]: string list);
+        val current_line = ref 1;
 
-            (* helper function *)
-            fun drop_newline s =
-            if String.isSuffix "\n" s then String.substring (s, 0, size s - 1)
-            else s;
+        (* helper function *)
+        fun drop_newline s =
+          if String.isSuffix "\n" s then String.substring (s, 0, size s - 1)
+          else s;
 
-            fun output () = (String.concat (rev (! out_buffer)));
+        fun output () = (String.concat (rev (! out_buffer)));
 
-            (* take a charcter out of the input txt string *)
-            fun get () =
-              (case ! in_buffer of
-                [] => NONE
-              | c :: cs =>
-                  (in_buffer := cs; if c = #"\n" then current_line := ! current_line + 1 else (); SOME c));
+        (* take a charcter out of the input txt string *)
+        fun get () =
+          (case ! in_buffer of
+              [] => NONE
+            | c :: cs =>
+              (in_buffer := cs; if c = #"\n" then current_line := ! current_line + 1 else (); SOME c));
 
-            (* add to putput buffer *)
-            fun put s = (out_buffer := s :: ! out_buffer);
+        (* add to putput buffer *)
+        fun put s = (out_buffer := s :: ! out_buffer);
 
-            (* handling error messages *)
-            fun put_message { message = msg1, hard, location : PolyML.location,
-                              context } =
-                let val line_width = 76; in
-                   (put (if hard then "Error: " else "Warning: ");
-                    PolyML.prettyPrint (put, line_width) msg1;
-                    (case context of NONE => ()
-                     | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
-                     put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: "
-                          ^ location_url ^ "\n"))
-                end;
+        (* handling error messages *)
+        fun put_message { message = msg1, hard, location : PolyML.location,
+                          context } =
+          let val line_width = 76; in
+            (put (if hard then "Error: " else "Warning: ");
+              PolyML.prettyPrint (put, line_width) msg1;
+              (case context of NONE => ()
+              | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
+              put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: "
+              ^ location_url ^ "\n"))
+          end;
 
             val compile_params =
               [(* keep track of line numbers *)
-               PolyML.Compiler.CPLineNo (fn () => ! current_line),
-
-               (* the following catches any output durin
-                  compilation/evaluation and store it in the put stream. *)
-               PolyML.Compiler.CPOutStream put,
-                      (* the following handles error messages specially
-                  to say where they come from in the error message into
-                  the put stream. *)
-               PolyML.Compiler.CPErrorMessageProc put_message
+                PolyML.Compiler.CPLineNo (fn () => ! current_line),
+                (* the following catches any output durin
+                compilation/evaluation and store it in the put stream. *)
+                PolyML.Compiler.CPOutStream put,
+                (* the following handles error messages specially
+                to say where they come from in the error message into
+                the put stream. *)
+                PolyML.Compiler.CPErrorMessageProc put_message
               ]
 
             val (worked,_) =
@@ -185,6 +184,32 @@ structure PolyMLext (*: POLYMLEXT*)
         in
             if (output_str="") then () else send_request (JSON.encode json_obj)
         end
+        
+    (*****************************************************************************)
+    (*                  "use": compile from a file.                              *)
+    (*****************************************************************************)
+
+    fun use (originalName: string): unit =
+    let
+        (* use "f" first tries to open "f" but if that fails it tries "f.ML", "f.sml" etc. *)
+        (* We use the functional layer and a reference here rather than TextIO.input1 because
+           that requires locking round every read to make it thread-safe.  We know there's
+           only one thread accessing the stream so we don't need it here. *)
+        fun trySuffixes [] =
+            (* Not found - attempt to open the original and pass back the
+               exception. *)
+            (TextIO.openIn originalName, originalName)
+         |  trySuffixes (s::l) =
+            (TextIO.openIn (originalName ^ s), originalName ^ s)
+                handle IO.Io _ => trySuffixes l
+        (* First in list is the name with no suffix. *)
+        val (inStream, fileName) = trySuffixes("" :: ! PolyML.suffixes)
+        val contents = TextIO.inputAll inStream
+    in
+        evaluate fileName contents;
+        (* Normal termination: close the stream. *)
+        TextIO.closeIn (inStream)
+    end (* use *)
 
     fun loop () =
         let
@@ -202,7 +227,7 @@ structure PolyMLext (*: POLYMLEXT*)
             val _ = OS.FileSys.chDir(sandboxPath)
             
             (* disable access to this structure *)
-            val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]
+            (*val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]*)
             
             val _ = loop() handle
                         Interrupt => ()

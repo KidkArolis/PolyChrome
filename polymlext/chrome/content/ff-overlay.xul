@@ -53,36 +53,35 @@ permission" />
 		<splitter id="polymlext-console-splitter" collapsed="true"/>
 		<vbox id="polymlext-console-box" collapsed="true"
 				persist="height" height="100%">
-			<hbox role="toolbar">
-				<hbox flex="12">
-					<label id="polymlext-console-title"
-							value="PolyML Console" />
-				</hbox>
-				<splitter collapsed="true"/>
-				<hbox flex="1">
-					<label id="polymlext-console-button-disable"
-							value="Disable"/>
-				</hbox>
-			</hbox>
-		  
-			<hbox>
-				<textbox id="polymlext-console-logarea" multiline="true"
-						rows="12" flex="1" readonly="true" />
-			</hbox>
-		  
-			<!--
-			<vbox>
-				<iframe src="chrome://polymlext/content/logArea.html" flex="1"
-						height="100%" id="logArea" />
-			</vbox>
-			-->
 			
-			<hbox id="polymlext-console-commandline-box">
-				<label id="polymlext-console-commandline-arrow" value=">"/>
-				<textbox id="polymlext-console-commandline-input" flex="1"
+			<tabbox flex="1" persist="height" height="200px">
+				<hbox>
+					<label id="polymlext-console-title"	value="PolyML Console" />
+					<tabs id="polymlext-console-tabs">
+					   <tab label="Compiler Information" />
+					   <tab label="Output" />
+					</tabs>
+					<spacer flex="1" />
+					<label id="polymlext-console-button-disable" value="Disable" />
+				</hbox>
+				<tabpanels flex="1" style="padding:0;">
+					<hbox>
+						<textbox id="polymlext-console-logarea" multiline="true"
+								flex="1" readonly="true" />
+					</hbox>
+					<hbox>
+						<textbox id="polymlext-console-output" multiline="true"
+								 flex="1" readonly="true" />
+					</hbox>
+				</tabpanels>
+				<hbox id="polymlext-console-commandline-box" style="border:none">
+					<label id="polymlext-console-commandline-arrow" value=">"/>
+					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline" />
-			</hbox>
+				</hbox>
+			</tabbox>
+			
 		</vbox>
 	</vbox>
 </overlay>

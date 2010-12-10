@@ -237,7 +237,7 @@ Evaluator.prototype = {
                     this.poly.sendCode(p.code);
                     break;
                 case "sml":
-                    this.poly.sendCode('PolyML.use "' + p.filename + '";');
+                    this.poly.sendCode('PolyMLext.use "' + p.filename + '";');
                     break;
                 case "zip":
                     //have to wait for the download to finish before unziping

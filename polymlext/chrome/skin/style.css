@@ -31,41 +31,38 @@
 #polymlext-console-commandline-input > .textbox-input-box > .textbox-textarea {
 	overflow: hidden;
 }
-#polymlext-console-logarea {
+#polymlext-console-logarea, #polymlext-console-output {
 	-moz-appearance: none;
-	font-family: Monaco, monospace;
-	font-size:13px;
+	font-size:14px;
 	font-weight:normal;
 	margin:0;
 	border:none;
 	border-top:1px solid #ccc;
 	background-color: #FFFFFF;
-	color:black;
+	color:#333;
 	padding: 0 4px;
 	font-family: monospace;
-	font-size:12px;
 	background-color:white;
 	margin:0;
 	overflow:auto;
 }
 
 #polymlext-console-button-disable {
-	width:80px;
-	padding:2px;
-	font-size:10px;
-	float:right;
+	margin-top:4px;
+	margin-right:10px;
 	font-size:13px;
 	text-decoration:underline;
-	text-align:right;
 }
 
 #polymlext-icon-statusindicator {
 	font-size:12px;
-	margin-top:5px;
+	margin-top:4px;
 	font-weight:bold;
 }
 
 #polymlext-console-title {
 	font-size:13px;
 	font-weight:bold;
+	margin-top:4px;
+	margin-right:10px;
 }

@@ -17,14 +17,17 @@ structure JSON = struct
 
     exception notobj_exn of unit;
     
-    (** Adds slashes before all " and \ in the string **)
-    fun add_slashes_ #"\"" = [#"\\", #"\""]
-      | add_slashes_ #"\\" = [#"\\", #"\\"]
-      | add_slashes_ x = [x];
-    fun add_slashes s =
-            String.implode
-                (foldr op@ [] (map (add_slashes_) (String.explode s)));
-                
+    (** escapes ", \ and \n **)
+    fun escape s =
+      let
+        fun helper #"\"" = [#"\\", #"\""]
+          | helper #"\\" = [#"\\", #"\\"]
+          | helper #"\n" = [#"\\", #"n"]
+          | helper x = [x]
+      in
+        String.implode
+          (foldr op@ [] (map helper (String.explode s)))
+      end
     
     (*replaces ~ to - *)
     fun convert_minus s = String.implode
@@ -59,7 +62,7 @@ structure JSON = struct
     
 
     fun enc_name (name) = "\"" ^ (Name.string_of_name name) ^ "\":"
-    and enc_value (String value) = "\"" ^ String.toCString value ^ "\""
+    and enc_value (String value) = "\"" ^ escape value ^ "\""
       | enc_value (Int value) = convert_minus (Int.toString value)
       | enc_value (Bool value) = Bool.toString value
       | enc_value (Real value) = Real.toString value
