@@ -224,6 +224,16 @@ var Utils = {
         }
     },
     
+    getAbsoluteURLString : function(src, base) {
+        var ios = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService);
+                
+        var baseURI = ios.newURI(base, null, null);
+        var srcURI = ios.newURI(src, null, baseURI);
+        
+        return srcURI.prepath + srcURI.path;
+    },
+    
     /*
       taken from http://mxr.mozilla.org/mozilla-central/source/toolkit/mozap
       ps/extensions/XPIProvider.jsm#799

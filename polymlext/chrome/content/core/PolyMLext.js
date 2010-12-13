@@ -57,7 +57,6 @@ var PolyMLext = (function() {
                 });
             } else {
                 PolyMLext.BrowserUI.noPoly();
-                PolyMLext.BrowserUI.setStatus({s:"PolyML not found"});
             }
             
             //if PolyML path is modified, we need to restart the browser
@@ -119,15 +118,17 @@ var PolyMLext = (function() {
                         id = tab.getAttribute("polymlext-tabid");
                         var poly = new PolyMLext.Poly(
                                 doc, PolyMLext.polyCollection[id].console);
-                        //the same tab means we don't care about the
-                        //"alwaysEnabled" preference
-                        poly.init();
                         PolyMLext.polyCollection[id].poly = poly;
                         PolyMLext.polyCollection[id].console.poly = poly;
                         PolyMLext.polyCollection[id].console.clear();
+                        //hack #181
+                        poly.enabled = true;
                         if (doc == content.document) {
                             PolyMLext.polyCollection[id].console.select();
                         }
+                        //the same tab means we ignore the
+                        //"alwaysEnabled" preference
+                        poly.init();
                     } else {
                         //create new id
                         while (true) {
@@ -150,11 +151,15 @@ var PolyMLext = (function() {
                         var alwaysEnabled = Application.prefs.getValue(
                             "extensions.polymlext@ed.ac.uk.alwaysEnabled",
                             false);
+                        //hack #181
                         if (alwaysEnabled) {
-                            poly.init();
+                            poly.enabled = true;
                         }
                         if (doc == content.document) {
                             console.select();
+                        }
+                        if (alwaysEnabled) {
+                            poly.init();
                         }
                     }
                     //add event listener for page unload
@@ -180,8 +185,10 @@ var PolyMLext = (function() {
         onPolyEnable : function(event) {
             var tab = gBrowser.selectedTab;
             var id = tab.getAttribute("polymlext-tabid");
-            PolyMLext.polyCollection[id].poly.init();
+            //hack #181
+            PolyMLext.polyCollection[id].poly.enabled = true;
             PolyMLext.polyCollection[id].console.select();
+            PolyMLext.polyCollection[id].poly.init();
         },
         
         onTabSelect : function(event) {

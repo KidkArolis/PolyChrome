@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://polymlext/skin/style.css" type="text/css"?>
 
 <overlay id="polymlext-overlay"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	
 	<script src="core/PolyMLext.js" />
 	<script src="core/components/DebugConsole.js" />
@@ -62,12 +62,11 @@ permission" />
 					   <tab label="Output" />
 					</tabs>
 					<spacer flex="1" />
-					<label id="polymlext-console-button-disable" value="Disable" />
+					<label id="polymlext-console-button-disable" value="Click to disable" />
 				</hbox>
 				<tabpanels flex="1" style="padding:0;">
 					<hbox>
-						<textbox id="polymlext-console-logarea" multiline="true"
-								flex="1" readonly="true" />
+						<iframe id="polymlext-console-logarea" flex="1" src="chrome://polymlext/content/logarea.html" />
 					</hbox>
 					<hbox>
 						<textbox id="polymlext-console-output" multiline="true"
@@ -75,13 +74,11 @@ permission" />
 					</hbox>
 				</tabpanels>
 				<hbox id="polymlext-console-commandline-box" style="border:none">
-					<label id="polymlext-console-commandline-arrow" value=">"/>
 					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline" />
 				</hbox>
 			</tabbox>
-			
 		</vbox>
 	</vbox>
 </overlay>

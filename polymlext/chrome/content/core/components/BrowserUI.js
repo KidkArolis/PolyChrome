@@ -47,6 +47,8 @@ PolyMLext.BrowserUI.prototype = {
         e("polymlext-button-nopoly").addEventListener("click", function() {
                 self.displayAboutPage();
             }, false);
+        
+        this.setGlobalStatus({s:"PolyML not found"});
     },
     
     bindContextMenu : function() {
@@ -121,9 +123,13 @@ PolyMLext.BrowserUI.prototype = {
                                                false);
     },
     
-    setStatus : function(s) {
-        e("polymlext-icon-statusindicator").value = s.s;
-        if (s.error) {
+    setStatus : function(console) {
+        if (this.console.activeConsole!=console) {
+            return;
+        }
+        
+        e("polymlext-icon-statusindicator").value = console.status.s;
+        if (console.status.error) {
             e("polymlext-icon-statusindicator").style["color"] = "red";
         } else {
             e("polymlext-icon-statusindicator").style["color"] = "black";
@@ -134,9 +140,9 @@ PolyMLext.BrowserUI.prototype = {
         //a bit more complex this should be refactored. Hardcoding the label
         //is not very good, also it's not very good to check the value of the
         //string as opposed to having some boolean variable for tracking the
-        //enabled-to-click and enabled-already for each tab should
+        //enabled-to-click and enabled-already for each tab should...oops..not very clear
         if (PolyMLext.polyFound) {
-            if (s.s=="Click to enable PolyML app") {
+            if (console.status.s=="Click to enable PolyML app") {
                 //bind the click to load the app button
                 e("polymlext-icon-statusindicator").addEventListener("click",
                     this.callbacks.onPolyEnable, false);
@@ -145,6 +151,15 @@ PolyMLext.BrowserUI.prototype = {
                 e("polymlext-icon-statusindicator").removeEventListener("click",
                     this.callbacks.onPolyEnable, false);
             }
+        }
+    },
+    
+    setGlobalStatus : function (status) {
+        e("polymlext-icon-statusindicator").value = status.s;
+        if (status.error) {
+            e("polymlext-icon-statusindicator").style["color"] = "red";
+        } else {
+            e("polymlext-icon-statusindicator").style["color"] = "black";
         }
     }
 };
@@ -161,18 +176,32 @@ ConsoleUI.prototype = {
     
     update : function(console) {
         if (this.activeConsole == console) {
-            e("polymlext-console-logarea").value = this.activeConsole.content;
+            var logarea = e("polymlext-console-logarea").contentDocument;
+            var annotatedContent = ""
+            for (var i in this.activeConsole.content) {
+                var item = this.activeConsole.content[i];
+                switch (item.type) {
+                    case "input":
+                        annotatedContent += '<div class="polymlext-console-item-input"><pre>'+item.m+'</pre></div>';
+                        break;
+                    case "output":
+                        annotatedContent += '<div class="polymlext-console-item-output"><pre>'+item.m+'</pre></div>';
+                        break;
+                    case "error":
+                        annotatedContent += '<div class="polymlext-console-item-error"><pre>'+item.m+'</pre></div>';
+                        break;
+                }
+            }
+            logarea.getElementById("polymlext-console-logarea").innerHTML = annotatedContent;
             this.scrollDown();
         }
     },
     
     select : function(console) {
         this.activeConsole = console;
-        
-        PolyMLext.BrowserUI.setStatus(this.activeConsole.status);
+        PolyMLext.BrowserUI.setStatus(this.activeConsole);
         e("polymlext-icon-statusindicator").setAttribute("hidden", false);
-        e("polymlext-console-logarea").value = this.activeConsole.content;
-        this.scrollDown();
+        this.update(console);
         if (this.activeConsole.enabled) {
             if (this.activeConsole.poly.enabled) {
                 if (this.activeConsole.minimized) {
@@ -180,7 +209,7 @@ ConsoleUI.prototype = {
                 } else {
                     this.showConsole();
                 }
-            this.setButtonColor("red");
+                this.setButtonColor("red");
             }
         } else {
             this.disable();
@@ -188,13 +217,18 @@ ConsoleUI.prototype = {
     },
     
     scrollDown : function() {
-        var textbox = e("polymlext-console-logarea");
-        var ti = document.getAnonymousNodes(textbox)[0].childNodes[0];
-        ti.scrollTop = ti.scrollHeight;
+        //var textbox = e("polymlext-console-logarea");
+        //var ti = document.getAnonymousNodes(textbox)[0].childNodes[0];
+        //ti.scrollTop = ti.scrollHeight;
+        
+        var iframe = e("polymlext-console-logarea");
+        //wrappedJSObject
+        iframe.contentDocument.defaultView.scrollTo(0, iframe.contentDocument.body.clientHeight);
     },
 
     clearConsole : function() {
-        e("polymlext-console-logarea").value = "";
+        var logarea = e("polymlext-console-logarea").contentDocument;
+        logarea.getElementById("polymlext-console-logarea").innerHTML = "";
     },
     
     toggleConsole : function(event) {
@@ -300,7 +334,7 @@ ConsoleUI.prototype = {
             case this.KEY_ENTER:
                 var command = e("polymlext-console-commandline-input").value;
                 e("polymlext-console-commandline-input").value = "";
-                this.activeConsole.log("> " + command + "\n");
+                this.activeConsole.logInput(command);
                 this.activeConsole.historyAdd(command);
                 this.activeConsole.poly.sendCode(command);
                 break;

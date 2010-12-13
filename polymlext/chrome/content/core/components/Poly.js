@@ -119,7 +119,7 @@ PolyMLext.Poly.prototype = {
     },
     
     onConnectionLost : function() {
-        this.console.setStatus({s:"PolyML process is gone", e:true});
+        this.console.setStatus({s:"PolyML process is gone", error:true});
     },
     
     //this is used for sending PolyML code to be evaluated
@@ -187,7 +187,7 @@ Evaluator.prototype = {
             } else {
                 var base = this.poly.document.documentURI;
             }
-            Utils.downloadFile(src, base , destFile, listener);
+            Utils.downloadFile(src, base, destFile, listener);
             
             //add this 
             return { type:ext, filename:filename }
@@ -234,6 +234,8 @@ Evaluator.prototype = {
             var p = this.queue[i];
             switch (p.type) {
                 case "code":
+                    var url = this.poly.document.location.href;
+                    this.poly.sendCode("val _=PolyMLext.code_location:=\""+url+"\";");
                     this.poly.sendCode(p.code);
                     break;
                 case "sml":
@@ -256,6 +258,41 @@ Evaluator.prototype = {
         }
         this.queue = [];
         this.poly.console.setStatusDefault();
+    },
+    
+    /**
+     * based on http://mxr.mozilla.org/mozilla-central/source/toolkit/components/viewsource/content/viewSource.js?raw=1
+     */
+    //TODO: finish this
+    viewSource : function(url) {
+        var viewSrcUrl = "view-source:" + url;
+    
+        var loadFromURL = true;
+    
+        /*
+         TODO: use the code below
+        var pageDescriptor = ?page descriptor?;
+        //try loading it from cache first by using the descriptor
+        try {
+            var pageLoader = getWebNavigation().QueryInterface(Ci.nsIWebPageDescriptor);
+            if (typeof(pageDescriptor) == "object" && pageDescriptor != null) {
+                // Load the page using the page descriptor rather than the URL.
+                // This allows the content to be fetched from the cache (if
+                // possible) rather than the network...
+                pageLoader.loadPage(pageDescriptor, gPageLoader.DISPLAY_AS_SOURCE);
+                // The content was successfully loaded.
+                loadFromURL = false;
+            }
+        } catch(ex) {
+          // Ignore the failure. The content will be loaded via the URL instead
+        }
+        */
+    
+        if (loadFromURL) {
+            // Currently, an exception is thrown if the URL load fails...
+            var loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+            getWebNavigation().loadURI(viewSrcUrl, loadFlags, null, null, null);
+        }
     },
     
     destroy : function() {}

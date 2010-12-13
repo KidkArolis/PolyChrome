@@ -31,6 +31,9 @@ structure PolyMLext (*: POLYMLEXT*)
     
     val requestCounter = ref 0
     
+    val code_location = ref ""
+    val code_offset = ref 1
+    
     exception Error of string
 
     fun the (reference) = Option.valOf (!reference)
@@ -109,10 +112,10 @@ structure PolyMLext (*: POLYMLEXT*)
       (Socket.shutdown(s,Socket.NO_RECVS_OR_SENDS);
        Socket.close s)
 
-    fun evaluate location_url txt =
+    fun evaluate code_location code_offset code =
       let
         (* uses input and output buffers for compilation and output message *)
-        val in_buffer = ref (String.explode txt)
+        val in_buffer = ref (String.explode code)
         val out_buffer = ref ([]: string list);
         val current_line = ref 1;
 
@@ -130,7 +133,7 @@ structure PolyMLext (*: POLYMLEXT*)
             | c :: cs =>
               (in_buffer := cs; if c = #"\n" then current_line := ! current_line + 1 else (); SOME c));
 
-        (* add to putput buffer *)
+        (* add to output buffer *)
         fun put s = (out_buffer := s :: ! out_buffer);
 
         (* handling error messages *)
@@ -141,8 +144,8 @@ structure PolyMLext (*: POLYMLEXT*)
               PolyML.prettyPrint (put, line_width) msg1;
               (case context of NONE => ()
               | SOME msg2 => PolyML.prettyPrint (put, line_width) msg2);
-              put ("At line " ^ (Int.toString (#startLine location)) ^ "; in url: "
-              ^ location_url ^ "\n"))
+              put ("At line " ^ (Int.toString ((#startLine location) - code_offset)) ^ " in "
+              ^ code_location ^ "\n"))
           end;
 
             val compile_params =
@@ -206,15 +209,17 @@ structure PolyMLext (*: POLYMLEXT*)
         val (inStream, fileName) = trySuffixes("" :: ! PolyML.suffixes)
         val contents = TextIO.inputAll inStream
     in
-        evaluate fileName contents;
+        evaluate fileName 0 contents;
         (* Normal termination: close the stream. *)
         TextIO.closeIn (inStream)
     end (* use *)
 
     fun loop () =
         let
-            val code = recv_code();
-            val _ = evaluate "foo" code;
+          val code = recv_code();
+          val _ = evaluate "" 0 code
+          val code = recv_code();
+          val _ = evaluate (!code_location) (!code_offset) code
         in
             loop()
         end

@@ -9,13 +9,14 @@ PolyMLext.Console = function() {
     this.minimized = Application.prefs.getValue(
         "extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup", true);
     this.cmdHistory = [];
+    this.content = [];
     this.status = {s:"Click to enable PolyML app"}
 }
 PolyMLext.Console.prototype = {
     poly : null, // poly object associated with this console
     minimized : true,
     enabled : false,
-    content : "",
+    content : null,
     cmdHistory : null,
     HISTORY_LIMIT : 200,
     historyPointer : -1,
@@ -23,24 +24,36 @@ PolyMLext.Console.prototype = {
     
     log : function(m) {
         if (this.enabled) {
-            this.content += m;
+            this.content.push({m:m, type:"output"});
             PolyMLext.BrowserUI.console.update(this);
         }
         this.setStatusDefault();
     },
     
+    logInput : function(m) {
+        //if the user is typing something in the console, we unset the error
+        //flag in the current status, so that the error status can be cleared
+        //when this function is called it means that the user must already have
+        //seen the error status and message and is acting up on it
+        this.status.error = false;
+        this.content.push({m:m, type:"input"});
+        this.setStatusDefault();
+    },
+    
     error : function(m) {
-        this.content += m;
+        this.content.push({m:m, type:"error"});
         PolyMLext.BrowserUI.console.update(this);
         this.setStatus({s:"PolyML error", error:true});
     },
     
     setStatus : function(s) {
         this.status = s;
-        PolyMLext.BrowserUI.setStatus(this.status);
+        PolyMLext.BrowserUI.setStatus(this);
     },
     
     setStatusDefault : function() {
+        //if there was an error, we do not want to clear the status, the user
+        //should be able to see the error
         if (!this.status.error) {
             this.setStatus({s:"PolyML app"});
         }
@@ -88,7 +101,7 @@ PolyMLext.Console.prototype = {
     },
     
     clear : function() {
-        this.content = "";
+        this.content = [];
     },
     
     destroy : function() {},
