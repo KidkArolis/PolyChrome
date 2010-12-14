@@ -13,19 +13,6 @@ PolyMLext.BrowserUI = function() {
             "extensions.polymlext@ed.ac.uk.alwaysEnabled");
     this.prefs.PolyMLPath = Application.prefs.get(
             "extensions.polymlext@ed.ac.uk.PolyMLPath");
-    
-    //checking if it's first time launch
-    //which case an about page is displayed
-    var firstLaunch = Application.prefs.get(
-            "extensions.polymlext@ed.ac.uk.firstLaunch");
-    if (firstLaunch.value) {
-        this.displayAboutPage();
-        firstLaunch.value = false;
-    }
-    //if (PolyMLext.extension.firstRun) {
-    //    this.displayAboutPage();
-    //}
-    
     this.console = new ConsoleUI(this);
 }
 PolyMLext.BrowserUI.prototype = {
@@ -35,9 +22,10 @@ PolyMLext.BrowserUI.prototype = {
     prefs : null,
     
     links : {
-        about       : 'chrome://polymlext/content/about.html',
+        settings    : 'chrome://polymlext/content/settings.html',
         demos       : 'chrome://polymlext/content/demos/index.html',
-        construct   : 'chrome://polymlext/content/theConstruct.html'
+        construct   : 'chrome://polymlext/content/theConstruct.html',
+        docs        : 'chrome://polymlext/content/docs/index.html'
     },
     
     noPoly : function() {
@@ -45,7 +33,7 @@ PolyMLext.BrowserUI.prototype = {
         e("polymlext-button-console").setAttribute("hidden", true);
         e("polymlext-button-nopoly").setAttribute("hidden", false);
         e("polymlext-button-nopoly").addEventListener("click", function() {
-                self.displayAboutPage();
+                self.displaySettingsPage();
             }, false);
         
         this.setGlobalStatus({s:"PolyML not found"});
@@ -59,14 +47,16 @@ PolyMLext.BrowserUI.prototype = {
                 self.displayDemosPage();
             }, false);
         
-        //The Construct (The Matrix reference :)
+        //The Construct (from The Matrix :)
         e("polymlext-button-construct").addEventListener("click", function() {
                 gBrowser.selectedTab = gBrowser.addTab(self.links.construct);
             }, false);
-        
+        //always enabled option
         e("polymlext-button-alwaysEnable").setAttribute("checked",
                 this.prefs.alwaysEnabled.value);
         this.prefs.alwaysEnabled.events.addListener("change", function(aEvent) {
+            log("changed");
+            log(self.prefs.alwaysEnabled.value);
             e("polymlext-button-alwaysEnable").setAttribute(
                     "checked", self.prefs.alwaysEnabled.value);
         });        
@@ -75,16 +65,18 @@ PolyMLext.BrowserUI.prototype = {
                 self.prefs.alwaysEnabled.value =
                         !self.prefs.alwaysEnabled.value;
             }, false);
-        
-        
-        //about
-        e("polymlext-button-about").addEventListener("click", function() {
-                self.displayAboutPage();
+        //docs
+        e("polymlext-button-docs").addEventListener("click", function() {
+                gBrowser.selectedTab = gBrowser.addTab(self.links.docs);
             }, false);
+        //settings
+        e("polymlext-button-settings").addEventListener("click", function() {
+                self.displaySettingsPage();
+            }, false);        
     },
     
-    displayAboutPage : function() {
-        Utils.openAndReuseOneTabPerURL(this.links.about);
+    displaySettingsPage : function() {
+        Utils.openAndReuseOneTabPerURL(this.links.settings);
     },
     
     displayDemosPage: function() {
@@ -262,7 +254,7 @@ ConsoleUI.prototype = {
     disable : function() {
         this.activeConsole.enabled = false;
         this.activeConsole.minimized = true;
-        this.activeConsole.content = "";
+        this.activeConsole.content = [];
         this.hideConsole();
         this.setButtonColor("gray");
         this.clearConsole();
@@ -316,7 +308,10 @@ ConsoleUI.prototype = {
             function(event) {
                 self.toggleConsole(event)
             }, false);
-        e("polymlext-console-button-disable").addEventListener("click",
+        //TODO: RESOLVE THE CONFUSION, the button is called 'off', but the action
+        //function for this button is called 'disable', and there is also another
+        //function called 'off' that does smth else..
+        e("polymlext-console-button-off").addEventListener("click",
             function(event) {
                 var LEFT_BUTTON = 0;
                 if (event.button==LEFT_BUTTON) {
@@ -324,6 +319,13 @@ ConsoleUI.prototype = {
                     Application.prefs.setValue(
                         "extensions.polymlext@ed.ac.uk.Console.enabledOnStartup",
                         false);
+                }
+            }, false);
+        e("polymlext-console-button-min").addEventListener("click",
+            function(event) {
+                var LEFT_BUTTON = 0;
+                if (event.button==LEFT_BUTTON) {
+                    self.toggleConsole();
                 }
             }, false);
     },
@@ -336,7 +338,9 @@ ConsoleUI.prototype = {
                 e("polymlext-console-commandline-input").value = "";
                 this.activeConsole.logInput(command);
                 this.activeConsole.historyAdd(command);
-                this.activeConsole.poly.sendCode(command);
+                if (command!="") {
+                    this.activeConsole.poly.sendCode(command);
+                }
                 break;
             case this.KEY_UP:
                 e("polymlext-console-commandline-input").value =

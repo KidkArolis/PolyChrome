@@ -35,8 +35,11 @@ PolyMLext.Console.prototype = {
         //flag in the current status, so that the error status can be cleared
         //when this function is called it means that the user must already have
         //seen the error status and message and is acting up on it
-        this.status.error = false;
-        this.content.push({m:m, type:"input"});
+        if (this.enabled) {
+            this.status.error = false;
+            this.content.push({m:m, type:"input"});
+            PolyMLext.BrowserUI.console.update(this);
+        }
         this.setStatusDefault();
     },
     

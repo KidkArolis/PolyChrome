@@ -28,6 +28,7 @@ var PolyMLext = (function() {
         
         ran : Math.floor(Math.random()*100),
         
+        //hacky var, it only means that the PolyMLext.extension variable is set...
         ready : false,
         
         //====================================================================
@@ -38,9 +39,11 @@ var PolyMLext = (function() {
             if(Application.extensions) {
                 PolyMLext.extension = Application.extensions
                     .get('polymlext@ed.ac.uk');
+                PolyMLext.ready = true;
             } else if (Application.getExtensions) {
                 Application.getExtensions(function (extensions){
                     PolyMLext.extension = extensions.get('polymlext@ed.ac.uk');
+                    PolyMLext.ready = true;
                 });
             }
             
@@ -72,7 +75,6 @@ var PolyMLext = (function() {
                         }
                     }
             });
-            PolyMLext.ready = true;
         },
 
         onReady : function(callback) {
@@ -83,6 +85,7 @@ var PolyMLext = (function() {
                 callback();
               }
             }
+            init();
         },
         
         findPoly : function() {

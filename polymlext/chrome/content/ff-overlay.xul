@@ -28,7 +28,8 @@
 					tooltiptext="Execute PolyML applications without explicit 
 permission" />
 			<menuseparator />
-			<menuitem id="polymlext-button-about" label="Settings / Help" />
+			<menuitem id="polymlext-button-docs" label="Docs" />
+			<menuitem id="polymlext-button-settings" label="Settings" />
 		</menupopup>
 	</popupset>
 
@@ -50,35 +51,24 @@ permission" />
 	</statusbar>
 	
 	<vbox id="appcontent">
-		<splitter id="polymlext-console-splitter" collapsed="true"/>
-		<vbox id="polymlext-console-box" collapsed="true"
-				persist="height" height="100%">
-			
-			<tabbox flex="1" persist="height" height="200px">
+		<splitter id="polymlext-console-splitter" collapsed="true" />
+		<vbox id="polymlext-console-box" persist="height" >
 				<hbox>
 					<label id="polymlext-console-title"	value="PolyML Console" />
-					<tabs id="polymlext-console-tabs">
-					   <tab label="Compiler Information" />
-					   <tab label="Output" />
-					</tabs>
 					<spacer flex="1" />
-					<label id="polymlext-console-button-disable" value="Click to disable" />
+					<hbox id="polymlext-console-buttons" role="toolbar">
+                        <toolbarbutton id="polymlext-console-button-min" class="toolbarbutton-iconic"
+                            tooltiptext="Minimize The Console" />
+                        <toolbarbutton id="polymlext-console-button-off" class="toolbarbutton-iconic"
+                            tooltiptext="Turn The Console Off" />
+                    </hbox>
 				</hbox>
-				<tabpanels flex="1" style="padding:0;">
-					<hbox>
-						<iframe id="polymlext-console-logarea" flex="1" src="chrome://polymlext/content/logarea.html" />
-					</hbox>
-					<hbox>
-						<textbox id="polymlext-console-output" multiline="true"
-								 flex="1" readonly="true" />
-					</hbox>
-				</tabpanels>
+				<iframe id="polymlext-console-logarea" flex="1" src="chrome://polymlext/content/logarea.html" />
 				<hbox id="polymlext-console-commandline-box" style="border:none">
 					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline" />
 				</hbox>
-			</tabbox>
 		</vbox>
 	</vbox>
 </overlay>

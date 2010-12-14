@@ -12,7 +12,7 @@ if [ -f deploy.cfg ];
         exit 2
 fi
 
-THE_POLY_HEAP="polymlext.heap"
+THE_POLY_HEAP="polymlext.polyml-heap"
 
 #the directory of the extension
 extension="$(dirname $0)"

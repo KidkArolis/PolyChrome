@@ -12,18 +12,19 @@
 #polymlext-console-commandline-input {
 	-moz-appearance: none;
 	margin: 0;
-	padding: 4px 4px;
-	height: 24px;
+	padding: 6px 4px 4px 12px;
+	height: 26px;
 	border: none;
 	font-family: monospace;
 	font-size:14px;
 	direction: ltr;
-	border: none;
 	width: 100%;
 	overflow: visible;
 	font-weight: normal;
 	padding-left:14px;
-	background:url("chrome://polymlext/skin/arrow_right_small.png") 5px 7px no-repeat;
+	background:url("chrome://polymlext/skin/arrow_right_small.png") 5px 9px no-repeat;
+	border: none;
+	border-top:1px solid #ccc;
 }
 
 #polymlext-console-commandline-input > .textbox-input-box > .textbox-textarea {
@@ -44,10 +45,30 @@
 	overflow:auto;
 }
 
-#polymlext-console-button-disable {
-	margin-top:4px;
-	margin-right:10px;
-	font-size:13px;
+#polymlext-console-buttons {
+	margin-right:4px;
+}
+#polymlext-console-button-min {
+	width: 16px;
+    height: 16px;
+    list-style-image: url(chrome://polymlext/skin/min.png);
+}
+#polymlext-console-button-min:hover {
+	list-style-image: url(chrome://polymlext/skin/minHover.png);
+}
+#polymlext-console-button-min:active {
+	list-style-image: url(chrome://polymlext/skin/minActive.png);
+}
+#polymlext-console-button-off {
+	width: 16px;
+    height: 16px;
+    list-style-image: url(chrome://polymlext/skin/off.png);
+}
+#polymlext-console-button-off:hover {
+	list-style-image: url(chrome://polymlext/skin/offHover.png);
+}
+#polymlext-console-button-off:active {
+	list-style-image: url(chrome://polymlext/skin/offActive.png);
 }
 
 #polymlext-icon-statusindicator {
@@ -59,6 +80,8 @@
 #polymlext-console-title {
 	font-size:13px;
 	font-weight:bold;
-	margin-top:4px;
-	margin-right:10px;
+}
+
+#polymlext-button-console, #polymlext-button-nopoly {
+	margin:2px;
 }

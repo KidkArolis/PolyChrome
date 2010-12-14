@@ -1,0 +1,50 @@
+body {
+	font-family: 'Lucida Grande', Verdana, Geneva, sans-serif;
+	font-size:14px;
+	color:#222;
+	margin:0;
+	padding:0;
+}
+h1, h2 {
+	font-size:24px;
+	font-weight:normal;
+	border-bottom:1px solid #ccc;
+	padding:2px;
+	margin-top:18px;
+}
+h1 {
+	color:#E13300;
+}
+h2 {
+	font-size:18px;
+}
+p {
+	line-height:150%;
+}
+#header {
+	padding:30px;
+}
+#header li {
+	padding:5px;
+}
+#title img {
+	float:left;
+	margin-right:8px;
+}
+#content {
+	padding:0 30px;
+}
+#content-table li {
+	
+}
+
+#content .section {
+	border-bottom:1px solid #eee;
+	margin-bottom:30px;
+	padding-bottom:20px;
+}
+
+#content img {
+	border:1px solid #aaa;
+	margin-left:20px;
+}
