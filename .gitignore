@@ -1,4 +1,4 @@
-.komodoproject
+*.komodoproject
 .svn
 *.polyml-heap
 *.so
