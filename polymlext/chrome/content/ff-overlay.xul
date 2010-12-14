@@ -51,8 +51,8 @@ permission" />
 	</statusbar>
 	
 	<vbox id="appcontent">
-		<splitter id="polymlext-console-splitter" collapsed="true" />
-		<vbox id="polymlext-console-box" persist="height" >
+		<splitter id="polymlext-console-splitter" collapsed="false" />
+		<vbox id="polymlext-console-box" collapsed="true" persist="height" >
 				<hbox>
 					<label id="polymlext-console-title"	value="PolyML Console" />
 					<spacer flex="1" />
