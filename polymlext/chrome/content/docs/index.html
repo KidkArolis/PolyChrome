@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>PolyML Extension - Documentation</title>
+		<title>PolyMLext - Firefox Extension</title>
 		
 		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" type="text/css" href="style/style.css">
@@ -10,76 +10,44 @@
 			val _ = Console.print "Welcome to the PolyML extension\n";
 		</script>
 		
+		<style type="text/css">
+			h2 { border:none; margin:0; }
+			
+		</style>
+		
 	</head>
 	<body>
 		<div id="header">
 			<div id="title">
 				<img src="style/polyml_32x32t.png" />
-				<h1>PolyML Extension Documentaton</h1>
+				<h1>PolyML Extension</h1>
 			</div>
-			<ul>
-				<li>The extension can be downloaded at <a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">https://addons.mozilla.org/en-US/firefox/addon/262830/</a></li>
-				<li>The development happens at <a href="https://www.assembla.com/spaces/polymlext/">https://www.assembla.com/spaces/polymlext/</a></li>
-			</ul>
 		</div>
 		
 		<div id="content">
-			
 			<div class="section">
-				<h1>Content Table</h1>
-				<ol id="content-table">
-					<li><a href="#installing">Installing</a></li>
-					<li><a href="#application-developer-guide">Application Developer Guide</a></li>
-					<li><a href="#extension-developer-guide">Extension Developer Guide</a></li>
-				</ol>
+				
+				<p>
+					PolyMLext is an extension for Firefox web browser that can run SML programs embedded in HTML documents. In addition to providing DOM access for SML applications, the extension provides a simple foreign function interface to JavaScript and as a result JavaScript libraries can be used in SML.
+				</p>
+				
+				<h3>Resources</h3>
+				<ul>
+					<li><h2><a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">Download</a></h2></li>
+					<li><h2><a href="https://www.assembla.com/spaces/polymlext/">Develop</a></h2></li>
+					<li><h2><a href="http://www.assembla.com/spaces/polymlext/support/tickets">Report Bugs</a></h2></li>
+					<li><h2><a href="docs.html">Documentation</a></h2></li>
+				</ul>
+				
+				<h3>Why do this?</h3>
+				<h3>What are the limitations</h3>
+				<h3>How does it work?</h3>
+				<h3>What's inside the extension?</h3>
+				
+				<h3>Additional references</h3>
+				<p>MSc thesis on PolyMLext: <a href="http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf">http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf</a></p>
+				
 			</div>
-			
-			<div class="section">
-				<h1 id="installing">Installing</h1>
-				<p>To use the PolyML Extension you'll need to install <a href="http://polyml.org/download.html">PolyML</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">the extension itself</a>.
-				<p>After you've done that, you can check if it's working by opening up Firefox, right clicking the extension icon in the bottom right corner of the browser and clicking "The Construct" item in the menu.</p>
-				<img src="images/TheConstruct.png" />
-				<p>By default, PolyML Extension is disabled, therefore if the page contains Standard ML code the "Click to enable PolyML app" label will appear in the status bar. Clicking it will execute the Standard ML program contained in the document. You can override this setting by turning the "Always Enable" option in the context menu as seen above or in the <a href="#">settings page.</a></p>
-				<img src="images/ClickToEnable.png" />
-			</div>
-			
-			<div class="section">
-				<div class="section">
-					<div id="intro">
-						<h1>Quick Intro</h1>
-						<h2>The Icon</h2>
-						<p>In the bottom right corner, you can see the PolyMLext icon.</p>
-						<table>
-							<tr>
-								<td><img src="../skin/polyml_16x16_gray.png" /></td>
-								<td>Click this to activate the PolyML Console for an active tab. It will only open the console for pages that contain PolyML code. In another pages clicking this icon will not do anything. Presence of PolyML code on the page is indicated by a label "PolyML app" to the left of this icon. Right clicking this icon will provide you with a context menu with useful links.</td>
-							</tr>
-							<tr>
-								<td><img src="../skin/polyml_16x16.png" /></td>
-								<td>This means that Console is activated. Clicking this icon will toggle the visibility of the console. Clicking "Disable" in the Console will deactivate the console and the icon will turn gray again. As with the gray icon, right clicking will provide you with the context menu.</td>
-							</tr>
-							<tr>
-								<td><img src="../skin/polyml_16x16_gray_no_poly.png" /></td>
-								<td>This indicates that PolyML was not found on the computer. Clicking it will display the settings page where you customize the custom PolyML path or get instructions on installing PolyML.</td>
-							</tr>
-						</table>
-						
-					  
-						<h2>Click To Enable</h2>
-						<p>By default the extension is always disabled and has to be enabled each site by clicking "Click to enable PolyML" in the bottom right corner of the browser. If open another site in the same tab or reload the tab, you will not be asked for confirmation anymore.</p>
-					  
-						<h2>The Construct</h2>
-						<p>In the context menu of the extension (which is opened by clicking the PolyMLext icon), you'll see "The Construct" button. This will take you to an empty html document with enabled PolyML, where you can try out different things. It's kind of like opening poly in the terminal for quick experiments.
-					  
-						<h2>Console</h2>
-						<p>Console is an interactive top level PolyML shell. It corresponds to the opened document. Try opening up the console right now and enter:</p>
-							<pre>
-	DOM.setStyle (valOf (DOM.getElementById "container")) "background" "orange"
-							</pre>
-					  </div>
-				</div>
-			</div>
-			
 		</div>
 		<div id="footer"></div>
 	</body>

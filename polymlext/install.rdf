@@ -4,7 +4,7 @@
     <em:unpack>true</em:unpack>
     <em:id>polymlext@ed.ac.uk</em:id>
     <em:type>2</em:type>
-    <em:name>PolyML Extension</em:name>
+    <em:name>PolyMLext</em:name>
     <em:description>Use Standard ML as a clientside programming language.</em:description>
     <em:version>0.2.2</em:version>
     <em:creator>Karolis Narkevičius</em:creator>
@@ -18,7 +18,7 @@
         <em:maxVersion>4.0b8pre</em:maxVersion>
       </Description>
     </em:targetApplication>
-    <em:homepageURL>https://www.assembla.com/spaces/polymlext/</em:homepageURL>
+    <em:homepageURL>http://polymlext.assembla.me/</em:homepageURL>
     <em:iconURL>chrome://PolyMLext/skin/polyml_32x32.png</em:iconURL>
   </Description>
 </RDF>

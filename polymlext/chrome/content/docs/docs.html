@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyMLext - Documentation</title>
+		
+		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="style/style.css">
+			
+		<script type="application/x-polyml">
+			val _ = Console.print "Welcome to the PolyML extension\n";
+		</script>
+		
+	</head>
+	<body>
+		<div id="header">
+			<div id="title">
+				<img src="style/polyml_32x32t.png" />
+				<h1>PolyML Extension Documentaton</h1>
+			</div>
+		</div>
+		
+		<div id="content">
+			
+			<div class="section">
+				<ol id="content-table">
+					<li><a href="#resources">Resources</a></li>
+					<li><a href="#installing">Installing</a></li>
+					<li><a href="#gui">Quick Intro</a></li>
+					<li><a href="#">Developing Applications</a></li>
+					<ol>
+						<li><a href="#">Tutorial: Hello World</a></li>
+					</ol>
+					<li><a href="#">DOM API</a></li>
+				</ol>
+			</div>
+			
+			<div class="section">
+				<h1 id="installing">Installing</h1>
+				<p>To use the PolyML Extension you'll need to install <a href="http://polyml.org/download.html">PolyML</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">the extension itself</a>.
+				<p>After you've done that, you can check if it's working by opening up Firefox, right clicking the extension icon in the bottom right corner of the browser and clicking "The Construct" item in the menu.</p>
+				<img src="images/TheConstruct.png" />
+				<p>By default, PolyML Extension is disabled, therefore if the page contains Standard ML code the "Click to enable PolyML app" label will appear in the status bar. Clicking it will execute the Standard ML program contained in the document. You can override this setting by turning the "Always Enable" option in the context menu as seen above or in the <a href="#">settings page.</a></p>
+				<img src="images/ClickToEnable.png" />
+				
+			</div>
+			
+			<div class="section">
+				<h1>Quick Intro</h1>
+				<p>In the bottom right corner, you can see the PolyMLext icon.</p>
+				<table>
+					<tr>
+						<td><img src="images/polyml_16x16_gray.png" /></td>
+						<td>Click this to activate the PolyML Console for an active tab. It will only open the console for pages that contain PolyML code. In another pages clicking this icon will not do anything. Presence of PolyML code on the page is indicated by a label "PolyML app" to the left of this icon. Right clicking this icon will provide you with a context menu with useful links.</td>
+					</tr>
+					<tr>
+						<td><img src="images/polyml_16x16.png" /></td>
+						<td>This means that Console is activated. Clicking this icon will toggle the visibility of the console. Clicking "Disable" in the Console will deactivate the console and the icon will turn gray again. As with the gray icon, right clicking will provide you with the context menu.</td>
+					</tr>
+					<tr>
+						<td><img src="images/polyml_16x16_gray_no_poly.png" /></td>
+						<td>This indicates that PolyML was not found on the computer. Clicking it will display the settings page where you customize the custom PolyML path or get instructions on installing PolyML.</td>
+					</tr>
+				</table>
+				
+				<h2>Click To Enable</h2>
+				<p>By default the extension is always disabled and has to be enabled each site by clicking "Click to enable PolyML" in the bottom right corner of the browser. If open another site in the same tab or reload the tab, you will not be asked for confirmation anymore.</p>
+			  
+				<h2>The Construct</h2>
+				<p>In the context menu of the extension (which is opened by clicking the PolyMLext icon), you'll see "The Construct" button. This will take you to an empty html document with enabled PolyML, where you can try out different things. It's kind of like opening poly in the terminal for quick experiments.
+			  
+				<h2>Console</h2>
+				<p>Console is an interactive top level PolyML shell. It corresponds to the opened document. If you're in Firefox right now, and you've installed the extension, open the console right now and enter:</p>
+				<pre>
+	DOM.setStyle (valOf (DOM.getElementById "content")) "background" "orange"
+				</pre>
+			</div>
+				
+			<div class="section">
+				<h1>Report Bugs</h1>
+				<a href="http://www.assembla.com/spaces/polymlext/support/tickets">http://www.assembla.com/spaces/polymlext/support/tickets</a>
+			</div>
+			
+		</div>
+		<div id="footer"></div>
+	</body>
+</html>

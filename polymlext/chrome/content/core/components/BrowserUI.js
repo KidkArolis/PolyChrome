@@ -25,7 +25,7 @@ PolyMLext.BrowserUI.prototype = {
         settings    : 'chrome://polymlext/content/settings.html',
         demos       : 'chrome://polymlext/content/demos/index.html',
         construct   : 'chrome://polymlext/content/theConstruct.html',
-        docs        : 'chrome://polymlext/content/docs/index.html'
+        docs        : 'chrome://polymlext/content/docs/docs.html'
     },
     
     noPoly : function() {

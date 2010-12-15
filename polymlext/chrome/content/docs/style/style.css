@@ -21,8 +21,11 @@ h2 {
 p {
 	line-height:150%;
 }
+li {
+	padding:2px;
+}
 #header {
-	padding:30px;
+	padding:10px 30px;
 }
 #header li {
 	padding:5px;
@@ -30,6 +33,9 @@ p {
 #title img {
 	float:left;
 	margin-right:8px;
+}
+#footer {
+	text-align:center;
 }
 #content {
 	padding:0 30px;
