@@ -4,30 +4,23 @@ var log = PolyMLext.log;
 var error = PolyMLext.error;
 
 PolyMLext.Console = function() {
-    this.enabled = Application.prefs.getValue(
-        "extensions.polymlext@ed.ac.uk.Console.enabledOnStartup", false);
-    this.minimized = Application.prefs.getValue(
-        "extensions.polymlext@ed.ac.uk.Console.minimizedOnStartup", true);
+    this.minimized = PolyMLext.prefs.consoleMinimizedOnStartup.value;
     this.cmdHistory = [];
     this.content = [];
-    this.status = {s:"Click to enable PolyML app"}
 }
 PolyMLext.Console.prototype = {
     poly : null, // poly object associated with this console
     minimized : true,
-    enabled : false,
     content : null,
     cmdHistory : null,
     HISTORY_LIMIT : 200,
     historyPointer : -1,
-    status : null,
     
     log : function(m) {
-        if (this.enabled) {
-            this.content.push({m:m, type:"output"});
-            PolyMLext.BrowserUI.console.update(this);
-        }
-        this.setStatusDefault();
+        var message = {m:m, type:"output"};
+        this.content.push(message);
+        PolyMLext.browserUI.console.update(this, message);
+        this.poly.setStatusDefault();
     },
     
     logInput : function(m) {
@@ -35,32 +28,21 @@ PolyMLext.Console.prototype = {
         //flag in the current status, so that the error status can be cleared
         //when this function is called it means that the user must already have
         //seen the error status and message and is acting up on it
-        if (this.enabled) {
-            this.status.error = false;
-            this.content.push({m:m, type:"input"});
-            PolyMLext.BrowserUI.console.update(this);
-        }
-        this.setStatusDefault();
+        this.poly.status.error = false;
+        var message = {m:m, type:"input"};
+        this.content.push(message);
+        PolyMLext.browserUI.console.update(this, message);
+        this.poly.setStatusDefault();
+        this.historyAdd(m);
     },
     
     error : function(m) {
-        this.content.push({m:m, type:"error"});
-        PolyMLext.BrowserUI.console.update(this);
-        this.setStatus({s:"PolyML error", error:true});
+        var message = {m:m, type:"error"};
+        this.content.push(message);
+        PolyMLext.browserUI.console.update(this, message);
+        this.poly.setStatus({s:"PolyML error", error:true});
     },
     
-    setStatus : function(s) {
-        this.status = s;
-        PolyMLext.BrowserUI.setStatus(this);
-    },
-    
-    setStatusDefault : function() {
-        //if there was an error, we do not want to clear the status, the user
-        //should be able to see the error
-        if (!this.status.error) {
-            this.setStatus({s:"PolyML app"});
-        }
-    },
     
     historyAdd : function(m) {
         this.historyResetPointer();
@@ -100,14 +82,15 @@ PolyMLext.Console.prototype = {
     },
     
     select : function() {
-        PolyMLext.BrowserUI.console.select(this);
+        PolyMLext.browserUI.console.select(this);
     },
     
     clear : function() {
         this.content = [];
+        PolyMLext.browserUI.console.clear();
     },
     
-    destroy : function() {},
+    destroy : function() {}
 };
 
 }());

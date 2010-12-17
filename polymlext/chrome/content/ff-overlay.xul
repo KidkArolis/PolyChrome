@@ -7,6 +7,7 @@
 	
 	<script src="core/PolyMLext.js" />
 	<script src="core/components/DebugConsole.js" />
+	<script src="core/components/ConsoleUI.js" />
 	<script src="core/components/BrowserUI.js" />
 	<script src="core/components/JSFFI.js" />
 	<script src="core/components/Poly.js" />
@@ -18,36 +19,46 @@
 	
 	<popupset id="mainPopupSet">
 		<menupopup id="polymlext-contextmenu" position="after_end">
-			<menuitem id="polymlext-button-construct" label="The Construct"
-					tooltiptext="The Construct - an interactive PolyML shell"
-					/>
-			<menuitem id="polymlext-button-demos" label="Demos"
-					tooltiptext="Demonstrations of PolyMLext features" />
+			<menuitem id="polymlext-button-start" label="Start PolyML"
+					tooltiptext="Start PolyML process for this page" />
+			<menuitem id="polymlext-button-stop" label="Stop PolyML"
+					tooltiptext="Stop PolyML process for this page" hidden="true" />
+			<menuseparator />
+			<menuitem id="polymlext-button-console-show" label="Show Console"
+					tooltiptext="Show the interactive PolyML console" disabled="true" />
+			<menuitem id="polymlext-button-console-hide" label="Hide Console"
+					tooltiptext="Hide the interactive PolyML console" hidden="true" />
 			<menuseparator />
 			<menuitem id="polymlext-button-alwaysEnable" label="Always Enable"
-					tooltiptext="Execute PolyML applications without explicit 
-permission" />
+					tooltiptext="Execute PolyML applications without explicit permission" />
 			<menuseparator />
+			<menuitem id="polymlext-button-demos" label="Demos"
+					tooltiptext="Demonstrations of PolyMLext features" />
 			<menuitem id="polymlext-button-docs" label="Docs" />
 			<menuitem id="polymlext-button-settings" label="Settings" />
 		</menupopup>
 	</popupset>
 
 	<statusbar id="status-bar">
-		<label id="polymlext-icon-statusindicator" hidden="true"
-				value="PolyML app"
-				tooltiptext="This page contains PolyML code" />
-		<statusbarpanel id="polymlext-button-console" hidden="false"
+		<label id="polymlext-status"
+				value=""
+				tooltiptext="This page contains PolyML code"
+				context="" />
+		<label id="polymlext-click-to-enable"
+			   value="Click to run PolyML app"
+			   tooltiptext="Clicking will activate the PolyML application found on this page"
+			   context=""
+			   hidden="true" />			   
+		<statusbarpanel id="polymlext-icon" hidden="false"
 				class="statusbarpanel-iconic"
-				tooltiptext="PolyML console disabled"
+				tooltiptext="Click to open PolyML console, right-click for a context menu"
 				src="chrome://polymlext/skin/polyml_16x16_gray.png"
 				context="polymlext-contextmenu" />
-		<statusbarpanel id="polymlext-button-nopoly" hidden="true"
-						class="statusbarpanel-iconic"
-						tooltiptext="PolyML was not found on this computer 
-(Click for more)"
-						src="chrome://polymlext/skin/
-						polyml_16x16_gray_no_poly.png" />
+		<statusbarpanel id="polymlext-icon-nopoly" hidden="true"
+				class="statusbarpanel-iconic"
+				tooltiptext="PolyML was not found on this computer (Click for more info)"
+				src="chrome://polymlext/skin/polyml_16x16_gray_no_poly.png"
+				context="" />
 	</statusbar>
 	
 	<vbox id="appcontent">
@@ -57,14 +68,12 @@ permission" />
 					<label id="polymlext-console-title"	value="PolyML Console" />
 					<spacer flex="1" />
 					<hbox id="polymlext-console-buttons" role="toolbar">
-                        <toolbarbutton id="polymlext-console-button-min" class="toolbarbutton-iconic"
+                        <toolbarbutton id="polymlext-console-button-min"
                             tooltiptext="Minimize The Console" />
-                        <toolbarbutton id="polymlext-console-button-off" class="toolbarbutton-iconic"
-                            tooltiptext="Turn The Console Off" />
                     </hbox>
 				</hbox>
 				<iframe id="polymlext-console-logarea" flex="1" src="chrome://polymlext/content/logarea.html" />
-				<hbox id="polymlext-console-commandline-box" style="border:none">
+				<hbox id="polymlext-console-commandline-box" hidden="true" style="border:none">
 					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline" />

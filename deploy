@@ -21,6 +21,7 @@ extension=`pwd`
 
 #update the extension file and move it to firefox profile
 echo "$extension/polymlext" > polymlext@ed.ac.uk
+rm -rf "$FIREFOX_PROFILE/extensions/polymlext@ed.ac.uk"
 cp polymlext@ed.ac.uk "$FIREFOX_PROFILE/extensions/"
 rm polymlext@ed.ac.uk
 

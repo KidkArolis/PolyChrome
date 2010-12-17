@@ -16,7 +16,7 @@
       
       <div id="content">
         
-      <p id="disclaimer">Use PolyMLext at your own risk. It is not safe to browse internet while PolyMLext is enabled.</p>
+      <p id="disclaimer">Use PolyMLext at your own risk.<br />It is not safe to browse sites containing embedded PolyML code while PolyMLext is enabled.</p>
 
       <div id="polymlNotFound" style="display:none">
         <p>PolyML could was not found on this computer.<p>
@@ -41,7 +41,23 @@
               <tr>
                   <td></td>
                   <td><input type="submit" id="savePrefs" value="Save" /></td>
+                  <td>
+                    <span id="polymlNotFound2" class="error" style="display:none">PolyML was not found at the provided path</span>
+                    <span id="polymlFound2" class="success" style="display:none">Custom PolyML path saved</span>
+                  </td>
+              </tr>
+          </table>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div id="utils">
+          <h1>Insides</h1>
+          <table>
+              <tr>
                   <td></td>
+                  <td><input type="button" id="rebuildHeaps" value="Rebuild Heaps" /><span id="rebuildingStatus"></span></td>
+                  <td class="hint">This is provided just in case something breaks. Usually you don't need to do this manually.</td>
               </tr>
           </table>
         </div>
@@ -61,59 +77,99 @@
     
     <script type="text/javascript">
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                .getService(Components.interfaces.nsIWindowMediator);
+            .getService(Components.interfaces.nsIWindowMediator);
         var currentWindow = wm.getMostRecentWindow("navigator:browser");
         var PolyMLext = currentWindow.PolyMLext;
+        
+        //this chunk is for reading the version of the extension in
+        //backwards compatible way
+        if(Application.extensions) {
+          //older FF
+          var version = Application.extensions
+              .get('polymlext@ed.ac.uk').version;
+          init();
+        } else if (Application.getExtensions) {
+          //FF4
+          Application.getExtensions(function (extensions){
+            var version = extensions.get('polymlext@ed.ac.uk').version;
+            init();
+          });
+        }
         
         var init = function() {
           //shortcut
           var e = function(id) { return document.getElementById(id) }
           
-          var noPolyFound = function() {
+          //this one is used always
+          var wasPolyFound = function() {
               if (!PolyMLext.polyFound) {
                   e("polymlNotFound").style["display"] = "block";
               } else {
                   e("polymlNotFound").style["display"] = "none";
               }
           }
-          noPolyFound();
+          wasPolyFound();
+          //this one is used only when save button is clicked
+          var wasPolyFound2 = function() {
+              if (!PolyMLext.polyFound) {
+                  e("polymlNotFound2").style["display"] = "inline";
+                  e("polymlFound2").style["display"] = "none";
+              } else {
+                  e("polymlNotFound2").style["display"] = "none";
+                  e("polymlFound2").style["display"] = "inline";
+              }
+          }
           
-          e("version").innerHTML = PolyMLext.extension.version;
+          e("version").innerHTML = version;
           
           e("linkDemos").addEventListener("click", function() {
-              PolyMLext.BrowserUI.displayDemosPage();
+              PolyMLext.browserUI.displayDemosPage();
           }, false);
           
-          //preferences
           //always enabled pref
-          var prefAlwaysEnabled = PolyMLext.BrowserUI.prefs.alwaysEnabled;
+          var prefAlwaysEnabled = PolyMLext.prefs.alwaysEnabled;
           e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
           prefAlwaysEnabled.events.addListener("change", function(aEvent) {
               e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
           });
           
-          //always enabled
-          var prefPolyMLPath = PolyMLext.BrowserUI.prefs.PolyMLPath;
+          //polyml path pref
+          var prefPolyMLPath = PolyMLext.prefs.PolyMLPath;
           e("prefPolyMLPath").value = prefPolyMLPath.value;
-          prefPolyMLPath.events.addListener("change", function(aEvent) {
-              e("prefAlwaysEnabled").value = prefPolyMLPath.value;
-              PolyMLext.findPoly();
-              noPolyFound();
-          });
           
           //save prefs
           e("savePrefs").addEventListener("click",
-              function() {
-                  prefAlwaysEnabled.value = e("prefAlwaysEnabled").checked;
-                  //we do a check here not to fire the "change" event initiating
-                  //the browser restart if the value wasn't actually changed
-                  if (e("prefPolyMLPath").value!=prefPolyMLPath.value) {
-                      prefPolyMLPath.value = e("prefPolyMLPath").value;
-                  }
-                  return false;
-              }, false);
+            function() {
+              prefAlwaysEnabled.value = e("prefAlwaysEnabled").checked;
+              //check if the value was changed
+              if (e("prefPolyMLPath").value!=prefPolyMLPath.value) {
+                  prefPolyMLPath.value = e("prefPolyMLPath").value;
+                  PolyMLext.findPoly();
+                  wasPolyFound();
+                  wasPolyFound2();
+              }
+              return false;
+          }, false);
+          
+          //rebuild heaps
+          e("rebuildHeaps").addEventListener("click", function() {
+            e("rebuildingStatus").innerHTML = "";
+            if (PolyMLext.polyFound) {
+              PolyMLext.browserUI.stopPoly();
+              //check whether the script has already been inserted
+              if (document.getElementsByTagName("script").length==1) {
+                var a = document.createElement("script");
+                a.setAttribute("type", "application/x-polyml");
+                a.innerHTML = 'val _ = DOM.setInnerHTML (valOf (DOM.getElementById DOM.document "rebuildingStatus")) "DONE";'
+                             +'val _ = Console.print "Heaps were rebuilt succesfully"';
+                document.body.appendChild(a);
+              }
+              PolyMLext.removeHeaps();
+              PolyMLext.browserUI.startPoly();
+              e("rebuildingStatus").innerHTML = "please wait...";
+            }
+          }, false);
         }
-        PolyMLext.onReady(init);
     </script>
   </body>
 </html>

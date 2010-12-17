@@ -10,23 +10,24 @@ var error = PolyMLext.error;
 PolyMLext.Poly = function(document, console) {
     this.document = document;
     this.console = console;
+    this.status = {s:""};
 }
 PolyMLext.Poly.prototype = {
     process : null,
     document : null,
     enabled : false,
+    ready : false,
+    status : null,
     
     init : function() {
-        //PolyMLext.debug.profile(";Initializing Poly;;");
         this.enabled = true;
-        this.console.setStatus({s:"Initializing..."});
+        this.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2(this);
         this.sandbox = new PolyMLext.Sandbox();
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jsffi = new PolyMLext.JSFFI(this);
-        //PolyMLext.debug.profile(";Finished initializing Poly;;");
     },
     
     startPolyProcess : function () {
@@ -42,8 +43,8 @@ PolyMLext.Poly.prototype = {
         } else {
             args.push("production");
         }
-        if (PolyMLext.BrowserUI.prefs.PolyMLPath!="") {
-            args.push(PolyMLext.BrowserUI.prefs.PolyMLPath.value);
+        if (PolyMLext.prefs.PolyMLPath!="") {
+            args.push(PolyMLext.prefs.PolyMLPath.value);
         }
         this.process = Utils.startProcess(bin, args, false);
     },
@@ -62,15 +63,27 @@ PolyMLext.Poly.prototype = {
 
     destroy : function() {
         //PolyMLext.debug.writeProfilingReport();
-        this.stopPolyProcess();
-        this.socket1.destroy();
-        this.socket2.destroy();
-        this.jsffi.destroy();
-        this.evaluator.destroy();
-        this.sandbox.destroy();
+        try {
+            this.stopPolyProcess();
+        } catch(e) {}
+        try {
+            this.socket1.destroy();
+        } catch(e) {}
+        try {
+            this.socket2.destroy();
+        } catch(e) {}
+        try {
+            this.jsffi.destroy();
+        } catch(e) {}
+        try {
+            this.evaluator.destroy();
+        } catch(e) {}
+        try {
+            this.sandbox.destroy();
+        } catch(e) {}
     },
 
-    onRequest : function(request, id) {
+    onRequest : function(request) {
         var response = this.jsffi.process(request);
         
         //Figure out whether to use sendCode or sendResponse, by looking at the
@@ -79,7 +92,6 @@ PolyMLext.Poly.prototype = {
         switch (response.type) {
             case "success":
                 if (response.ret) {
-                    //PolyMLext.debug.profile("C;send response;"+id+";");
                     this.sendResponse(response.message);
                 }
                 break;
@@ -95,12 +107,13 @@ PolyMLext.Poly.prototype = {
     },
 
     onReady : function() {
-        this.console.setStatusDefault();
+        this.setStatusDefault();
         this.evaluator.start();
+        this.ready = true;
     },
     
     onConnectionLost : function() {
-        this.console.setStatus({s:"PolyML process is gone", error:true});
+        this.setStatus({s:"PolyML process is gone", error:true});
     },
     
     //this is used for sending PolyML code to be evaluated
@@ -126,7 +139,20 @@ PolyMLext.Poly.prototype = {
             prefix = "1";
         }
         this.socket2.send(prefix+m);
-    }
+    },
+    
+    setStatus : function(s) {
+        this.status = s;
+        PolyMLext.browserUI.setStatus(this);
+    },
+    
+    setStatusDefault : function() {
+        //if there was an error, we do not want to clear the status, the user
+        //should be able to see the error
+        if (!this.status.error) {
+            this.setStatus({s:"PolyML"});
+        }
+    },
 }
 
 /*
@@ -158,7 +184,7 @@ Evaluator.prototype = {
                     self.poly.console.error("Could not download file: " + src + "\n");
                 },
                 onProgressChange : function(percentComplete) {
-                    self.poly.console.setStatus({s:"Downloading... "+percentComplete+"%"});
+                    self.poly.setStatus({s:"Downloading... "+percentComplete+"%"});
                 }
             }
             var destFile = this.poly.sandbox.getPath();
@@ -210,7 +236,7 @@ Evaluator.prototype = {
     },
     
     processQueue : function() {
-        this.poly.console.setStatus({s: "Compiling..."});
+        this.poly.setStatus({s: "Compiling..."});
         for (var i in this.queue) {
             var p = this.queue[i];
             switch (p.type) {
@@ -238,7 +264,7 @@ Evaluator.prototype = {
             }
         }
         this.queue = [];
-        this.poly.console.setStatusDefault();
+        this.poly.setStatusDefault();
     },
     
     /**
@@ -359,14 +385,11 @@ Socket1.prototype = {
     
     input : null,
     output : null,
-       
-    requestCounter : 1,
     
     onInputStreamReady : function(input) {
         do {
             var bytesToWaitFor = 0;
             if (!this.reading) {
-                //PolyMLext.debug.profile("B;onInputStreamReady;"+this.requestCounter+";");
                 try {
                     //TODO also check here, if we really read as much as we
                     //wanted, because asyncWait does not guarantee that it will
@@ -377,7 +400,6 @@ Socket1.prototype = {
                     }
                 } catch (e) {
                     error(e);
-                    this.eventListener.onConnectionLost();
                     return;
                 }
                 this.bytesLeft = parseInt(r);
@@ -389,15 +411,13 @@ Socket1.prototype = {
                     var chunk = this.sin.read(this.bytesNextChunk);
                 } catch (e) {
                     error(e);
-                    this.eventListener.onConnectionLost();
                     return;
                 }
                 this.bytesLeft -= chunk.length;
                 this.request += chunk;
                 if (this.bytesLeft == 0) {
                     //we're done with reading this request
-                    this.eventListener.onRequest(this.request, this.requestCounter);
-                    this.requestCounter += 1;
+                    this.eventListener.onRequest(this.request);
                     //cleanup
                     this.reading = false;
                     this.request = "";
@@ -459,6 +479,7 @@ Socket1.prototype = {
         //be some events accumulated in firefox, that call these functions
         //after the sockets are closed
         this.onInputStreamReady = function() {};
+        this.eventListener = null;
     
         if (this.input&&this.input.close) {
             this.output.close();
@@ -514,6 +535,8 @@ Socket2.prototype = {
     },
 
     destroy : function() {
+        this.eventListener = null;
+        
         if (this.output&&this.output.close) {
             this.output.close();
         }
