@@ -1,1 +1,0 @@
-PolyML.use "test.sml";

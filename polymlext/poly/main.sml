@@ -253,3 +253,4 @@ end;
 use "console.sml";
 use "jsffi.sml";
 use "dom.sml";
+use "canvas.sml";
