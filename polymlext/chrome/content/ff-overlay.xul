@@ -73,7 +73,7 @@
                     </hbox>
 				</hbox>
 				<iframe id="polymlext-console-logarea" flex="1" src="chrome://polymlext/content/logarea.html" />
-				<hbox id="polymlext-console-commandline-box" hidden="true" style="border:none">
+				<hbox id="polymlext-console-commandline-box" style="border:none">
 					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline" />

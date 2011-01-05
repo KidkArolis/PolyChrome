@@ -141,22 +141,47 @@ var PolyMLext = (function() {
         },
         
         startPoly : function(id) {
+            if (!PolyMLext.polyFound) {
+                return;
+            }
+            if (id==undefined) {
+                id = PolyMLext.currentAppId();
+                if (id==null) {
+                    return;
+                }
+            }
+            
             var app = PolyMLext.apps[id];
-            if (PolyMLext.polyFound) {
-                app.poly = new PolyMLext.Poly(app.doc, app.console);
-                app.console.poly = app.poly;
-                app.console.minimized = this.prefs.consoleMinimizedOnStartup.value;
-                app.active = true;
-                app.poly.init();
+            app.poly = new PolyMLext.Poly(app.doc, app.console);
+            app.console.poly = app.poly;
+            app.console.minimized = this.prefs.consoleMinimizedOnStartup.value;
+            app.active = true;
+            app.poly.init();
+            
+            //check if we should update the GUI
+            if (content.document==app.doc) {
+                PolyMLext.browserUI.update();
             }
         },
         
         stopPoly : function(id) {
+            if (id==undefined) {
+                id = PolyMLext.currentAppId();
+                if (id==null) {
+                    return;
+                }
+            }
+            
             var app = PolyMLext.apps[id];
             app.active = false;
             if (app.poly != null) {
                 app.poly.destroy();
                 app.poly = null;
+            }
+            
+            //check if we should update the GUI
+            if (content.document==app.doc) {
+                PolyMLext.browserUI.update();
             }
         },        
         
@@ -210,6 +235,25 @@ var PolyMLext = (function() {
                 }
             }
             return false;
+        },
+        
+        currentAppId : function() {
+            var tab = gBrowser.selectedTab;
+            if (tab.hasAttribute("polymlext-tabid")) {
+                var id = tab.getAttribute("polymlext-tabid");
+                return id;
+            } else {
+                return null;
+            }
+        },
+        
+        currentApp : function() {
+            var id = PolyMLext.currentAppId();
+            if (id!=null) {
+                return PolyMLext.apps[id];
+            } else {
+                return null;
+            }        
         },
         
         //create new id

@@ -270,14 +270,12 @@ Evaluator.prototype = {
     /**
      * based on http://mxr.mozilla.org/mozilla-central/source/toolkit/components/viewsource/content/viewSource.js?raw=1
      */
-    //TODO: finish this
     viewSource : function(url) {
         var viewSrcUrl = "view-source:" + url;
     
         var loadFromURL = true;
     
         /*
-         TODO: use the code below
         var pageDescriptor = ?page descriptor?;
         //try loading it from cache first by using the descriptor
         try {
@@ -391,7 +389,7 @@ Socket1.prototype = {
             var bytesToWaitFor = 0;
             if (!this.reading) {
                 try {
-                    //TODO also check here, if we really read as much as we
+                    //TODO: also check here, if we really read as much as we
                     //wanted, because asyncWait does not guarantee that it will
                     //callback when PREFIX_SIZE of data is available
                     var r = this.sin.read(PolyMLext.PREFIX_SIZE);

@@ -10,8 +10,8 @@ PolyMLext.ConsoleUI = function() {
     var self = this;
     this.logarea = e("polymlext-console-logarea").contentDocument
         .getElementById("polymlext-console-logarea");
-    this.input = e("polymlext-console-logarea").contentDocument
-        .getElementById("polymlext-console-input");
+    
+    this.input = e("polymlext-console-commandline-input");
         
     this.input.addEventListener("keydown", function(event) {
         self.handleKeyDown(event);

@@ -13,10 +13,10 @@ PolyMLext.BrowserUI = function(callbacks) {
     var self = this;
     
     e("polymlext-button-start").addEventListener("click", function() {
-        self.startPoly();
+        PolyMLext.startPoly();
     }, false);
     e("polymlext-button-stop").addEventListener("click", function() {
-        self.stopPoly();
+        PolyMLext.stopPoly();
     }, false);
     e("polymlext-button-console-show").addEventListener("click", function() {
         self.console.show();
@@ -50,10 +50,7 @@ PolyMLext.BrowserUI = function(callbacks) {
         if (event.originalTarget.nodeName == "#document") {
             var doc = event.originalTarget;
             self.callbacks.onDocumentLoad(doc);
-            //check if we should update the GUI
-            if (content.document==doc) {
-                self.update();
-            }
+            self.update();
         }
     }, true);
     //bind the tab select event
@@ -88,19 +85,19 @@ PolyMLext.BrowserUI = function(callbacks) {
     e("polymlext-icon").addEventListener("click", function(event) {
         if (event.button!=self.LEFT_MOUSE_BUTTON) return;
         //here we slightly indirectly check if the app in the current tab is active
-        if (self.currentApp().active) {
+        if (PolyMLext.currentApp().active) {
             self.console.toggle();
         } else {
             if (content.document.defaultView.confirm(
                 "Would you like to start a PolyML process for this page?")) {
-                    self.startPoly();
+                    PolyMLext.startPoly();
             }
         }
     }, false);
     
     e("polymlext-click-to-enable").addEventListener("click", function() {
         e("polymlext-click-to-enable").hidden = true;
-        self.startPoly();
+        PolyMLext.startPoly();
     }, false);
     
     e("polymlext-icon-nopoly").addEventListener("click", function() {
@@ -143,45 +140,8 @@ PolyMLext.BrowserUI.prototype = {
         e("polymlext-icon").src = "chrome://polymlext/skin/polyml_16x16.png";
     },
     
-    currentAppId : function() {
-        var tab = gBrowser.selectedTab;
-        if (tab.hasAttribute("polymlext-tabid")) {
-            var id = tab.getAttribute("polymlext-tabid");
-            return id;
-        } else {
-            return null;
-        }
-    },
-    
-    currentApp : function() {
-        var id = this.currentAppId();
-        if (id!=null) {
-            return PolyMLext.apps[id];
-        } else {
-            return null;
-        }        
-    },
-    
-    startPoly : function() {
-        if (PolyMLext.polyFound) {
-            var id = this.currentAppId();
-            if (id!=null) {
-                PolyMLext.startPoly(id);
-                this.update();
-            }
-        }
-    },
-    
-    stopPoly : function() {
-        var id = this.currentAppId();
-        if (id!=null) {
-            PolyMLext.stopPoly(id);
-            this.update();
-        }
-    },
-    
     setStatus : function(poly) {
-        if (this.currentApp().poly!=poly) {
+        if (PolyMLext.currentApp().poly!=poly) {
             return;
         }
         e("polymlext-status").value = poly.status.s;
@@ -193,7 +153,7 @@ PolyMLext.BrowserUI.prototype = {
     },
     
     update : function() {
-        var app = this.currentApp();
+        var app = PolyMLext.currentApp();
         if (app==null) {
             return;
         }

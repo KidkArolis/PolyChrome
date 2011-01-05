@@ -155,7 +155,7 @@
           e("rebuildHeaps").addEventListener("click", function() {
             e("rebuildingStatus").innerHTML = "";
             if (PolyMLext.polyFound) {
-              PolyMLext.browserUI.stopPoly();
+              PolyMLext.stopPoly();
               //check whether the script has already been inserted
               if (document.getElementsByTagName("script").length==1) {
                 var a = document.createElement("script");
@@ -165,7 +165,7 @@
                 document.body.appendChild(a);
               }
               PolyMLext.removeHeaps();
-              PolyMLext.browserUI.startPoly();
+              PolyMLext.startPoly();
               e("rebuildingStatus").innerHTML = "please wait...";
             }
           }, false);
