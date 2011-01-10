@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyMLext - Documentation</title>
+		
+		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="../style/style.css">
+		
+	</head>
+	<body>
+		<h1>Canvas Signature</h1>
+			
+		<div class="section">
+			<pre>
+datatype Context = Context of jsffi.fptr
+eqtype fptr
+structure Tab : NAME_TAB
+structure Name : SSTR_NAMES
+structure arg :
+  sig
+    val string : string -> JSON.T list
+    val reference : fptr -> JSON.T list
+    val real : real -> JSON.T list
+    val object : JSON.T -> JSON.T list
+    val null : unit -> JSON.T list
+    val list : JSON.T list -> JSON.T list
+    val int : int -> JSON.T list
+    val callback : string -> JSON.T list
+    val bool : bool -> JSON.T list
+  end
+structure Memory :
+  sig
+    val switchNs : string -> unit
+    val switchDefaultNs : unit -> unit
+    val removeReference : string -> unit
+    val deleteNs : string -> unit
+    val clearNs : string -> unit
+    val clearDefaultNs : unit -> unit
+    val addFunctionReferenceOW : string -> fptr
+    val addFunctionReference : string -> fptr
+  end
+exception Error
+val fillRect = fn: Context -> int -> int -> int -> int -> unit
+val exec_js_set = fn: string -> string -> JSON.T list list -> unit
+val moveTo = fn: Context -> int -> int -> unit
+val fill = fn: Context -> unit
+val getContext = fn: DOM.HTMLElement -> string -> Context
+val fillStyle = fn: Context -> string -> unit
+val lineTo = fn: Context -> int -> int -> unit
+val exec_js_r = fn: string -> string -> JSON.T list list -> string
+val beginPath = fn: Context -> unit
+val getStrokeStyle = fn: Context -> string
+val getFillStyle = fn: Context -> string
+val canvasHeight = fn: Context -> int
+val arc = fn: Context -> int -> int -> real -> real -> real -> bool -> unit
+val getLineWidth = fn: Context -> string
+val canvasWidth = fn: Context -> int
+val exec_js_new = fn: string -> string -> JSON.T list list -> string
+val setStrokeStyle = fn: Context -> string -> unit
+val exec_js_get = fn: string -> string -> JSON.T list list -> string
+val ready = fn: unit -> unit
+val setFillStyle = fn: Context -> string -> unit
+val exec_js = fn: string -> string -> JSON.T list list -> unit
+val setLineWidth = fn: Context -> real -> unit
+val stroke = fn: Context -> unit
+			</pre>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyMLext - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/style.css">
+	</head>
+	<body>
+		
+		<h1>JSON Signature</h1>
+		<div class="section">
+			<pre>
+datatype T =
+    Bool of bool
+  | Int of int
+  | List of JSON.T list
+  | Null
+  | Object of JSON.T Tab.T
+  | Real of real
+  | String of string
+structure Tab : NAME_TAB
+structure Name : SSTR_NAMES
+val escape = fn: string -> string
+val delete = fn: string -> T -> T
+val lookup = fn: T -> string -> T option
+val enc_list = fn: T list -> string
+val get = fn: T -> string -> T
+val update = fn: string * T -> T -> T
+val add = fn: string * T -> T -> T
+val empty = Object (Tab {tab = Empty, names = Empty}): T
+val enc_value = fn: T -> string
+val convert_minus = fn: string -> string
+exception notobj_exn of unit
+val enc_1 = fn: Name.name * T -> string -> string
+val enc_name = fn: Name.name -> string
+val encode = fn: T -> string
+
+(*
+val x = JSON.empty
+|> JSON.add ("type", JSON.Int 2)
+|> JSON.add ("f", (JSON.String "getElementById"))
+|> JSON.add ("arg1", (JSON.String "foo"))
+|> JSON.add ("arg2", (JSON.Bool true))
+|> JSON.update ("arg1", JSON.Null);
+
+val y = JSON.empty;
+val y = JSON.add ("test1", (JSON.String "foo")) y;
+val y = JSON.add ("test2", (JSON.Bool true)) y;
+
+val x = JSON.add ("obj", y) x;
+
+TextIO.print (JSON.encode x);
+val test = JSON.encode x
+*)
+			</pre>
+		</div>
+	</body>
+</html>

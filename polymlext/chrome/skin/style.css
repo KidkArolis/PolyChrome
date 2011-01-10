@@ -19,7 +19,6 @@
 	font-size:14px;
 	direction: ltr;
 	width: 100%;
-	overflow: visible;
 	font-weight: normal;
 	padding-left:14px;
 	background:url("chrome://polymlext/skin/arrow_right_small.png") 5px 9px no-repeat;
@@ -27,9 +26,6 @@
 	border-top:1px solid #ccc;
 }
 
-#polymlext-console-commandline-input > .textbox-input-box > .textbox-textarea {
-	overflow: hidden;
-}
 #polymlext-console-logarea, #polymlext-console-output {
 	-moz-appearance: none;
 	font-size:14px;
@@ -49,9 +45,11 @@
 	margin-right:4px;
 }
 #polymlext-console-button-min {
-	width: 16px;
-    height: 16px;
-    list-style-image: url(chrome://polymlext/skin/min.png);
+	-moz-appearance: none;
+	padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+	list-style-image: url(chrome://polymlext/skin/min.png);
 }
 #polymlext-console-button-min:hover {
 	list-style-image: url(chrome://polymlext/skin/minHover.png);
@@ -59,22 +57,12 @@
 #polymlext-console-button-min:active {
 	list-style-image: url(chrome://polymlext/skin/minActive.png);
 }
-#polymlext-console-button-off {
-	width: 16px;
-    height: 16px;
-    list-style-image: url(chrome://polymlext/skin/off.png);
-}
-#polymlext-console-button-off:hover {
-	list-style-image: url(chrome://polymlext/skin/offHover.png);
-}
-#polymlext-console-button-off:active {
-	list-style-image: url(chrome://polymlext/skin/offActive.png);
-}
 
-#polymlext-icon-statusindicator {
+#polymlext-status, #polymlext-click-to-enable {
 	font-size:12px;
-	margin-top:4px;
+	padding-top:4px;
 	font-weight:bold;
+	margin:0;
 }
 
 #polymlext-console-title {
@@ -82,6 +70,6 @@
 	font-weight:bold;
 }
 
-#polymlext-button-console, #polymlext-button-nopoly {
-	margin:2px;
+#polymlext-icon, #polymlext-icon-nopoly {
+	padding:1px 3px;
 }

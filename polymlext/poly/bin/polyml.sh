@@ -6,6 +6,8 @@
 HERE=$(dirname "$0")
 PRG=$(basename "$0")
 
+ISAPLIB="$HERE/../isaplib"
+
 CUSTOM_POLYML_PATH=$5
 if [ -z "$CUSTOM_POLYML_PATH" ]
 then
@@ -40,14 +42,14 @@ then
 fi
 
 #compile the isaplib
-if [ ! -e "$HERE/../isaplib/heaps/all.polyml-heap" ]
+if [ ! -e "${ISAPLIB}/heaps/all.polyml-heap" ]
 then
     # compilation, based on Makefile of IsapLib
-    cd "$HERE/../isaplib/"
+    cd "${ISAPLIB}"
     (echo 'use "ROOT.ML"; PolyML.fullGC ();
            PolyML.SaveState.saveState "heaps/all.polyml-heap";';) \
            | "${POLYML_HOME}/bin/poly" "$@";
-    cd ../bin
+    cd "${HERE}"
 fi
 LEDIT=`which cat`;
 #development mode ignores the heap file

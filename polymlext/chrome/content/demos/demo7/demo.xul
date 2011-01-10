@@ -5,8 +5,7 @@
         orient="horizontal"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <html:script type="application/x-polyml" src="chrome://polymlext/content/libs/canvas/canvas.sml" />
+
   <html:script type="application/x-polyml" src="life.sml" />
   <html:script type="application/x-polyml" src="main.sml" />
   <html:script type="application/javascript">

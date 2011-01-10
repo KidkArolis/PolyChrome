@@ -46,45 +46,52 @@ h2 { font-size: 15px; font-family: Georgia; font-weight:normal; }
     text-align:center;
     font-size:14px;
 }
-  .section {
+.section {
     border-bottom:0px solid #eee;
     padding-bottom:10px;
 }
 #disclaimer {
    text-align:center;
 }
-#settings {
+#settings, #utils {
     margin-bottom:10px;
 	font-size:12px;
 }
-#settings input[type="submit"] {
+input[type="submit"] {
     width:80px;
     display:block;
 }
-#settings input[type="text"] {
-    font-size:18px;
+input[type="text"] {
+    font-size:15px;
     padding:10px;
+    width:260px;
 }
-#settings .name {
+.name {
     width:160px;
     text-align:right;
 }
-#settings .hint {
+.hint {
     color:#777;
 }
-#settings td {
+td {
     padding:10px;
     border-top:1px solid #eee;
 }
-#settings table {
+table {
     width:100%;
-}
-#intro td {
-    padding:10px;
-    border-top:1px solid #eee;
 }
 
 #demos td {
     padding:10px;
     border-top:1px solid #eee;
+}
+#rebuildingStatus {
+   margin-left:20px;
+   color:green;
+}
+.error {
+   color:red;
+}
+.success {
+   color:green;
 }

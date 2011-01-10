@@ -4,14 +4,13 @@
     <meta charset="utf-8">
     <title>PolyML Extension</title>
     <link rel="stylesheet" href="../settings.css" type="text/css" />
-
   </head>
   <body>
     <div id="container">
         
       <div id="logo">
         <img src="chrome://PolyMLext/skin/polyml_32x32t.png" />
-        <span id="title">PolyML Extension <span id="version"></span></span>
+        <span id="title">PolyMLext</span>
       </div>
       
       <div id="content">
@@ -69,20 +68,5 @@
         </div>
       </div>
     </div>
-      
-    <script type="text/javascript">
-      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-              .getService(Components.interfaces.nsIWindowMediator);  
-      var currentWindow = wm.getMostRecentWindow("navigator:browser");
-      var PolyMLext = currentWindow.PolyMLext;
-      
-      var init = function() {
-        //shortcut
-        var e = function(id) { return document.getElementById(id) }
-        e("version").innerHTML = PolyMLext.extension.version;
-      }
-      
-      PolyMLext.onReady(init);
-    </script>
   </body>
 </html>

@@ -232,14 +232,13 @@ structure PolyMLext (*: POLYMLEXT*)
             val _ = OS.FileSys.chDir(sandboxPath)
             
             (* disable access to this structure *)
-            (*val _ = map PolyML.Compiler.forgetStructure["PolyMLext"]*)
+            (*val _ = map PolyML.Compiler.forgetStructure ["PolyMLext"]*)
             
             val _ = loop() handle
                         Interrupt => ()
                       (*| SysErr => ()*)
                         
             val _ = print "PolyML process stopped.\n"
-            (*val _ = Profiling.writeProfilingReport ()*)
             
             (* clean up *)
             val _ = close_sock (the socket1)
@@ -254,3 +253,4 @@ end;
 use "console.sml";
 use "jsffi.sml";
 use "dom.sml";
+use "canvas.sml";
