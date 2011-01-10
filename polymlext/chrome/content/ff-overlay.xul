@@ -29,7 +29,7 @@
 			<menuitem id="polymlext-button-console-hide" label="Hide Console"
 					tooltiptext="Hide the interactive PolyML console" hidden="true" />
 			<menuseparator />
-			<menuitem id="polymlext-button-alwaysEnable" label="Always Enable"
+			<menuitem id="polymlext-button-alwaysEnable" type="checkbox" label="Always Enable"
 					tooltiptext="Execute PolyML applications without explicit permission" />
 			<menuseparator />
 			<menuitem id="polymlext-button-demos" label="Demos"
