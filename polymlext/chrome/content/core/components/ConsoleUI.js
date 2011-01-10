@@ -78,8 +78,6 @@ PolyMLext.ConsoleUI.prototype = {
         } else {
             this.show();
         }
-        e("polymlext-button-stop").hidden = false;
-        e("polymlext-button-start").hidden = true;
         e("polymlext-button-console-show").disabled = false;
     },
     
@@ -88,8 +86,6 @@ PolyMLext.ConsoleUI.prototype = {
         this.activeConsole = null;
         this.hide();
         this.clear();
-        e("polymlext-button-stop").hidden = true;
-        e("polymlext-button-start").hidden = false;
         e("polymlext-button-console-show").disabled = true;
     },
     

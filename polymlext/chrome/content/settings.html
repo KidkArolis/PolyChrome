@@ -34,7 +34,7 @@
                   <td class="hint">e.g. /home/myname/polyml-5.4</td>
               </tr>
                <tr>
-                  <td class="name"><p>Always enable PolyML apps<p></td>
+                  <td class="name"><p>Always Enable PolyML apps<p></td>
                   <td><input type="checkbox" id="prefAlwaysEnabled" /></td>
                   <td class="hint">If checked, PolyML scripts will be executed without asking for confirmation.</td>
               </tr>
@@ -67,7 +67,7 @@
         <h1>Resources</h1>
         <ul>
           <li><a href="#" onclick="return false" id="linkDemos">Demos</a></li>
-          <li><a href="chrome://polymlext/content/docs/index.html">Documentation</a></li>
+          <li><a href="chrome://polymlext/content/docs/docs.html">Documentation</a></li>
           <li><a href="https://www.assembla.com/spaces/polymlext/" target="_blank">Source Code and Issue Tracker</a></li>
         </ul>
       </div>
@@ -80,21 +80,6 @@
             .getService(Components.interfaces.nsIWindowMediator);
         var currentWindow = wm.getMostRecentWindow("navigator:browser");
         var PolyMLext = currentWindow.PolyMLext;
-        
-        //this chunk is for reading the version of the extension in
-        //backwards compatible way
-        if(Application.extensions) {
-          //older FF
-          var version = Application.extensions
-              .get('polymlext@ed.ac.uk').version;
-          init();
-        } else if (Application.getExtensions) {
-          //FF4
-          Application.getExtensions(function (extensions){
-            var version = extensions.get('polymlext@ed.ac.uk').version;
-            init();
-          });
-        }
         
         var init = function() {
           //shortcut
@@ -169,6 +154,21 @@
               e("rebuildingStatus").innerHTML = "please wait...";
             }
           }, false);
+        }
+        
+        //this chunk is for reading the version of the extension in
+        //backwards compatible way
+        if(Application.extensions) {
+          //older FF
+          var version = Application.extensions
+              .get('polymlext@ed.ac.uk').version;
+          init();
+        } else if (Application.getExtensions) {
+          //FF4
+          Application.getExtensions(function (extensions){
+            var version = extensions.get('polymlext@ed.ac.uk').version;
+            init();
+          });
         }
     </script>
   </body>

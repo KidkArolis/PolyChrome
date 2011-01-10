@@ -19,7 +19,6 @@
 	font-size:14px;
 	direction: ltr;
 	width: 100%;
-	overflow: visible;
 	font-weight: normal;
 	padding-left:14px;
 	background:url("chrome://polymlext/skin/arrow_right_small.png") 5px 9px no-repeat;
@@ -27,9 +26,6 @@
 	border-top:1px solid #ccc;
 }
 
-#polymlext-console-commandline-input > .textbox-input-box > .textbox-textarea {
-	overflow: hidden;
-}
 #polymlext-console-logarea, #polymlext-console-output {
 	-moz-appearance: none;
 	font-size:14px;

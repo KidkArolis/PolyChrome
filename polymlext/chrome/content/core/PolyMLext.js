@@ -52,6 +52,13 @@ var PolyMLext = (function() {
                 onTabClose : PolyMLext.onTabClose,
                 onTabMove : PolyMLext.onTabMove
             });
+            
+            //observe changes to the custom polyml path option
+            PolyMLext.prefs.PolyMLPath.events.addListener("change", function() {
+                PolyMLext.findPoly();
+                PolyMLext.browserUI.update();
+                PolyMLext.removeHeaps();
+            });
         },
         
         processDoc : function(doc) {
@@ -69,14 +76,17 @@ var PolyMLext = (function() {
                 var id = tab.getAttribute("polymlext-tabid");
                 PolyMLext.apps[id].doc = doc;
                 PolyMLext.apps[id].active = PolyMLext.apps[id].active ||
-                    (PolyMLext.polyFound && PolyMLext.prefs.alwaysEnabled.value && containsSML);
+                    (PolyMLext.polyFound && PolyMLext.prefs.alwaysEnabled.value
+                    && containsSML);
                 PolyMLext.apps[id].containsSML = containsSML;
             } else {
                 var id = PolyMLext.generateId();
                 tab.setAttribute("polymlext-tabid", id);
                 PolyMLext.apps[id] = {
                     doc : doc,
-                    active : PolyMLext.polyFound && PolyMLext.prefs.alwaysEnabled.value && containsSML,
+                    active : PolyMLext.polyFound
+                        && PolyMLext.prefs.alwaysEnabled.value
+                        && containsSML,
                     containsSML : containsSML,
                     console : new PolyMLext.Console(),
                     poly : null

@@ -42,10 +42,9 @@
 	<statusbar id="status-bar">
 		<label id="polymlext-status"
 				value=""
-				tooltiptext="This page contains PolyML code"
 				context="" />
 		<label id="polymlext-click-to-enable"
-			   value="Click to run PolyML app"
+			   value="Click to run the PolyML app"
 			   tooltiptext="Clicking will activate the PolyML application found on this page"
 			   context=""
 			   hidden="true" />			   
@@ -76,7 +75,8 @@
 				<hbox id="polymlext-console-commandline-box" style="border:none">
 					<textbox id="polymlext-console-commandline-input" flex="1"
 						label="console command line"
-						aria-autocomplete="inline" />
+						aria-autocomplete="inline"
+						multiline="true" />
 				</hbox>
 		</vbox>
 	</vbox>

@@ -12,16 +12,16 @@ PolyMLext.BrowserUI = function(callbacks) {
     
     var self = this;
     
-    e("polymlext-button-start").addEventListener("click", function() {
+    e("polymlext-button-start").addEventListener("command", function(e) {
         PolyMLext.startPoly();
     }, false);
-    e("polymlext-button-stop").addEventListener("click", function() {
+    e("polymlext-button-stop").addEventListener("command", function() {
         PolyMLext.stopPoly();
     }, false);
-    e("polymlext-button-console-show").addEventListener("click", function() {
+    e("polymlext-button-console-show").addEventListener("command", function() {
         self.console.show();
     }, false);
-    e("polymlext-button-console-hide").addEventListener("click", function() {
+    e("polymlext-button-console-hide").addEventListener("command", function() {
         self.console.hide();
     }, false);    
     e("polymlext-button-alwaysEnable").setAttribute(
@@ -30,17 +30,17 @@ PolyMLext.BrowserUI = function(callbacks) {
         e("polymlext-button-alwaysEnable").setAttribute(
                 "checked", PolyMLext.prefs.alwaysEnabled.value);
     });        
-    e("polymlext-button-alwaysEnable").addEventListener("click", function() {
+    e("polymlext-button-alwaysEnable").addEventListener("command", function() {
         PolyMLext.prefs.alwaysEnabled.value =
             !PolyMLext.prefs.alwaysEnabled.value;
     }, false);    
-    e("polymlext-button-demos").addEventListener("click", function() {
+    e("polymlext-button-demos").addEventListener("command", function() {
         self.displayDemosPage();
     }, false);    
-    e("polymlext-button-docs").addEventListener("click", function() {
+    e("polymlext-button-docs").addEventListener("command", function() {
         gBrowser.selectedTab = gBrowser.addTab(self.links.docs);
     }, false);    
-    e("polymlext-button-settings").addEventListener("click", function() {
+    e("polymlext-button-settings").addEventListener("command", function() {
         self.displaySettingsPage();
     }, false);
     
@@ -76,15 +76,11 @@ PolyMLext.BrowserUI = function(callbacks) {
         }
     }, false);
     
-    
-    e("polymlext-console-button-min").addEventListener("click", function(event) {
-        //if (event.button==self.LEFT_MOUSE_BUTTON) {
-            self.console.hide();
-        //}
+    e("polymlext-console-button-min").addEventListener("command", function(event) {
+        self.console.hide();
     }, false);
     e("polymlext-icon").addEventListener("click", function(event) {
         if (event.button!=self.LEFT_MOUSE_BUTTON) return;
-        //here we slightly indirectly check if the app in the current tab is active
         if (PolyMLext.currentApp().active) {
             self.console.toggle();
         } else {
@@ -96,6 +92,7 @@ PolyMLext.BrowserUI = function(callbacks) {
     }, false);
     
     e("polymlext-click-to-enable").addEventListener("click", function() {
+        log("fired");
         e("polymlext-click-to-enable").hidden = true;
         PolyMLext.startPoly();
     }, false);
@@ -103,14 +100,6 @@ PolyMLext.BrowserUI = function(callbacks) {
     e("polymlext-icon-nopoly").addEventListener("click", function() {
         self.displaySettingsPage();
     }, false);
-    
-    //observe changes to the custom polyml path option and modify the
-    //UI accordingly
-    PolyMLext.prefs.PolyMLPath.events.addListener("change", function(aEvent) {
-        PolyMLext.findPoly();
-        self.update();
-        PolyMLext.removeHeaps();
-    });
     
     this.update();
 }
@@ -164,7 +153,7 @@ PolyMLext.BrowserUI.prototype = {
             if (app.active) {
                 app.console.select();
                 this.setStatus(app.poly);
-                this.setIconRed();                
+                this.setIconRed();
                 e("polymlext-button-stop").hidden = false;
                 e("polymlext-button-start").hidden = true;
                 e("polymlext-click-to-enable").hidden = true;
