@@ -1,54 +1,57 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>PolyMLext - Firefox Extension</title>
-		
-		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+		<title>PolyMLext - PolyML Firefox Extension</title>
 		<link rel="stylesheet" type="text/css" href="style/style.css">
-			
-		<script type="application/x-polyml">
-			val _ = Console.print "Welcome to the PolyML extension\n";
-		</script>
-		
-		<style type="text/css">
-			h2 { border:none; margin:0; }
-			
-		</style>
-		
 	</head>
+	
 	<body>
-		<div id="header">
-			<div id="title">
-				<img src="style/polyml_32x32t.png" />
-				<h1>PolyML Extension</h1>
-			</div>
+		
+		<div id="title">
+			<img src="style/polyml_32x32t.png" />
+			<h1>PolyMLext</h1>
 		</div>
 		
-		<div id="content">
-			<div class="section">
-				
-				<p>
-					PolyMLext is an extension for Firefox web browser that can run SML programs embedded in HTML documents. In addition to providing DOM access for SML applications, the extension provides a simple foreign function interface to JavaScript and as a result JavaScript libraries can be used in SML.
-				</p>
-				
-				<h3>Resources</h3>
-				<ul>
-					<li><h2><a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">Download</a></h2></li>
-					<li><h2><a href="https://www.assembla.com/spaces/polymlext/">Develop</a></h2></li>
-					<li><h2><a href="http://www.assembla.com/spaces/polymlext/support/tickets">Report Bugs</a></h2></li>
-					<li><h2><a href="docs.html">Documentation</a></h2></li>
-				</ul>
-				
-				<h3>Why do this?</h3>
-				<h3>What are the limitations</h3>
-				<h3>How does it work?</h3>
-				<h3>What's inside the extension?</h3>
-				
-				<h3>Additional references</h3>
-				<p>MSc thesis on PolyMLext: <a href="http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf">http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf</a></p>
-				
-			</div>
+		<div>
+			<p>
+				PolyMLext is an extension for Firefox web browser that can run SML programs embedded in HTML documents. The extension provides a simple foreign function interface to JavaScript. As a result, JavaScript libraries and interfaces provided by the browser, such as DOM and Canvas, can be used in SML.
+			</p>
+			
+			<ul id="resources">
+				<li><a href="https://addons.mozilla.org/en-US/firefox/addon/262830/">Download</a> (you'll also need to install <a href="http://polyml.org/download.html">PolyML</a>)</li>
+				<li><a href="docs.html">Documentation</a></li>
+				<li><a href="http://www.assembla.com/spaces/polymlext/support/tickets">Report Bugs</a></li>
+				<li><a href="https://www.assembla.com/spaces/polymlext/">Develop</a></li>
+			</ul>
+			
+			<h3>Why do this?</h3>
+			<ul>
+				<li>HTML, CSS and browser technologies such as Canvas or Scalabble Vector Graphics support provides Standard ML with a way of creating Graphical User Interfaces or graphics in general.</li>
+				<li>Easy deployment of SML applications. If PolyML and PolyMLext is installed, opening the URL (remote or local) of the application is all it takes to run it.</li>
+				<li>Cross-platform GUIs (though Windows currently are not supported :)</li> 
+			</ul>
+			
+			<h3>What are the limitations</h3>
+			<ul>
+				<li>The JavaScript FFI is rather inefficient therefore applications using this FFI intensively (like animation rendering) is slow.</li>
+				<li>The memory sharing mechanism between JavaScript and Standard ML is not fully automated, which means that some manual memory might be needed to prevent memory leaks.</li>
+				<li>Running remote applications is potentially harmful (as there is currently no sandboxing).</li>
+			</ul>
+			
+			<h3>How does it work?</h3>
+			<ul>
+				<li>The JavaScript component of the extension that is executed by Firefox opens up a PolyML process for each HTML document and executes Standard ML component of the extension.</li>
+				<li>A socket connection is established between the JavaScript and Standard ML components.</li>
+				<li>DOM, Canvas, etc. libraries are loaded in PolyML.</li>
+				<li>Those libraries use the socket connection to forward any JavaScript function call to the JavaScript component, where it get's executed.</li>
+				<li>Because the browser provides a JavaScript interface to DOM, we can now access and modify DOM from Standard ML code.</li>
+				<li>The SML code from the HTML document is grabbed by the JavaScript component and sent for evaluation to the Standard ML component</li>
+				<li>More details are provided in the <a href="docs.html">documentation</a></li>
+			</ul>
+			
+			<h3>Additional references</h3>
+			<p>MSc thesis on PolyMLext: <a href="http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf">http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf</a></p>
+			
 		</div>
-		<div id="footer"></div>
 	</body>
 </html>

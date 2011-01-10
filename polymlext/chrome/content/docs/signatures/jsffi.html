@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyMLext - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/style.css">
+	</head>
+	<body>
+		
+		<h1>JSFFI Signature</h1>
+		<div class="section">
+			<pre>
+eqtype fptr
+structure Name : SSTR_NAMES
+structure arg :
+  sig
+    val string : string -> JSON.T list
+    val reference : fptr -> JSON.T list
+    val real : real -> JSON.T list
+    val object : JSON.T -> JSON.T list
+    val null : unit -> JSON.T list
+    val list : JSON.T list -> JSON.T list
+    val int : int -> JSON.T list
+    val callback : string -> JSON.T list
+    val bool : bool -> JSON.T list
+  end
+structure Tab : NAME_TAB
+structure Memory :
+  sig
+    val switchNs : string -> unit
+    val switchDefaultNs : unit -> unit
+    val removeReference : string -> unit
+    val deleteNs : string -> unit
+    val clearNs : string -> unit
+    val clearDefaultNs : unit -> unit
+    val addFunctionReferenceOW : string -> fptr
+    val addFunctionReference : string -> fptr
+  end
+exception Error
+val exec_js_set = fn: string -> string -> JSON.T list list -> unit
+val exec_js_new = fn: string -> string -> JSON.T list list -> string
+val ready = fn: unit -> unit
+val exec_js_get = fn: string -> string -> JSON.T list list -> string
+val exec_js_r = fn: string -> string -> JSON.T list list -> string
+val exec_js = fn: string -> string -> JSON.T list list -> unit
+			</pre>
+		</div>
+	</body>
+</html>
