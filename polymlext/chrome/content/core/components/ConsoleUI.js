@@ -136,6 +136,8 @@ PolyMLext.ConsoleUI.prototype = {
                     if (command!="") {
                         this.activeConsole.logInput(command);
                         this.activeConsole.poly.sendCode(command);
+                    } else {
+                        this.activeConsole.logInput(command);
                     }
                     this.input.value = "";
                     event.preventDefault();
