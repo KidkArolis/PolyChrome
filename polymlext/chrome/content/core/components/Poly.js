@@ -113,6 +113,7 @@ PolyMLext.Poly.prototype = {
     },
     
     onConnectionLost : function() {
+                log("Test1");
         this.setStatus({s:"PolyML process is gone", error:true});
     },
     
@@ -398,6 +399,9 @@ Socket1.prototype = {
                     }
                 } catch (e) {
                     error(e);
+                    if (this.eventListener) {
+                        this.eventListener.onConnectionLost();
+                    }
                     return;
                 }
                 this.bytesLeft = parseInt(r);
@@ -464,7 +468,9 @@ Socket1.prototype = {
                 pos += nbytes;
             }
         } catch (e) {
-            this.eventListener.onConnectionLost();
+            if (this.eventListener) {
+                this.eventListener.onConnectionLost();
+            }
         }
     },
 

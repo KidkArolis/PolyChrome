@@ -12,7 +12,8 @@
 #polymlext-console-commandline-input {
 	-moz-appearance: none;
 	margin: 0;
-	padding: 3px 4px 4px 12px;
+	padding: 5px 4px 0 14px;
+	border:1px solid red;
 	height: 26px;
 	border: none;
 	font-family: monospace;
@@ -20,7 +21,6 @@
 	direction: ltr;
 	width: 100%;
 	font-weight: normal;
-	padding-left:14px;
 	background:url("chrome://polymlext/skin/arrow_right_small.png") 5px 9px no-repeat;
 	border: none;
 	border-top:1px solid #ccc;
