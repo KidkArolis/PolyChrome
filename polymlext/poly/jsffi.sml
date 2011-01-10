@@ -43,13 +43,13 @@ sig
         val clearDefaultNs : unit -> unit
     end
     
-    exception Error
+    exception Error of unit
 end
 
 structure jsffi : JSFFI =
 struct
 
-    exception Error
+    exception Error of unit
     
     type fptr = string
 
