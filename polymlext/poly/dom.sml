@@ -103,7 +103,7 @@ struct
     (* we'll keep event callbacks here *)
     val eventCallbackTab = ref (Tab.empty : (HTMLElement * EventType * EventCallback) Tab.T)
     fun handle_event id event = let
-            val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id)) handle UNDEF => (raise Error ()) (* TODO, more informative error?*)
             val _ = f (Event event)
             val _ = Memory.removeReference event (* clean up the memory *)
             val _ = ready ()
@@ -112,7 +112,7 @@ struct
     (* we'll keep timeout and interval callbacks here *)
     val timerCallbackTab = ref (Tab.empty : (TimerCallback * fptr * int) Tab.T)
     fun handle_timeout f_id = let
-            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error ()) (* TODO, more informative error?*)
             val _ = f ()
             (* clean up *)
             val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
@@ -120,7 +120,7 @@ struct
             val _ = ready ()
         in () end
     fun handle_interval f_id = let
-            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+            val (TimerCallback f, _, _) = Tab.get (!timerCallbackTab) (Name.mk f_id) handle UNDEF => (raise Error ()) (* TODO, more informative error?*)
             val _ = ready ()
         in f () end
     
@@ -191,7 +191,7 @@ struct
             val contains = (Tab.contains (!timerCallbackTab) (Name.mk f_id))
             val _ = case contains of true => (let
                 val (_, timeout_id, time) = (Tab.get (!timerCallbackTab) (Name.mk f_id))
-                          handle UNDEF => (raise Error);
+                          handle UNDEF => (raise Error ());
                 val _ = exec_js w "clearTimeout" [arg.string timeout_id]
                 (* cleanup *)
                 val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
@@ -212,7 +212,7 @@ struct
             val contains = (Tab.contains (!timerCallbackTab) (Name.mk f_id))
             val _ = case contains of true => (let
                 val (_, interval_id, time) = (Tab.get (!timerCallbackTab) (Name.mk f_id))
-                          handle UNDEF => (raise Error);
+                          handle UNDEF => (raise Error ());
                 val _ = exec_js w "clearInterval" [arg.string interval_id]
                 (* cleanup *)
                 val _ = (timerCallbackTab := (Tab.delete (Name.mk f_id) (!timerCallbackTab)))
