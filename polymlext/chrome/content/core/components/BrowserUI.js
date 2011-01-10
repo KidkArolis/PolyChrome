@@ -92,7 +92,6 @@ PolyMLext.BrowserUI = function(callbacks) {
     }, false);
     
     e("polymlext-click-to-enable").addEventListener("click", function() {
-        log("fired");
         e("polymlext-click-to-enable").hidden = true;
         PolyMLext.startPoly();
     }, false);

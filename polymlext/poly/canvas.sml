@@ -1,6 +1,6 @@
 structure Canvas =
 struct
-    open jsffi
+    local open jsffi in
     
     datatype Context = Context of fptr
 
@@ -21,4 +21,6 @@ struct
     fun fillStyle (Context c) style = exec_js_set c "fillStyle" [arg.string style]
     fun canvasWidth (Context c) = valOf (Int.fromString (exec_js_get c "canvas.width" []))
     fun canvasHeight (Context c) = valOf (Int.fromString (exec_js_get c "canvas.height" []))
+    
+    end
 end

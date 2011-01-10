@@ -25,7 +25,6 @@ sig
     val exec_js : string -> string -> JSON.T list list -> unit
     val exec_js_get : string -> string -> JSON.T list list -> string
     val exec_js_set : string -> string -> JSON.T list list -> unit
-    val exec_js_new : string -> string -> JSON.T list list -> string
     (* this has to be sent to JS after handling each event *)
     val ready : unit -> unit
     
@@ -83,7 +82,6 @@ struct
     fun exec_js_r obj f args = (send (JSONReqStr 2 obj f true args); recv())
     fun exec_js_set obj f args = send (JSONReqStr 3 obj f false args);
     fun exec_js_get obj f args = (send (JSONReqStr 3 obj f true args); recv())
-    fun exec_js_new obj f args = (send (JSONReqStr 6 obj f true args); recv())
     
     val readySignal = JSON.encode (JSON.empty
             |> JSON.add ("type", JSON.Int 5)

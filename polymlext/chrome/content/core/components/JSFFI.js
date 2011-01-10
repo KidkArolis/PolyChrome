@@ -21,7 +21,7 @@ PolyMLext.JSFFI.prototype = {
         } catch (e) {
             error("Could not decode JSON.\nRequest:\n"+req+"\n",
                     this.poly.document.location.href);
-            return;
+            return responsePacket;
         }
         
         switch (request.type) {
@@ -35,7 +35,6 @@ PolyMLext.JSFFI.prototype = {
             
             case 2: //JS function
             case 3: //setting/getting attributes of JS objects
-            case 6: //new operator
                 try {
                     response = this.executeJS(request);
                     if (response === undefined) {
@@ -137,19 +136,6 @@ PolyMLext.JSFFI.prototype = {
                         throw "Unexpected request. Too many arguments."
                 }
                 break;
-            case 6:
-                //a trick from http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-                var unsafeWin = this.poly.document.defaultView.wrappedJSObject;
-                /*
-                function F(args) {
-                    return obj[field].apply(obj, args);
-                }
-                F.prototype = obj[field].prototype;
-                returnValue = new F(request.args);
-                */
-                var args = this.convertArgsFromPoly(request.args);
-                returnValue = new unsafeWin.createViewport(args[0]);
-                break;
         }
         //return smth only if we have to
         if (request.r) {
@@ -159,6 +145,12 @@ PolyMLext.JSFFI.prototype = {
         }
     },
     
+    /**
+     * This function is used to convert the returned value of a JavaScript
+     * function call into a value compatible with Poly. Note, however, that
+     * all of these values reach Poly as strings, so it is up to the
+     * jsffi.exec_js... caller to convert the types.
+     */
     convertTypesToPoly : function(item) {
         switch (typeof(item)) {
             case null:
@@ -170,12 +162,15 @@ PolyMLext.JSFFI.prototype = {
             case "object":
                 item = this.Memory.addReference(item);
                 break;
-            case "array":
-                item = item.map(this.convertTypesToPoly, this);
         }
         return item;
     },
     
+    /**
+     * Poly sends arguments to JavaScript functions in tuples
+     * (argument:string, type:string). This function converts the first item
+     * of the tuple into an appropriate JavaScript object
+     */
     convertArgsFromPoly : function(items) {
         var args = [];
         for (var i in items) {
@@ -196,6 +191,19 @@ PolyMLext.JSFFI.prototype = {
     destroy : function() {}
 }
 
+
+
+/*
+    The references are identified by an integer index and a string name
+    of a namespace, i.e. idx|namespace. This means namespace names can't
+    contain character |. Namespace names also can't contain comma (,)
+    because lists of elements are tokenized by comma.
+
+    Term 'reference' is used here to describe both the string identifier
+    of the reference and the JavaScript reference (pointer). That is done
+    for the exception handling. e.g. exceptions raised here will produce
+    more readable messages like "TypeError: reference is undefined"
+*/
 var Memory = function(poly) {
     this.poly = poly;
     this.references = {};
@@ -209,21 +217,21 @@ var Memory = function(poly) {
     this.polyReady = true;
     this.callbackQueue = [];
 }
-Memory.prototype = {
+Memory.prototype = {    
+    parse_id : function(reference) {
+        var y = reference.split("|");
+        return {idx:y[0], ns: y[1]};
+    },
     
-    /*
-        The references are identified by an integer index and a string name
-        of a namespace, i.e. idx|namespace. This means namespace names can't
-        contain character |. Namespace names also can't contain comma (,)
-        because lists of elements are tokenized by comma.
-    */
+    create_id : function(idx, ns) {
+        return (idx + "|" + ns);
+    },
     
-    /*
-        Term 'reference' is used here to describe both the string identifier
-        of the reference and the JavaScript reference (pointer). That is done
-        for the exception handling. e.g. exceptions raised here will produce
-        more readable messages like "TypeError: reference is undefined"
-    */
+    /**
+     * This is very similar to convertTypesToPoly, however this also
+     * wraps certain things with quotes, because these are intended to be
+     * arguments to functions
+     */
     convertArgsToPoly : function(item) {
         switch (typeof(item)) {
             case null:
@@ -238,19 +246,10 @@ Memory.prototype = {
             case "object":
                 item = '"'+this.addReference(item)+'"';
                 break;
-            case "array":
-                item = '['+item.map(this.convertArgsToPoly, this)+']';
         }
         return item;
     },
     
-    parse_id : function(reference) {
-        var y = reference.split("|");
-        return {idx:y[0], ns: y[1]};
-    },
-    create_id : function(idx, ns) {
-        return (idx + "|" + ns);
-    },
     addFunctionReference : function(callback, overwritable) {
         var self = this;
         //create a dummy reference to get the id
@@ -277,6 +276,7 @@ Memory.prototype = {
         this.replaceReference(id, f);
         return id;
     },
+    
     addReference : function(reference) {
         if (reference==null) {
             //this will be converted to "NONE: string option" in PolyML
@@ -287,6 +287,7 @@ Memory.prototype = {
             return this.create_id(this.counter++, this.currentNs)
         }
     },
+    
     getReference : function(reference) {
         var y = this.parse_id(reference);
         if (this.references[y.ns]===undefined) {
@@ -298,10 +299,12 @@ Memory.prototype = {
         }
         return ref;
     },
+    
     replaceReference : function(id, reference) {
         var y = this.parse_id(id);
         this.references[y.ns][y.idx] = reference;
     },
+    
     removeReference : function(reference) {
         var y = this.parse_id(reference);
         delete this.references[y.ns][y.idx];
@@ -310,6 +313,7 @@ Memory.prototype = {
     switchDefaultNs : function() {
         this.currentNs = "";
     },
+    
     switchNs : function(ns) {
         //create new namespace if it doesn't exist yet
         if (!this.references[ns]) {
@@ -317,22 +321,26 @@ Memory.prototype = {
         }
         this.currentNs = ns;
     },
+    
     clearDefaultNs : function() {
         //set document and window references
         this.references[""] = {};
         this.references[""]["document"] = this.poly.document;
         this.references[""]["window"] = this.poly.document.defaultView.wrappedJSObject;
     },
+    
     clearNs : function(ns) {
         if (ns=="") {
             this.clearDefaultNs();
         }
         this.references[ns] = {};
     },
+    
     deleteNs : function(ns) {
         if (ns=="") throw "Can't delete the default namespace";
         delete this.references[ns];
     },
+    
     dispatchCallback : function(original_cmd, cmd, overwritable) {
         if (this.polyReady) {
             this.polyReady = false;
@@ -350,6 +358,7 @@ Memory.prototype = {
             }
         }
     },
+    
     dispatchNextCallback : function() {
         if (this.callbackQueue.length==0) {
             this.polyReady = true;

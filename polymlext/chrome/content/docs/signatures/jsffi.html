@@ -37,7 +37,6 @@ structure Memory :
   end
 exception Error
 val exec_js_set = fn: string -> string -> JSON.T list list -> unit
-val exec_js_new = fn: string -> string -> JSON.T list list -> string
 val ready = fn: unit -> unit
 val exec_js_get = fn: string -> string -> JSON.T list list -> string
 val exec_js_r = fn: string -> string -> JSON.T list list -> string
