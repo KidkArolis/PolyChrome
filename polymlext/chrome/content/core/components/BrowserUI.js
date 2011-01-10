@@ -58,6 +58,7 @@ PolyMLext.BrowserUI = function(callbacks) {
         var tab = event.target;
         if (tab.hasAttribute("polymlext-tabid")) {
             self.callbacks.onTabClose(tab.getAttribute("polymlext-tabid"));
+            self.update();
         }
     }, false);
     //bind the tab select event
@@ -74,6 +75,7 @@ PolyMLext.BrowserUI = function(callbacks) {
         if (tab.hasAttribute("polymlext-tabid")) {
             self.callbacks.onTabMove(tab.getAttribute("polymlext-tabid"));
         }
+        self.update();
     }, false);
     
     e("polymlext-console-button-min").addEventListener("command", function(event) {

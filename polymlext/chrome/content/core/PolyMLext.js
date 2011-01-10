@@ -75,9 +75,11 @@ var PolyMLext = (function() {
             if (tab.hasAttribute("polymlext-tabid")) {
                 var id = tab.getAttribute("polymlext-tabid");
                 PolyMLext.apps[id].doc = doc;
-                PolyMLext.apps[id].active = PolyMLext.apps[id].active ||
-                    (PolyMLext.polyFound && PolyMLext.prefs.alwaysEnabled.value
-                    && containsSML);
+                PolyMLext.apps[id].active =
+                    (PolyMLext.apps[id].active && containsSML)
+                    || (PolyMLext.polyFound
+                        && PolyMLext.prefs.alwaysEnabled.value
+                        && containsSML);
                 PolyMLext.apps[id].containsSML = containsSML;
             } else {
                 var id = PolyMLext.generateId();
