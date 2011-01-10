@@ -30,17 +30,17 @@ struct
   (* we'll keep event callbacks here *)
   val dragCallbackTab = ref (Tab.empty : (shape * moveCallback * startCallback * stopCallback) Tab.T)
   fun handle_move id dx dy = let
-      val (shape, MoveCallback f, _, _) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+      val (shape, MoveCallback f, _, _) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error () ) (* TODO, more informative error?*)
       val _ = f shape dx dy
       val _ = ready ()
     in () end
   fun handle_start id = let
-      val (shape, _, StartCallback f, _) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+      val (shape, _, StartCallback f, _) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error ()) (* TODO, more informative error?*)
       val _ = f shape
       val _ = ready ()
     in () end
   fun handle_stop id = let
-      val (shape, _, _, StopCallback f) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error) (* TODO, more informative error?*)
+      val (shape, _, _, StopCallback f) = (Tab.get (!dragCallbackTab) (Name.mk id)) handle UNDEF => (raise Error ()) (* TODO, more informative error?*)
       val _ = f shape
       val _ = ready ()
     in () end
