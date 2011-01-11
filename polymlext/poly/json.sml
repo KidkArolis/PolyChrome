@@ -1,4 +1,5 @@
-structure JSON = struct
+structure JSON : JSON
+= struct
 
     structure Name = SStrName;
     structure Tab = Name.NTab;

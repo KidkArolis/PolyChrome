@@ -3,6 +3,7 @@ PolyML.fullGC();
 
 (* load needed libs  *)
 PolyML.SaveState.loadState "isaplib/heaps/all.polyml-heap";
+use "json.sig";
 use "json.sml";
 
 (* reopen the print function *)
@@ -251,6 +252,9 @@ end;
 
 (* Browser / DOM goodies *)
 use "console.sml";
+use "jsffi.sig";
 use "jsffi.sml";
+use "dom.sig";
 use "dom.sml";
+use "canvas.sig";
 use "canvas.sml";

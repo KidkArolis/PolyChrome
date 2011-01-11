@@ -1,4 +1,4 @@
-structure Canvas =
+structure Canvas : CANVAS =
 struct
     local open jsffi in
     

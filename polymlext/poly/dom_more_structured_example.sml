@@ -1,7 +1,53 @@
-structure DOM : DOM =
+(*
+signature BASIC_FPTR = sig
+    type T
+    val fptr_of : T -> fptr
+end;
+
+signature VAL_ATTR_OBJ = sig
+    type T
+    val setValue : string -> T -> ()
+    val getValue : T -> string
+end
+
+signature DOCUMENT = sig
+    include VAL_ATTR_OBJ
+    val fptr_of : T -> fptr
+end;
+
+functor ValueFUN(S : BASIC_FPTR) : VAL_ATTR_OBJ =
+struct
+    fun setValue x value = exec_js (S.fptr_of x) "value" [arg.string value]
+    fun getValue x = exec_js_r (S.fptr_of x) "value" []
+end;
+*)
+
+structure DOM =
 struct
 
     local open jsffi in
+    
+    (*
+    structure Document : DOCUMENT =
+    struct 
+        structure B : BASIC_FPTR =
+            datatype T = Document of fptr
+            fun fptr_of (Document fptr) = fptr;
+        end;
+        sturcture V = ValueFUN(B);
+        open V;
+    end;
+    
+    Document.getValue ...
+    
+    HTMLElement.getValue ...
+    
+    
+    datatype HTML_Elem_Kind = InputElem | DivElement;
+    datatype HTMLElement = HTMLElement of HTML_Elem_Kind * fptr
+
+    fun htmlFun (HTMLElement (_,fptr)) = ... fptr ...
+    *)
     
     datatype HTMLElement = HTMLElement of fptr
     datatype HTMLCollection = HTMLCollection of fptr
