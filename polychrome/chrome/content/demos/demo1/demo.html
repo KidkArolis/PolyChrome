@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>PolyChrome demo 1</title>
+<link type="text/css" rel="stylesheet" href="../demos.css" /> 
+
+<script type="application/x-polyml">
+open DOM;
+
+fun s2i s = valOf (Int.fromString s);
+fun i2s i = Int.toString i;
+
+val e = valOf (getElementById document "abc");
+
+val but1 = valOf (getElementById document "button1");
+val but2 = valOf (getElementById document "button2");
+val rem1 = valOf (getElementById document "remove1");
+val rem2 = valOf (getElementById document "remove2");
+
+setAttribute rem1 ("listener", "on");
+setAttribute rem2 ("listener", "on");
+
+val listener1 = ref ((EventListener ""):EventListener);
+val listener2 = ref ((EventListener ""):EventListener);
+
+
+fun applyOperation operation =
+    let
+        val current_value = getInnerHTML e
+        val new_value = i2s (operation((s2i current_value), 1))
+        val _ = setInnerHTML e new_value
+    in
+        ()
+    end;
+
+fun removeToggle1 (_) =
+    let
+      val e = rem1
+      val a = getAttribute e "listener"
+      val _ = if (a="on")
+              then (setValue e "add first listener")
+              else (setValue e "remove first listener");
+      val _ = if (a="on")
+              then (removeEventListener (!listener1))
+              else (listener1 := addEventListener
+                    but1
+                    click
+                    (EventCallback (fn(_)=>applyOperation op+)));
+      val _ = if (a="on")
+              then setAttribute e ("listener", "off")
+              else setAttribute e ("listener", "on")
+    in
+      ()
+    end;
+
+fun removeToggle2 (_) =
+    let
+      val e = rem2
+      val a = getAttribute e "listener"
+      val _ = if (a="on")
+              then (setValue e "add first listener")
+              else (setValue e "remove first listener");
+      val _ = if (a="on")
+              then (removeEventListener (!listener2))
+              else (listener2 := addEventListener
+                    but2
+                    click
+                    (EventCallback (fn(_)=>applyOperation op-)));
+      val _ = if (a="on")
+              then setAttribute e ("listener", "off")
+              else setAttribute e ("listener", "on");
+    in
+      ()
+    end;
+
+val l1 = addEventListener but1 click (EventCallback (fn(_)=>applyOperation op+));
+removeEventListener l1;
+
+(*doing it again would throw an exception*)
+(*removeEventListener l1;*)
+
+
+val _ = listener1 := addEventListener but1 click (EventCallback (fn(_)=>applyOperation op+));
+val _ = listener2 := addEventListener but2 click (EventCallback (fn(_)=>applyOperation op-));
+
+addEventListener rem1 click (EventCallback removeToggle1);
+addEventListener rem2 click (EventCallback removeToggle2);
+</script>
+
+</head>
+<body>
+
+<div id="container">
+    <p id="abc" class="first">0</p>
+    <input id="button1" type="button" value="add one" />
+    <input id="button2" type="button" value="subtract one" />
+    <input id="remove1" type="button" value="remove first listener" />
+    <input id="remove2" type="button" value="remove second listener" />
+</div>
+
+<div id="description">
+    <p>Adding/removing/handling event listeners</p>
+</div>
+</body>
+</html>
+

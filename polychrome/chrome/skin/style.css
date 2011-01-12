@@ -1,0 +1,75 @@
+#polychrome-console-commandline-box {
+	border-top: 1px solid #CCCCCC;
+	background-color: #FFFFFF;
+	font-size:13px;
+}
+#polychrome-console-commandline-arrow {
+	margin: 2px 0 2px 7px;
+	font-family: Monaco, monospace;
+	color: #FF0000;
+}
+
+#polychrome-console-commandline-input {
+	-moz-appearance: none;
+	margin: 0;
+	padding: 5px 4px 0 14px;
+	border:1px solid red;
+	height: 26px;
+	border: none;
+	font-family: monospace;
+	font-size:14px;
+	direction: ltr;
+	width: 100%;
+	font-weight: normal;
+	background:url("chrome://polychrome/skin/arrow_right_small.png") 5px 9px no-repeat;
+	border: none;
+	border-top:1px solid #ccc;
+}
+
+#polychrome-console-logarea, #polychrome-console-output {
+	-moz-appearance: none;
+	font-size:14px;
+	font-weight:normal;
+	margin:0;
+	border:none;
+	border-top:1px solid #ccc;
+	background-color: #FFFFFF;
+	color:#333;
+	padding: 0 4px;
+	font-family: monospace;
+	background-color:white;
+	overflow:auto;
+}
+
+#polychrome-console-buttons {
+	margin-right:4px;
+}
+#polychrome-console-button-min {
+	-moz-appearance: none;
+	padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+	list-style-image: url(chrome://polychrome/skin/min.png);
+}
+#polychrome-console-button-min:hover {
+	list-style-image: url(chrome://polychrome/skin/minHover.png);
+}
+#polychrome-console-button-min:active {
+	list-style-image: url(chrome://polychrome/skin/minActive.png);
+}
+
+#polychrome-status, #polychrome-click-to-enable {
+	font-size:12px;
+	padding-top:4px;
+	font-weight:bold;
+	margin:0;
+}
+
+#polychrome-console-title {
+	font-size:13px;
+	font-weight:bold;
+}
+
+#polychrome-icon, #polychrome-icon-nopoly {
+	padding:1px 3px;
+}

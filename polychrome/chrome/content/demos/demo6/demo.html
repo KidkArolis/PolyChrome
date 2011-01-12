@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>PolyChrome: Raphaël Demo</title>
+<script type="application/x-polyml" src="rwp/rwp.sml"></script>
+<script type="application/x-polyml" src="demo.sml"></script>
+</head>
+<body>
+<h1>Reactive Web Programming Examples</h1>
+<h2>Time</h2>
+The time is <span id='timer'>not initialized</span>
+<h2>Text Input</h2>
+<input id='a' value='0'/> + <input id='b' value='0'/> = <span id='c'>?</span>
+<h2>Mouse Over</h2>
+<span id='over'>Test this</span> -> <span id='overres'>?</span>
+<h2>Mouse Position</h2>
+<span id='mouse0'>?</span>&mdash; position<br />
+<span id='mouse1'>?</span>&mdash; calmed version of position (rounded off to nearest 10)<br />
+<span id='mouse2'>?</span>&mdash; position delayed 400ms<br />
+<h2>Click Events</h2>
+<input id='buttonDown' type='button' value='<==' /> &nbsp;
+<span id='clicks'>?</span> &nbsp;
+<input id='buttonUp' type='button' value='==>' />
+</body>
+</html>
+

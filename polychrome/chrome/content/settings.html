@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PolyML Extension</title>
+    <link rel="stylesheet" href="settings.css" type="text/css" />
+
+  </head>
+  <body>
+    <div id="container">
+        
+      <div id="logo">
+        <img src="../skin/polyml_32x32t.png" />
+        <span id="title">PolyChrome <span id="version"></span></span>
+      </div>
+      
+      <div id="content">
+        
+      <p id="disclaimer">Use PolyChrome at your own risk.<br />It is not safe to browse sites containing embedded PolyML code while PolyChrome is enabled.</p>
+
+      <div id="polymlNotFound" style="display:none">
+        <p>PolyML could was not found on this computer.<p>
+        <p>Please visit <a href="http://polyml.org/">http://polyml.org/</a> for instructions on installing PolyML.<p>
+        <p>You can also provide a custom path to the PolyML in the settings section below.</p>
+      </div>
+      
+      <div class="section">
+        <div id="settings">
+          <h1>Settings</h1>
+          <table>
+              <tr>
+                  <td class="name"><p>Custom PolyML path<p></td>
+                  <td><input type="text" id="prefPolyMLPath"  /></td>
+                  <td class="hint">e.g. /home/myname/polyml-5.4</td>
+              </tr>
+               <tr>
+                  <td class="name"><p>Always Enable PolyML apps<p></td>
+                  <td><input type="checkbox" id="prefAlwaysEnabled" /></td>
+                  <td class="hint">If checked, PolyML scripts will be executed without asking for confirmation.</td>
+              </tr>
+              <tr>
+                  <td></td>
+                  <td><input type="submit" id="savePrefs" value="Save" /></td>
+                  <td>
+                    <span id="polymlNotFound2" class="error" style="display:none">PolyML was not found at the provided path</span>
+                    <span id="polymlFound2" class="success" style="display:none">Custom PolyML path saved</span>
+                  </td>
+              </tr>
+          </table>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div id="utils">
+          <h1>Insides</h1>
+          <table>
+              <tr>
+                  <td></td>
+                  <td><input type="button" id="rebuildHeaps" value="Rebuild Heaps" /><span id="rebuildingStatus"></span></td>
+                  <td class="hint">This is provided just in case something breaks. Usually you don't need to do this manually.</td>
+              </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <h1>Resources</h1>
+        <ul>
+          <li><a href="chrome://polychrome/content/docs/docs.html">Documentation</a></li>
+          <li><a href="https://github.com/KidkArolis/PolyChrome" target="_blank">GitHub Repo</a></li>
+        </ul>
+      </div>
+
+      </div>
+    </div>
+    
+    <script type="text/javascript">
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Components.interfaces.nsIWindowMediator);
+        var currentWindow = wm.getMostRecentWindow("navigator:browser");
+        var PolyChrome = currentWindow.PolyChrome;
+        
+        var version = null;
+        
+        var init = function() {
+          //shortcut
+          var e = function(id) { return document.getElementById(id) }
+          
+          //this one is used always
+          var wasPolyFound = function() {
+              if (!PolyChrome.polyFound) {
+                  e("polymlNotFound").style["display"] = "block";
+              } else {
+                  e("polymlNotFound").style["display"] = "none";
+              }
+          }
+          wasPolyFound();
+          //this one is used only when save button is clicked
+          var wasPolyFound2 = function() {
+              if (!PolyChrome.polyFound) {
+                  e("polymlNotFound2").style["display"] = "inline";
+                  e("polymlFound2").style["display"] = "none";
+              } else {
+                  e("polymlNotFound2").style["display"] = "none";
+                  e("polymlFound2").style["display"] = "inline";
+              }
+          }
+          
+          e("version").innerHTML = version;
+          
+          //always enabled pref
+          var prefAlwaysEnabled = PolyChrome.prefs.alwaysEnabled;
+          e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
+          prefAlwaysEnabled.events.addListener("change", function(aEvent) {
+              log("test");
+              e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
+          });
+          
+          //polyml path pref
+          var prefPolyMLPath = PolyChrome.prefs.PolyMLPath;
+          e("prefPolyMLPath").value = prefPolyMLPath.value;
+          
+          //save prefs
+          e("savePrefs").addEventListener("command",
+            function() {
+              prefAlwaysEnabled.value = e("prefAlwaysEnabled").checked;
+              //check if the value was changed
+              if (e("prefPolyMLPath").value!=prefPolyMLPath.value) {
+                  prefPolyMLPath.value = e("prefPolyMLPath").value;
+                  PolyChrome.findPoly();
+                  wasPolyFound();
+                  wasPolyFound2();
+              }
+              return false;
+          }, false);
+          
+          //rebuild heaps
+          e("rebuildHeaps").addEventListener("click", function() {
+            e("rebuildingStatus").innerHTML = "";
+            if (PolyChrome.polyFound) {
+              PolyChrome.stopPoly();
+              //check whether the script has already been inserted
+              if (document.getElementsByTagName("script").length==1) {
+                var a = document.createElement("script");
+                a.setAttribute("type", "application/x-polyml");
+                a.innerHTML = 'val _ = DOM.setInnerHTML (valOf (DOM.getElementById DOM.document "rebuildingStatus")) "DONE";'
+                             +'val _ = Console.print "Heaps were rebuilt succesfully"';
+                document.body.appendChild(a);
+              }
+              PolyChrome.removeHeaps();
+              PolyChrome.startPoly();
+              e("rebuildingStatus").innerHTML = "please wait...";
+            }
+          }, false);
+        }
+        
+        //this chunk is for reading the version of the extension in
+        //backwards compatible way
+        if(Application.extensions) {
+          //older FF
+          version = Application.extensions.get('polychrome@ed.ac.uk').version;
+          init();
+        } else if (Application.getExtensions) {
+          //FF4
+          Application.getExtensions(function (extensions){
+            version = extensions.get('polychrome@ed.ac.uk').version;
+            init();
+          });
+        }
+    </script>
+  </body>
+</html>

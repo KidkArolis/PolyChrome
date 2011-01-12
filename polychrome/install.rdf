@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:unpack>true</em:unpack>
+    <em:id>polychrome@ed.ac.uk</em:id>
+    <em:type>2</em:type>
+    <em:name>PolyChrome</em:name>
+    <em:description>Use Standard ML as a clientside programming language.</em:description>
+    <em:version>0.2.2</em:version>
+    <em:creator>Karolis Narkevičius</em:creator>
+    <em:contributor></em:contributor>
+    <em:aboutURL>chrome://polychrome/content/triggerSettings.html</em:aboutURL>
+    <em:optionsURL>chrome://polychrome/content/triggerSettings.html</em:optionsURL>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
+        <em:minVersion>3.5</em:minVersion>
+        <em:maxVersion>4.0b9pre</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    <em:homepageURL>http://kidkarolis.github.com/PolyChrome/</em:homepageURL>
+    <em:iconURL>chrome://polychrome/skin/polyml_32x32.png</em:iconURL>
+  </Description>
+</RDF>

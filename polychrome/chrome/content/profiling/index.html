@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>PolyChrome Profiling Report</title>
+        <link rel="stylesheet" href="../settings.css" type="text/css" />
+        
+        <script type="text/javascript" src="chrome://polychrome/content/libs/jQuery/js/jquery-1.4.4.js"></script>
+        <script type="text/javascript" src="chrome://polychrome/content/libs/raphael/js/raphael-1.5.2.js"></script>
+        <script type="text/javascript" src="chrome://polychrome/content/libs/raphael/js/g.raphael-0.4.1.js"></script>
+        <script type="text/javascript" src="chrome://polychrome/content/libs/raphael/js/g.line-0.4.2.js"></script>
+        <script type="text/javascript" src="DataTables-1.7.4/media/js/jquery.dataTables.js"></script>
+        
+        <style>
+            .center {
+                text-align:center;
+            }
+            .red {
+                color:red;
+            }
+            #profiling-table {
+                width:100%;
+                margin-top:20px;
+                margin-bottom:20px;
+            }
+            #profiling-table td {
+                border-top:1px solid #EEEEEE;
+                padding:2px;
+            }
+            #diff {
+                position:fixed;
+                top:50px;
+                left:20px;
+                background:#eef4ff;
+                font-size:14px;
+                text-align:center;
+                padding:10px;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div id="container">
+    
+            <div id="logo">
+              <img src="../skin/polyml_32x32t.png" />
+              <span id="title">PolyChrome <span id="version"></span><span>
+            </div>
+      
+            <div id="content">
+                <div class="section">
+                    <h1>Stats</h1>
+                    <div id="stats"></div>
+                </div>
+                <div class="section">
+                    <h1>Report of the Last Profiling</h1>
+                    
+                    <div id="graph"></div>
+                    
+                    <table id="profiling-table" cellspacing="0">
+                        <tr><td>...</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!--<div id="diff">-->
+        <!--    <p>Click on any two rows to see the time difference</p>-->
+        <!--    <b></b>-->
+        <!--</div>-->
+    
+        <script type="text/javascript">
+            //setup some vars
+            Components.utils.import("resource://polychrome/core/Utils.jsm");
+        
+            var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                    .getService(Components.interfaces.nsIWindowMediator);  
+            var currentWindow = wm.getMostRecentWindow("navigator:browser");
+            
+            var PolyChrome = currentWindow.PolyChrome;
+            
+            
+            //read the profiling file
+            var file = Utils.getExtensionPath();
+            file.append("profiling");
+            file.append("output.txt");
+        
+            // open an input stream from file
+            var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+                                    createInstance(Components.interfaces.nsIFileInputStream);
+            istream.init(file, 0x01, 0444, 0);
+            istream.QueryInterface(Components.interfaces.nsILineInputStream);
+            // read lines into array
+            var line = {}, lines = [], hasmore;
+            do {
+                hasmore = istream.readLine(line);
+                lines.push(line.value);
+            } while(hasmore);
+            istream.close();
+            
+            //build the report table
+            //sort the lines
+            lines.sort();
+            for (var i in lines) {
+                lines[i] = lines[i].split(";");
+            }
+            var redSpikes = 0;
+            for (var i=0; i<lines.length; i++) {
+                var my_id = lines[i][3];
+                var my_time = lines[i][0];
+                var my_type = lines[i][1];
+                var found = false;
+                
+                if (my_type=="B") {
+                    for (var j=0; j<lines.length; j++) {
+                        if (lines[j][3]==my_id && lines[j][1]=="A") {
+                            var diff = Math.abs(my_time-lines[j][0]);
+                            if (diff > 30) {
+                                redSpikes++;
+                            }
+                            lines[i].push(diff);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!found) {
+                    lines[i].push("-");
+                }
+            }
+            
+            /*
+            $('#profiling-table').dataTable({
+                "aaData": lines,
+                "aoColumns": [
+                    { "sTitle": "Timestamp", "sClass": "center timestamp" },
+                    { "sTitle": "Roundtrip order", "sClass": "center" },
+                    { "sTitle": "Description", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            if ( sReturn == "drawing loop" ) {
+                                sReturn = "<b>"+sReturn+"</b>";
+                            }
+                            return sReturn;
+                        }
+                    },
+                    { "sTitle": "Request ID", "sClass": "center", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            sReturn = '<span class="request-id" data-request-id="'+sReturn+'">'+sReturn+'</span>';
+                            return sReturn;
+                        }
+                    },
+                    { "sTitle": "Size", "sClass": "center" },
+                    { "sTitle": "Time from sending", "sClass": "center", "fnRender": function(obj) {
+                            var sReturn = obj.aData[ obj.iDataColumn ];
+                            if ( sReturn >  50) {
+                                sReturn = '<span class="red">'+sReturn+'</span>';
+                                redSpikes++;
+                            }
+                            return sReturn;
+                        }
+                    }
+                ],
+                "bPaginate": false,
+                "aaSorting": [ [0,'asc'], [1,'asc'] ],
+            });
+            */
+            
+            
+            /*
+            var rows = [];
+            //bind table clicks
+            $("#profiling-table tr").click(function(e){
+                rows.push(parseFloat($(this).find(".timestamp").html()));
+                if (rows.length==2) {
+                    var diff = Math.abs(rows[1]-rows[0]);
+                    diff = Math.round(diff*1000)/1000;
+                    $("#diff b").html(diff + "ms");
+                    rows = [];
+                }
+                
+                if (rows.length==1) {
+                    $("#profiling-table tr").css("background-color", "white");
+                }
+                $(this).css("background-color", "yellow");
+                
+                e.stopPropagation();
+            });
+            $("body").click(function() {
+                $("#profiling-table tr").css("background-color", "white");
+            });
+            */
+            $("#profiling-table tr").hover(
+                function(e) {
+                    var request_id = $(this).find(".request-id").data("request-id");
+                    $("#profiling-table").find("[data-request-id='" + request_id +"']").parent().parent().css("background-color", "orange");
+                },
+                function(e) {
+                    $("#profiling-table tr").css("background-color", "white");
+                });
+            
+            
+            
+            
+            var MSG_START = "drawing loop";
+            var MSG_STOP = "drawing done";
+            var MSG_SENDING = "sending req";
+            var MSG_RECEIVING = "recv response";
+            
+            var msgCount;
+            var msgSize;
+            var startTimestamp;
+            var stopTimestamp;
+            
+            var msgCountAvg = 0;
+            var msgSizeAvg = 0;
+            var loopDurationAvg = 0;
+            var loopCount = 0;
+            
+            
+            for (var i=0; i<lines.length; i++) {
+                switch (lines[i][2]) {
+                    case MSG_START:
+                        msgCount = 0;
+                        msgSize = 0;
+                        startTimestamp = lines[i][0];
+                        break;
+                    case MSG_SENDING:
+                    case MSG_RECEIVING:
+                        msgCount++;
+                        msgSize+=parseInt(lines[i][4]);
+                        break;
+                    case MSG_STOP:
+                        stopTimestamp = lines[i][0];
+                        if (stopTimestamp==startTimestamp) break;
+                        duration = stopTimestamp-startTimestamp;
+                        var avgSize = msgSize/msgCount;
+                        msgCountAvg = (msgCountAvg*loopCount+msgCount)/(loopCount+1);
+                        msgSizeAvg = (msgSizeAvg*loopCount+avgSize)/(loopCount+1);
+                        loopDurationAvg = (loopDurationAvg*loopCount+duration)/(loopCount+1);
+                        loopCount++;
+                }
+            }
+            var a = "Avg # of msgs per loop: " + msgCountAvg.toFixed(3);
+            var b = "Avg duration of the loop: " + loopDurationAvg.toFixed(3);
+            var c = "Avg msg size: " + msgSizeAvg.toFixed(3);
+            var d = (msgCountAvg*(1000/loopDurationAvg)).toFixed(0) + " msgs/second";
+            var e = (msgCountAvg*msgSizeAvg*(1000/loopDurationAvg)).toFixed(0) + " bytes/second";
+            var f = "Red spikes: " + redSpikes;
+            var g = "Total duration: " + (lines[lines.length-1][0]-lines[20][0])/1000 + " seconds";
+            $("#stats").html(a + "<br />" + b + "<br />" + c + "<br />" + d + "<br />" + e + "<br />" + f + "<br />" + g + "<br />");
+            
+        </script>
+  </body>
+</html>

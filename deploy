@@ -12,7 +12,7 @@ if [ -f deploy.cfg ];
         exit 2
 fi
 
-THE_POLY_HEAP="polymlext.polyml-heap"
+THE_POLY_HEAP="polychrome.polyml-heap"
 
 #the directory of the extension
 extension="$(dirname $0)"
@@ -20,10 +20,10 @@ cd "$extension"
 extension=`pwd`
 
 #update the extension file and move it to firefox profile
-echo "$extension/polymlext" > polymlext@ed.ac.uk
-rm -rf "$FIREFOX_PROFILE/extensions/polymlext@ed.ac.uk"
-cp polymlext@ed.ac.uk "$FIREFOX_PROFILE/extensions/"
-rm polymlext@ed.ac.uk
+echo "$extension/polychrome" > polychrome@ed.ac.uk
+rm -rf "$FIREFOX_PROFILE/extensions/polychrome@ed.ac.uk"
+cp polychrome@ed.ac.uk "$FIREFOX_PROFILE/extensions/"
+rm polychrome@ed.ac.uk
 
 #remove these files to make firefox reregister the updated components
 if [ -e "$FIREFOX_PROFILE/xpti.dat" ]; then rm "$FIREFOX_PROFILE/xpti.dat"; fi
@@ -43,22 +43,22 @@ fi
 if [ "$1" == "package" ]
     then
         #remove the isaplib heap
-        isaplib_heap="$extension/polymlext/poly/isaplib/heaps/all.polyml-heap"
+        isaplib_heap="$extension/polychrome/poly/isaplib/heaps/all.polyml-heap"
         if [ -e "$isaplib_heap" ]; then
             rm "$isaplib_heap";
         fi
         #remove the polyml heap
-        polyml_heap="$extension/polymlext/poly/bin/$THE_POLY_HEAP"
+        polyml_heap="$extension/polychrome/poly/bin/$THE_POLY_HEAP"
         if [ -e "$polyml_heap" ]; then
             rm "$polyml_heap"
         fi
         #remove the packaged extension
-        if [ -e polymlext.xpi ]; then
-            rm polymlext.xpi;
+        if [ -e polychrome.xpi ]; then
+            rm polychrome.xpi;
         fi
         
         ZIP=`which zip`
-        cd polymlext
-        ${ZIP} -r ../polymlext.xpi *
+        cd polychrome
+        ${ZIP} -r ../polychrome.xpi *
         cd ..
 fi

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyChrome - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/style.css">
+	</head>
+	<body>
+		
+		<h1>Hello World</h1>
+		<div class="section">
+			<p>This example will demonstrate how to write SML applications using the PolyChrome.</p>
+			<h2>1.</h2>
+			<p>First, create an empty document called <strong>hello.html</strong>. Paste the following code into the document, and open the document with Firefox.</p>
+			<pre class="code">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+	&lt;head&gt;
+		&lt;title&gt;Hello SML World&lt;/title&gt;
+		
+		&lt;script type=&quot;application/x-polyml&quot;&gt;
+			val hello_div = valOf (DOM.getElementById DOM.document &quot;hello&quot;)
+			val _ = DOM.setInnerHTML hello_div &quot;Hello Graphical SML World&quot;
+			
+			val paper = valOf (DOM.getElementById DOM.document &quot;paper&quot;)
+			val context = Canvas.getContext paper &quot;2d&quot;
+			val _ = Canvas.fillStyle context &quot;green&quot;
+			val _ = Canvas.fillRect context 10 10 30 50
+		&lt;/script&gt;
+	
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1 id=&quot;hello&quot;&gt;&lt;/h1&gt;
+		&lt;canvas id=&quot;paper&quot;&gt;&lt;/canvas&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+			</pre>
+			<h2>2.</h2>
+			<p>That's it!</p>
+			<h2>What happened here?</h2>
+			<p>Firefox rendered the HTML document, which is actually empty in the beginning, even though it contains an h1 element and a canvas element. Then, PolyChrome extension found the PolyML code on this page and executed it. The code used DOM library to select the h1 element and add some text into it and then used Canvas library to draw a rectangle in the canvas element.</p>
+			<p>To fully understand the above example you should be familiar with HTML and JavaScript. Even though, no JavaScript was written in this example, the usage of DOM and Canvas libraries very closely corresponds to the way you would write JavaScript. For instance, lets look at equivalent SML and JavaScript code side by side:</p>
+			<table class="comparison">
+				<tr>
+					<td><strong>Standard ML</strong></td>
+				</tr>
+				<tr>
+					<td><pre>DOM.getElementById DOM.document "hello"</pre></td>
+				</tr>
+				<tr>
+					<td><strong>JavaScript</strong></td>
+				</tr>
+				<tr>
+					<td><pre>document.getElementById("hello")</pre></td>
+				</tr>
+				<tr>
+					<td><strong>Remarks</strong></td>
+				</tr>
+				<tr>
+					<td>DOM.getElementById returns an option type, which is NONE if the element does not exist in the document. JavaScript returns null in such case.</td>
+				</tr>
+			</table>
+			<table class="comparison">
+				<tr>
+					<td><strong>Standard ML</strong></td>
+				</tr>
+				<tr>
+					<td><pre>DOM.setInnerHTML hello_div "Hello Graphical SML World"</pre></td>
+				</tr>
+				<tr>
+					<td><strong>JavaScript</strong></td>
+				</tr>
+				<tr>
+					<td><pre>hello_div.innerHTML = "Hello Graphical SML World"</pre></td>
+				</tr>
+				<tr>
+					<td><strong>Remarks</strong></td>
+				</tr>
+				<tr>
+					<td>Notice that in case of JavaScript, innerHTML is not a function but rather an attribute. Such attributes can be accessed using the setters and getters provided in the SML DOM library.</td>
+				</tr>
+			</table>
+			<table class="comparison">
+				<tr>
+					<td><strong>Standard ML</strong></td>
+				</tr>
+				<tr>
+					<td><pre>Canvas.fillRect context 10 10 30 50</pre></td>
+				</tr>
+				<tr>
+					<td><strong>JavaScript</strong></td>
+				</tr>
+				<tr>
+					<td><pre>context.fillRect(10,10,30,50)</pre></td>
+				</tr>
+				<tr>
+					<td><strong>Remarks</strong></td>
+				</tr>
+				<tr>
+					<td>In case of SML we pass the context object to a function, whereas in JS we call the method of the object itself.</td>
+				</tr>
+			</table>
+		</div>
+		
+	</body>
+</html>

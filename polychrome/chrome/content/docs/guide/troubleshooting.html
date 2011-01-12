@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyChrome - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/style.css">
+	</head>
+	<body>
+		
+		<h1>Troubleshooting</h1>
+		<div class="section">
+			<p>Here are a few things you could take a look at to try and identify some of the problems.</p>
+			<h2>PolyML Not found</h2>
+			<p>If PolyML is not installed or found on the machine, you will see this.</p>
+			<img src="images/polymlNotFound.png" />
+			<p>Click on the icon to go to settings of the extension and configure the path to your PolyML installation.</td>
+			<h2>JavaScript Error Console</h2>
+			<p>PolyChrome extension uses Firefox'es JavaScript Error Console, that can be opened by <strong>Tools > Error Console</strong> or by Ctrl-Shift-J. Note, that errors from all Firefox extensions or even websites are printed here, so not all of it may be reported by PolyChrome. Only JavaScript components of the extension will report errors here.</p>
+			<h2>stdout</h2>
+			</p>Currently, not all of the PolyML output is printed to the PolyML console in Firefox. Some of it goes to the stdout, that can be seen, for example, by opening Firefox from a terminal (e.g. on linux that would mean executing command "firefox" in the terminal)</p>
+			<h2>Rebuilding Heaps</h2>
+			<p>You'll find the "Rebuild Heaps" button in the settings page, in case that is your problem. For example, this could be needed if you updated the version of PolyML on your machine.</p>
+		</div>
+		
+	</body>
+</html>

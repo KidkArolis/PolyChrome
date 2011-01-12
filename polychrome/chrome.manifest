@@ -1,0 +1,8 @@
+content   PolyChrome                 chrome/content/
+skin      PolyChrome   classic/1.0   chrome/skin/
+locale    PolyChrome   en-US         chrome/locale/en-US/
+
+overlay   chrome://browser/content/browser.xul   chrome://polychrome/content/ff-overlay.xul
+
+resource polychrome chrome/content/
+

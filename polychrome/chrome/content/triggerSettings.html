@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Triggering PolyChrome about.html</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Components.interfaces.nsIWindowMediator);  
+        var currentWindow = wm.getMostRecentWindow("navigator:browser");
+        currentWindow.PolyChrome.browserUI.displaySettingsPage();
+        window.close();
+        </script>
+    </body>
+</html>

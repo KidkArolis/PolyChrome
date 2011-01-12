@@ -3,6 +3,6 @@
 *.polyml-heap
 *.so
 *.xpi
-polymlext/sandboxes/*
+polychrome/sandboxes/*
 *.cfg
-polymlext/profiling/output.txt
+polychrome/profiling/output.txt
