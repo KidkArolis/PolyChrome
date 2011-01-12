@@ -1,10 +1,10 @@
 README
 ======
 
-PolyMLext
----------
+PolyChrome
+----------
 
-PolyMLext is an extension for Firefox web browser that can run SML programs
+PolyChrome is an extension for Firefox web browser that can run SML programs
 embedded in HTML documents. The extension provides a simple foreign function
 interface to JavaScript. As a result, JavaScript libraries and interfaces
 provided by the browser, such as DOM and Canvas, can be used in SML. 

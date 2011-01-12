@@ -29,8 +29,15 @@ rm polymlext@ed.ac.uk
 if [ -e "$FIREFOX_PROFILE/xpti.dat" ]; then rm "$FIREFOX_PROFILE/xpti.dat"; fi
 if [ -e "$FIREFOX_PROFILE/compreg.dat" ]; then rm "$FIREFOX_PROFILE/compreg.dat"; fi
 
+echo "PolyChrome deployed"
+
 #if run is passed as a parameter run firefox
-if [ "$1" == "run" ]; then $FIREFOX_BINARY -jsconsole; fi
+if [ "$1" == "run" ]
+    then
+        $FIREFOX_BINARY -jsconsole
+    else
+        echo "use argument 'run' to deploy and run Firefox"; echo "use argument 'package' to create an .xpi file"
+fi
 
 #if package is passed as a parameter create the xpi package
 if [ "$1" == "package" ]
