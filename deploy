@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-### EDIT THIS!! ##############################################################
-# make sure this is the profile you will be using the extension with
-
-##############################################################################
 
 if [ -f deploy.cfg ];
     then 
