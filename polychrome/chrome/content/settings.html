@@ -112,7 +112,6 @@
           var prefAlwaysEnabled = PolyChrome.prefs.alwaysEnabled;
           e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
           prefAlwaysEnabled.events.addListener("change", function(aEvent) {
-              log("test");
               e("prefAlwaysEnabled").checked = prefAlwaysEnabled.value;
           });
           

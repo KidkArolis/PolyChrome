@@ -32,6 +32,9 @@
 			<menuitem id="polychrome-button-alwaysEnable" type="checkbox" label="Always Enable"
 					tooltiptext="Execute PolyML applications without explicit permission" />
 			<menuseparator />
+			<menuitem id="polychrome-button-report-a-bug" label="Report a Bug"
+					tooltiptext="Report a Bug on GitHub" />
+			<menuseparator />
 			<menuitem id="polychrome-button-demos" label="Demos"
 					tooltiptext="Demonstrations of PolyChrome features" />
 			<menuitem id="polychrome-button-docs" label="Docs" />

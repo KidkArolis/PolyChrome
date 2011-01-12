@@ -33,7 +33,10 @@ PolyChrome.BrowserUI = function(callbacks) {
     e("polychrome-button-alwaysEnable").addEventListener("command", function() {
         PolyChrome.prefs.alwaysEnabled.value =
             !PolyChrome.prefs.alwaysEnabled.value;
-    }, false);    
+    }, false);
+    e("polychrome-button-report-a-bug").addEventListener("command", function() {
+        gBrowser.selectedTab = gBrowser.addTab(self.links.reportBugs);
+    }, false);
     e("polychrome-button-demos").addEventListener("command", function() {
         self.displayDemosPage();
     }, false);    
@@ -111,7 +114,8 @@ PolyChrome.BrowserUI.prototype = {
     links : {
         settings    : 'chrome://polychrome/content/settings.html',
         demos       : 'chrome://polychrome/content/demos/index.html',
-        docs        : 'chrome://polychrome/content/docs/docs.html'
+        docs        : 'chrome://polychrome/content/docs/docs.html',
+        reportBugs  : 'https://github.com/KidkArolis/PolyChrome/issues'
     },
     
     displaySettingsPage : function() {
