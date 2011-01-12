@@ -2,17 +2,20 @@
 <html>
 	<head>
 		<title>PolyChrome - Documentation</title>
-		<link rel="stylesheet" type="text/css" href="../style/style.css">
+		<link rel="stylesheet" type="text/css" href="../style/guide.css">
 	</head>
 	<body>
 		
 		<h1>Architecture</h1>
 		<div class="section">
 			<p>To understand the limitations and potential applications of the PolyChrome extension, it is important to have some insight on how it works</p>
-			<h2>Browser</h2>
-			<p>Firefox can open</p>
-			<p>Below is a rough scheme of the components and their relationships in PolyChrome.</p>
+			<h2>Firefox</h2>
+			<p>Firefox browser is as a collection of HTML rendering engine, DOM, JavaScript engine, networking components and many other components. When you enter a URL into the address bar and press enter, Firefox loads an HTML document from the server (or local filesystem), parses it into a Document Object Model (DOM), renders it on the screen and executes the JavaScript code embedded in the HTML document. JavaScript can modify how the document is rendered on screen, because the in memory representation of HTML, that is DOM, is reflected into JavaScript as a JavaScript Object. Calling methods and modifying attributes of this DOM-JavaScript wrapper object</p>
+			<h2>PolyChrome Components</h2>
+			<p>Below is a rough scheme of the PolyChrome components and their relationships.</p>
 			<img src="images/Components.png" />
+			<h2>Additional References</h2>
+			<p>MSc thesis on PolyChrome: <a href="http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf">http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf</a></p>
 		</div>
 		
 	</body>
