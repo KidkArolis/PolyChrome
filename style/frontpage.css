@@ -1,0 +1,20 @@
+body { font-family: Arial, Geneva, sans-serif; font-size:13px; color:#222; }
+table { border:1px solid #ccc; margin:10px; }
+p { line-height:150%; }
+pre.code { padding:10px; border:1px solid #ccc; background:#eee; }
+pre { padding:0; margin:0; }
+
+
+#content { width: 980px; margin:auto; padding-bottom:20px; margin-bottom:80px; border-bottom:1px solid #CCC; }
+
+p.intro { font-size:15px; margin:40px 0; }
+
+#header h1 { font-size:36px; font-weight:normal; padding:0; margin-top:18px; color:#E13300; }
+#header { border-bottom:1px solid #CCC; padding-bottom:10px; margin-bottom:20px; }
+
+#menu { margin:0; padding:0; }
+#menu li { display:inline; margin:4px 16px 0 0; }
+#menu a { text-decoration:none; color:#555; font-size:15px; }
+
+#screenshot { text-align:center; margin:40px; }
+li { line-height:150%; margin:6px 2px; }

@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>PolyMLext - Documentation</title>
-		<link rel="stylesheet" type="text/css" href="../style/style.css">
+		<title>PolyChrome - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/guide.css">
 	</head>
 	<body>
 		
 		<h1>Development Guide</h1>
 		<div class="section">
-			<p>The source code and bug tracker can be found at <a href="http://assembla.com/spaces/polymlext">http://assembla.com/spaces/polymlext</a>. Instructions on getting the source code can be found at <a href="http://www.assembla.com/code/polymlext/git/repo/instructions">http://www.assembla.com/code/polymlext/git/repo/instructions</a>.</p>
+			<p>The source code and the bug tracker can be found at <a href="https://github.com/KidkArolis/PolyChrome">https://github.com/KidkArolis/PolyChrome</a>.</p>
 			<h2>Setting Up the Development Environment</h2>
-			<p>Firefox extension is a zip archive with all of the extension files (with an extension .xpi), that is extracted to your Firefox profile once you install it. You could browse to your firefox profile and modify the code of the extension there, but the best way to modify the code of the extension is cloning the repository and using the deploy script.</p>
+			<p>Firefox extension is a zip archive with all of the extension files (with an extension .xpi), that is extracted to your Firefox profile once you install it. You could browse to your firefox profile and modify the code of the extension there, but there is a much better way of working on the code of the extension. Clone or fork the repository and create a "symlink" in your Firefox profile, pointing to the repo. Note, that this symlink is not a symlink in a usual sense, it is just a text file with a path to the extension. The simplest way of doing this is using the deploy script that you'll find in the root dir of the repo.</p>
 			<p>To use the deploy script you'll first need to create a <strong>deploy.cfg</strong> file based on the <strong>deploy.cfg.template</strong></p>
 			<p>After that, simply executing</p>
 			<pre># ./deploy run</pre>
-			<p>will place a text file in your Firefox profile with the path to the source code of the extension and will immediately run Firefox (with the error console opened up). It's actually enough to run the deploy script once. However, you do need to restart the Firefox browser every time you modify the JavaScript components of the extension or overlays/styles, etc. If you can't see some changes that you expect to see after restarting Firefox, you might want to run the deploy script again, because it clears the extension registry/cache.
-			<p>Modifying SML components, on the other hand, requires only the refresh of the HTML document. When using the text file linking to the source code of the extension, the extension knows it's running in development mode (function Utils.isDevelopmentMode) and therefore recompiles the SML components every time a document is opened.</p>
+			<p>will place a text file in your Firefox profile with the path to the source code of the extension and will immediately run Firefox (with the error console opened up). After running the deploy script once, Firefox will always load the extension from your repository. However, you do need to restart the Firefox browser every time you modify the JavaScript components of the extension or overlays/styles, etc. If you can't see some changes that you expect to see after restarting Firefox, you might want to run the deploy script again, because it clears the extension registry/cache. To remove the extension, you can simply uninstall it via the Add-Wons manager in Firefox
+			<p>Modifying SML components requires only the refresh of the HTML document. When extension is loaded using this "symlink", the extension knows it's running in development mode (function Utils.isDevelopmentMode) and therefore recompiles the SML components every time a document is opened.</p>
 			<p>Also, you should take a look at <a href="https://developer.mozilla.org/en/setting_up_extension_development_environment">https://developer.mozilla.org/en/setting_up_extension_development_environment</a>, especially the "Development preferences".</p>
-			<p>In general <a href="https://developer.mozilla.org/">https://developer.mozilla.org/</a> is the place to look for all extension development related docs.</p>
+			<p>In general <a href="https://developer.mozilla.org/">https://developer.mozilla.org/</a> is the place to look for all of the extension development related docs.</p>
 			<h2>Packaging</h2>
 			<p>Executing</p>
 			<pre># ./deploy package</pre>
 			<p>will zip the neccessary files and create an .xpi file.</p>
 			<h2>File Structure</h2>
-			<p><strong>/polymlext/chrome/content/core</strong> - contains the JavaScript components of the extension. Their relationships can be seen in the <a href="architecture.html" target="content">Architecture section</a></p>
-			<p><strong>/polymlext/chrome/content/core/PolyMLext.js</strong> - is the entry script. PolyMLext.init function, called in the ff-overlay.xul, starts the magic.</p>
-			<p><strong>/polymlext/chrome/content/ff-overlay.js</strong> - describes the GUI of the extension.</p>
-			<p><strong>/polymlext/chrome/content/docs</strong> - contains this documentation that you're reading right now.</p>
-			<p><strong>/polymlext/chrome/content/demos</strong> - contains all of the demos.</p>
-			<p><strong>/polymlext/poly</strong> - contains the SML components of the extension.</p>
-			<p><strong>/polymlext/poly/main.sml</strong> - is the entry script of the Poly part of things. PolyMLext.main is the function that starts the Poly side of the magic happen.</p>
-			<p><strong>/polymlext/poly/bin</strong> - contains some bash scripts for finding PolyML binary on the clients machine, running the main.sml script, and killing the PolyML process. This is the only bit of the whole extension that prevents it to be truly cross-platform. Hopefully, with some modifications in the next release of PolyML, these scripts won't be neccessary anymore.</p>
-			<p><strong>/polymlext/poly/isaplib/</strong> - contains the isaplib library that is used by the extension. Isaplib is part of the <a href="http://dream.inf.ed.ac.uk/projects/isaplanner/">IsaPlanner</a></p>
-			<p><strong>/polymlext/sandboxes/</strong> - is used to store all temporary files downloaded from the server (when they're included using script tags).</p>
-			<p>Read <a href="https://developer.mozilla.org/en/building_an_extension">https://developer.mozilla.org/en/building_an_extension<a> for description of other files, such as install manifest.</p>
+			<p><strong>/polychrome/chrome/content/core</strong> - contains the JavaScript components of the extension. Their relationships can be seen in the <a href="architecture.html" target="content">Architecture section</a></p>
+			<p><strong>/polychrome/chrome/content/core/PolyChrome.js</strong> - is the entry script. PolyChrome.init function, called in the ff-overlay.xul, starts the magic.</p>
+			<p><strong>/polychrome/chrome/content/ff-overlay.js</strong> - describes the GUI of the extension.</p>
+			<p><strong>/polychrome/chrome/content/docs</strong> - contains this documentation that you're reading right now. A copy of this directory is placed in the "gh-pages" branch of the repo for online access via GitHub pages.</p>
+			<p><strong>/polychrome/chrome/content/demos</strong> - contains all of the demos.</p>
+			<p><strong>/polychrome/poly</strong> - contains the SML components of the extension.</p>
+			<p><strong>/polychrome/poly/main.sml</strong> - is the entry script of the PolyML side of things. PolyChrome.main is the initialization function called in the polyml.sh bash script (that is executed in JavaScript).</p>
+			<p><strong>/polychrome/poly/bin</strong> - contains some bash scripts for finding PolyML binary on the clients machine, running the main.sml script, and killing the PolyML process. This is the only bit of the whole extension that prevents it to be truly cross-platform. Hopefully, with some modifications in the next release of PolyML, these scripts won't be neccessary anymore.</p>
+			<p><strong>/polychrome/poly/isaplib/</strong> - contains the isaplib library that is used by the extension. Isaplib is part of the <a href="http://dream.inf.ed.ac.uk/projects/isaplanner/">IsaPlanner</a></p>
+			<p><strong>/polychrome/sandboxes/</strong> - is used to store all temporary files downloaded from the server (when they're included using script tags).</p>
+			<p>Read <a href="https://developer.mozilla.org/en/building_an_extension">https://developer.mozilla.org/en/building_an_extension<a> for description of the other, Firefox specific, files, such as install manifest.</p>
 		</div>
 		
 	</body>
