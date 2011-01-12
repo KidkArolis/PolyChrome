@@ -1,6 +1,3 @@
-README
-======
-
 PolyChrome
 ----------
 
@@ -26,3 +23,9 @@ Running the extension with the deploy script
     
   to immediately run Firefox (with the error console opened) after deploying the
   extension.
+  
+  
+Documentation
+-------------
+
+[http://kidkarolis.github.com/PolyChrome/](http://kidkarolis.github.com/PolyChrome/)
