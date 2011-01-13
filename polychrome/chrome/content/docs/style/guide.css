@@ -13,7 +13,7 @@ pre { padding:10px; border:1px solid #ccc; background:#F2F2F2; color: #111; }
 #contents ul { padding-left:10px; }
 #contents li.chapter { font-weight:bold; font-size:110%; padding-left:0; }
 #contents li { padding-left:14px; list-style:none; padding-top:7px; }
-#contents li a, #contents li a:visited { color:#111; text-decoration:none; }
+#contents li a, #contents li a:visited { color:#09C; text-decoration:none; }
 
 #resources { font-size:18px; }
 

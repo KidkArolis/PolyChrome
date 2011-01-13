@@ -28,7 +28,7 @@ sig
     ...
 end</pre>
 			<p><strong>exec_js_r</strong> and <strong>exec_js</strong> are used to call JavaScript functions. The former expects something returned and the latter does not. They take 3 arguments. An object whose method will be called, a name of the method and a list of arguments.<strong>exec_js_get</strong> and <strong>exec_js_set</strong> are similar, but instead of calling methods they get and set attributes of the object.</p>
-			<p>To start with, you can use two fptr - "window|" and "document|" (read the <a href="memory.html" target="content">Memory Sharing</a> section to find out more about the foreign pointers). <strong>Window object</strong> in the browser is the root, global, ultimate object in the browser. Any JavaScript variable or function that is created in global scope becomes an attribute of the window object. Event the document object can be accessed using the window object fptr.</p>
+			<p>To start with, you can use two fptr - "window|" and "document|". The foreign pointers are simply strings of this form "identifier|namespace". <strong>Window object</strong> in the browser is the root, global, ultimate object in the browser. Any JavaScript variable or function that is created in global scope becomes an attribute of the window object. Even the document object can be accessed using the window object fptr.</p>
 			<pre class="code">
 exec_js_get "window|" "document" [];
 val it = "0|": string</pre>
