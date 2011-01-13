@@ -6,9 +6,55 @@
 	</head>
 	<body>
 		
-		<h1>Memory Management</h1>
+		<h1>Memory Sharing</h1>
 		<div class="section">
-			<p>One of the bigger difficulties with the socket based foreign function interface</p>
+			<p>DOM elements (e.g., input fields, buttons, paragraphs, images) appear in JavaScript as JavaScript objects. To work with these objects need to be able to store them and access their methods and attributes from within SML.</p>
+			<p>For example, every time, you call a DOM function that returns an HTML element, e.g.:</p>
+			<pre>
+val getElementById : Document -> string -> HTMLElement option</pre>
+			<p>you are actually only getting a unique string identifier of this element. That is, JavaScript keeps track of all these objects that SML had interest in, by storing (string identifier, reference to the object) tuples. It only sends the string identifier of an object to SML.<p>
+			<p>If you lose the string identifier in SML, there is no way to get access to a the corresponding DOM or JavaScript object, however the reference remains stored in JavaScript, which could prevent JavaScript garbage collection and in this way leak memory.</p>
+			<h2>Memory Management</h2>
+			<p>To prevent the memory leaking, you will have to clean up any JavaScript references, when you don't need them in SML anymore. To do that you should use the jsffi.Memory structure</p>
+			<pre>
+signature JSFFI =
+sig
+    ...
+    (* these are used for keeping the temporary memory, used for
+       storing javascript objects, tidy *)
+    structure Memory :
+    sig
+        val switchNs : string -> unit
+        val switchDefaultNs : unit -> unit
+        val addFunctionReference : string -> fptr
+        val addFunctionReferenceOW : string -> fptr
+        val removeReference : string -> unit
+        val deleteNs : string -> unit
+        val clearNs : string -> unit
+        val clearDefaultNs : unit -> unit
+    end
+    ...
+end</pre>
+		<p>For example:</p>
+		<pre>
+val a = valOf (DOM.getElementById DOM.document "test")
+(* if the value is not going to be ever used anymore *)
+val _ = jsffi.removeReference a</pre>
+		<h2>Namespacing</h2>
+		<p>It might be cumbersome to keep track of all these references individually. For convenience, you can use the "namespacing" functionality.</p>
+		<pre>
+(* we'll be using this value throughout the lifetime of the application *)
+val permanent = valOf (DOM.getElementById DOM.document "permanent")
+fun temporary () =
+	let
+		val _ = jsffi.switchNs "temp"
+		val temp1 = valOf (DOM.getElementById DOM.document "temp1")
+		val temp2 = valOf (DOM.parent temp1)
+		val temp3 = valOf (DOM.lastChild temp2)
+		(* you can still access the "permanent" element here *)
+		val _ = DOM.setValue temp3 (DOM.getValue permanent)
+		val _ = jsffi.deleteNs "temp"
+	in () end</pre>
 		</div>
 		
 	</body>
