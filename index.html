@@ -16,6 +16,7 @@
 					<li><a href="https://addons.mozilla.org/en-US/firefox/addon/271847/">Download</a></li>
 					<li><a href="docs.html">Documentation</a></li>
 					<li><a href="https://github.com/KidkArolis/PolyChrome/">Develop</a></li>
+					<li><a href="#about">About</a></li>
 				</ul>
 			</div>
 			
@@ -27,19 +28,19 @@
 			<ul>
 				<li>HTML, CSS and browser technologies such as Canvas or Scalabble Vector Graphics support provide Standard ML with a way of creating Graphical User Interfaces or graphics in general.</li>
 				<li>Easy deployment of SML applications. If PolyML and PolyChrome is installed, opening the URL (remote or local) of the application is all it takes to run it.</li>
-				<li>Cross-platform GUIs (though Windows currently are not supported :)</li> 
+				<li>Cross-platform GUIs (Although Windows is currently not tested and probably requires cygwin).</li> 
 			</ul>
 			
-			<h3>What are the limitations</h3>
+			<h3>What are the limitations?</h3>
 			<ul>
 				<li>The JavaScript FFI is rather inefficient therefore applications using this FFI intensively, e.g. rendering animations, might be slow.</li>
-				<li>The memory sharing mechanism between JavaScript and Standard ML is not fully automated, which means that some manual memory management might be needed to prevent memory leaks.</li>
-				<li>Running remote applications is potentially harmful (as there are currently no limits on what SML can be executed on the client's machine).</li>
+				<li>The memory sharing mechanism between JavaScript and Standard ML is not fully automated, which means that some explicit code for memory management is sometimes needed (to prevent memory leaks).</li>
+				<li>All ML applications are currently trusted, they could potentially be harmful: we do not currently limit what SML can do on the client machine.</li>
 			</ul>
 			
 			<h3>How does it work?</h3>
 			<ul>
-				<li>The JavaScript component of the extension that is executed by Firefox opens up a PolyML process for each HTML document and runs the Standard ML component of the extension.</li>
+				<li>PolyChrome is composed of two main components. The JavaScript component of the extension (executed in Firefox) opens up a PolyML process, which we call the ML component, for each HTML document.</li>
 				<li>A socket connection is established between the JavaScript and Standard ML components.</li>
 				<li>DOM, Canvas, etc. libraries are loaded in PolyML.</li>
 				<li>Those libraries use the socket connection to forward any JavaScript function call to the JavaScript component, where it get's executed.</li>
@@ -53,8 +54,9 @@
 				<p>PolyChrome in action</p>
 			</div>
 			
+			<h2 id="about">About the Project</h2>
 			<p class="about">
-				<a href="http://kidkarolis.github.com/PolyChrome/">PolyChrome</a> was developed by <a href="http://lt.linkedin.com/in/karolisnarkevicius">Karolis Narkevicius</a> and <a href="http://homepages.inf.ed.ac.uk/ldixon/">Lucas Dixon</a>. We'd like to thank EPSRC Platform grant <a href="http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=EP/E005713/1">The Integration and Interaction of Multiple Mathematical Reasoning Processes"</a>, and the <a href="http://dream.inf.ed.ac.uk/">Edinburgh DReaM group</a> for supporting this work. We'd also like to thank David Matthews for his input, ML wizardry, and tireless maintenance of <a href="http://polyml.org/">PolyML</a>
+				<a href="http://kidkarolis.github.com/PolyChrome/">PolyChrome</a> was developed by <a href="http://lt.linkedin.com/in/karolisnarkevicius">Karolis Narkevicius</a> and <a href="http://homepages.inf.ed.ac.uk/ldixon/">Lucas Dixon</a>. We'd like to thank EPSRC Platform grant <a href="http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=EP/E005713/1">The Integration and Interaction of Multiple Mathematical Reasoning Processes"</a>, and the <a href="http://dream.inf.ed.ac.uk/">Edinburgh DReaM group</a> for supporting this work. We'd also like to thank David Matthews for his input, ML wizardry, and tireless maintenance of <a href="http://polyml.org/">PolyML.</a>
 			</p>
 		
 		</div>
