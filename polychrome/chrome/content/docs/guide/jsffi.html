@@ -8,7 +8,54 @@
 		
 		<h1>Using JavaScript FFI</h1>
 		<div class="section">
-			examples, references to demos using raphael, jquery, JavaScript side of things ...
+			<p>PolyChrome can execute any Standard ML code. However, the HTML/DOM interaction is limited by what is provided in the DOM and Canvas libraries. Currently these 2 libraries don't provide much functionality and they will have to be extended in order to do something useful.</p>
+			<p>It is easy to extend the libraries or implement wrappers for any other existing JavaScript libraries, by using the JavaScript Foreign Function Interface (jsffi structure). In the demos page you'll find examples of jQuery and Raphael JavaScript libraries being used from SML.</p>
+			<h2>jsffi</h2>
+			<p>There are currently 4 functions that you can use to interact with JavaScript</p>
+			<pre class="code">
+signature JSFFI =
+sig
+    ...
+    (* these are used to call JS functions
+       when using exec_js_r, it is up to the implementation of the wrapper
+       function to convert the returned string to an appropriate type *)
+    (* args: an fptr to an object, a function name, an argument list *)
+    (* e.g. exec_js_r "document|" "getElementById" [arg.string "something"] *)
+    val exec_js_r : string -> string -> JSON.T list list -> string
+    val exec_js : string -> string -> JSON.T list list -> unit
+    val exec_js_get : string -> string -> JSON.T list list -> string
+    val exec_js_set : string -> string -> JSON.T list list -> unit
+    ...
+end</pre>
+			<p><strong>exec_js_r</strong> and <strong>exec_js</strong> are used to call JavaScript functions. The former expects something returned and the latter does not. They take 3 arguments. An object whose method will be called, a name of the method and a list of arguments.<strong>exec_js_get</strong> and <strong>exec_js_set</strong> are similar, but instead of calling methods they get and set attributes of the object.</p>
+			<p>To start with, you can use two fptr - "window|" and "document|" (read the <a href="memory.html" target="content">Memory Sharing</a> section to find out more about the foreign pointers). <strong>Window object</strong> in the browser is the root, global, ultimate object in the browser. Any JavaScript variable or function that is created in global scope becomes an attribute of the window object. Event the document object can be accessed using the window object fptr.</p>
+			<pre class="code">
+exec_js_get "window|" "document" [];
+val it = "0|": string</pre>
+			<p>Now, the fptrs "0|" and "document|" point to the same JavaScript object. Both of them can now be used as the first arguments to the exec_js functions.</p>
+			<p>For example, to call the getElementById function, we do:</p>
+			<pre class="code">
+fun parse_element e = case e of "null" => NONE | x => SOME (HTMLElement x)
+fun getElementById (Document d) id = parse_element (exec_js_r d "getElementById" [arg.string id])</pre>
+			<p>For example, to use the Raphael library, we can do this:</p>
+			<pre class="code">
+...
+&lt;script type=&quot;text/javascript&quot; src=&quot;raphael/js/raphael-1.5.2.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;application/x-polyml&quot;&gt;
+datatype paper = Paper of fptr
+fun Raphael (x, y, w, h) = Paper (exec_js_r &quot;window|&quot; &quot;Raphael&quot; [arg.int x, arg.int y, arg.int w, arg.int h])
+&lt;/script&gt;
+...</pre>
+			<h2>Accessing Deeper Attributes of JavaScript Objects</h2>
+			<p>Javascript</p>
+			<pre class="code">
+Raphael.getColor()</pre>
+			<p>is equivalent to JavaScript</p>
+			<pre class="code">
+window.Raphael.getColor()</pre>
+			<p>which in SML can be achieved by</p>
+<pre class="code">
+exec_js_r "window|" "Raphael.getColor" []</pre>
 		</div>
 		
 	</body>
