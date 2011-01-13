@@ -49,7 +49,7 @@ sig
 	val getInnerHTML : HTMLElement -> string
 	val setInnerHTML : HTMLElement -> string -> unit
 	val getValue : HTMLElement -> string
-	val setValue : HTMLElement -> string -> unit	
+	val setValue : HTMLElement -> string -> unit
 	val getHTMLCollectionItem : HTMLCollection -> int -> HTMLElement
 	
 	val addEventListener :

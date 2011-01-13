@@ -25,6 +25,8 @@ sig
     (* these are used to call JS functions
        when using exec_js_r, it is up to the implementation of the wrapper
        function to convert the returned string to an appropriate type *)
+    (* args: an fptr to an object, a function name, an argument list *)
+    (* e.g. exec_js_r "document|" "getElementById" [arg.string "something"] *)
     val exec_js_r : string -> string -> JSON.T list list -> string
     val exec_js : string -> string -> JSON.T list list -> unit
     val exec_js_get : string -> string -> JSON.T list list -> string
