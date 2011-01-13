@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PolyChrome - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style/guide.css">
+	</head>
+	<body>
+		
+		<h1>Callbacks</h1>
+		<div class="section">
+			<p>Sometimes you need JavaScript to be able to reference PolyML memory. One of such cases is DOM events. To handle DOM events, the JavaScript FFI is used to add event listeners, but there has to be a way for the JavaScript event handler to call PolyML functions. This is currently quite cumbersome as it involves maintaining data structures to store the PolyML functions for later use. In the future, it would be nice to have this integrated in the jsffi structure.<p>
+			<p>Below is an implementation of DOM.addEventListener</p>
+			<pre>
+structure DOM : DOM =
+struct
+
+    local open jsffi in
+    
+    ...
+    datatype EventListener = EventListener of string;
+    datatype Event = Event of fptr
+    datatype EventType = click | change | keypress | keyup | mouseover | mouseout | mousemove
+    datatype EventCallback = EventCallback of Event -> unit
+    
+    (* we'll keep event callbacks here *)
+    val eventCallbackTab = ref (Tab.empty : (HTMLElement * EventType * EventCallback) Tab.T)
+    fun handle_event id event = let
+            val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id))
+                handle UNDEF => (raise Error ())
+            val _ = f (Event event)
+            val _ = Memory.removeReference event (* clean up the memory *)
+            val _ = ready ()
+        in () end
+    
+    ...
+    
+    fun addEventListener_ (HTMLElement e) et f add_function_reference = let
+            val callback = "val _ = DOM.handle_event {id} {arg} ;"
+            val id = add_function_reference callback
+            val entry = (HTMLElement e, et, f)
+            val _ = (eventCallbackTab := Tab.ins (Name.mk id, entry) (!eventCallbackTab))
+            val _ = exec_js e "addEventListener" [arg.string (string_of_eventtype et),
+                                                  arg.reference id, arg.bool false]
+        in EventListener id end
+    fun addEventListener e et f = addEventListener_ e et f Memory.addFunctionReference
+    fun addEventListenerOW e et f = addEventListener_ e et f Memory.addFunctionReferenceOW
+
+    fun removeEventListener (EventListener id) = let
+            val (HTMLElement e, et, _) = (Tab.get (!eventCallbackTab) (Name.mk id))
+                          handle UNDEF => (raise PolyChrome.DOMExn "Undefined listener");
+            val _ = (eventCallbackTab := (Tab.delete (Name.mk id) (!eventCallbackTab)))
+            val _ = exec_js e "removeEventListener" [arg.string (string_of_eventtype et),
+                                                     arg.reference id, arg.bool false]
+            val _ = Memory.removeReference id
+        in () end
+    
+    ...
+    
+    end
+end</pre>
+			<h2>Comments</h2>
+			<p>We store the HTML element, event type and event callback function to the <strong>eventCallbackTab</strong> table. We need this table to be able to call the function anytime the event fires. The event type and the HTML element has to be stored, because that information is needed when we want to remove the event listener.</p>
+			<p><strong>add_function_reference</strong> is used to create a JavaScript function, that when called, sends a string to PolyML, in this case "val _ = DOM.handle_event {id} {arg} ;", for evaluation. This way we can create a JavaScript function that can call an SML function. The obscure {id} bit is replaced by JavaScript with the string identifier of that JavaScript function. It is the same identifier that is used for all JavaScript objects that are shared between JavaScript and PolyML as discussed in the <a href="memory.html" target="content">Memory Sharing</a> section. Each of the following {arg} substrings are replaced with the argument that the JavaScript function was called with. For example, in this case, all callbacks passed to the window.document.addEventListener function are called with an event object, which in this case is going to be passed to the SML function as an argument (again, only the string identifier will be passed to SML).</p>
+			<p>The difference between Memory.addFunctionReference and Memory.addFunctionReferenceOW is that the latter can be used for very ...</p>
+			<p>To fully understand what's going on in here you will have to look at the implementation of jsffi in both SML and JS. Those can be found in jsffi.sml and JSFFI.js files.</p>
+		</div>
+		
+	</body>
+</html>
