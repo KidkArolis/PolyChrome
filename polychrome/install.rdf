@@ -6,7 +6,7 @@
     <em:type>2</em:type>
     <em:name>PolyChrome</em:name>
     <em:description>Use Standard ML as a clientside programming language.</em:description>
-    <em:version>0.3.0pre2</em:version>
+    <em:version>0.3.0</em:version>
     <em:creator>Karolis Narkevičius</em:creator>
     <em:contributor>Lucas Dixon</em:contributor>
     <em:aboutURL>chrome://polychrome/content/triggerSettings.html</em:aboutURL>
