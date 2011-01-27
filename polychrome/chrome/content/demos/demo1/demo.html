@@ -59,8 +59,8 @@ fun removeToggle2 (_) =
       val e = rem2
       val a = getAttribute e "listener"
       val _ = if (a="on")
-              then (setValue e "add first listener")
-              else (setValue e "remove first listener");
+              then (setValue e "add second listener")
+              else (setValue e "remove second listener");
       val _ = if (a="on")
               then (removeEventListener (!listener2))
               else (listener2 := addEventListener
