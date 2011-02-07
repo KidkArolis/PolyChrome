@@ -24,7 +24,7 @@ PolyChrome.Poly.prototype = {
         this.setStatus({s:"Initializing..."});
         this.socket1 = new Socket1(this);
         this.socket2 = new Socket2(this);
-        this.sandbox = new PolyChrome.Sandbox();
+        this.sandbox = new PolyChrome.Sandbox(this.document);
         this.evaluator = new Evaluator(this);
         this.startPolyProcess();
         this.jsffi = new PolyChrome.JSFFI(this);
@@ -308,17 +308,48 @@ Evaluator.prototype = {
  sandbox deals with the filesystem. it takes care of creating temporary
  disk space for downloaded PolyML applications
 */
-PolyChrome.Sandbox = function() {
-    //create a new directory with random name
-    while (true) {
-        this.hash = Utils.randomString();
-        var dir = Utils.getExtensionPath();
-        dir.append("sandboxes");
-        dir.append(this.hash);
-        if (!dir.exists()) {
-            break;
+PolyChrome.Sandbox = function(document) {
+    //check if this application requires persistant storage
+    //TODO: we're already doing such looping somewhere else.. DRY...
+    this.persist = false;
+    if (document.contentType=="application/vnd.mozilla.xul+xml") {
+        scripts = document.getElementsByTagName("html:script");
+    } else {
+        scripts = document.getElementsByTagName("script");
+    }
+    for (var i=0, len=scripts.length; i<len; i++) {
+        if (scripts[i].getAttribute("type")=="application/x-polyml") {
+            var cls = scripts[i].getAttribute("class");
+            if (cls && cls.match(/persist/)) {
+                this.persist = true;
+                break;
+            }
         }
     }
+    
+    //create temporary dir or persistant dir
+    if (this.persist) {
+        var name = (document.location.host
+                    + document.location.pathname).replace(/\//g,".");
+        var dir = Utils.getExtensionPath();
+        dir.append("storage");
+        dir.append("persistant");
+        dir.append(name);
+    } else {
+        //create a new directory with random name
+        while (true) {
+            //TODO: why this.hash? is it used anywhere outside?
+            this.hash = Utils.randomString();
+            var dir = Utils.getExtensionPath();
+            dir.append("storage");
+            dir.append("temporary");
+            dir.append(this.hash);
+            if (!dir.exists()) {
+                break;
+            }
+        }
+    }
+    
     Utils.createDir(dir);
     this.pathStr = dir.path;
     this._path = dir;
@@ -337,16 +368,28 @@ PolyChrome.Sandbox.prototype = {
         return aFile;
     },
     
-    //completely empties the sandbox dir
-    clean : function() {
+    //completely empties the temporary dir
+    clear : function() {
         var sandboxPath = Utils.getExtensionPath();
-        sandboxPath.append("sandboxes");
+        sandboxPath.append("storage");
+        sandboxPath.append("temporary");
+        Utils.removeDir(sandboxPath);
+        Utils.createDir(sandboxPath);
+    },
+    
+    //completely empties the persistant dir
+    clearPersistant : function() {
+        var sandboxPath = Utils.getExtensionPath();
+        sandboxPath.append("storage");
+        sandboxPath.append("persistant");
         Utils.removeDir(sandboxPath);
         Utils.createDir(sandboxPath);
     },
     
     destroy : function() {
-        Utils.removeDir(this.getPath());
+        if (!this.persist) {
+            Utils.removeDir(this.getPath());
+        }
     }
 }
 

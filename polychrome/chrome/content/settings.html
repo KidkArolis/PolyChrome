@@ -59,6 +59,11 @@
                   <td><input type="button" id="rebuildHeaps" value="Rebuild Heaps" /><span id="rebuildingStatus"></span></td>
                   <td class="hint">This is provided just in case something breaks. Usually you don't need to do this manually.</td>
               </tr>
+              <tr>
+                  <td></td>
+                  <td><input type="button" id="clearPersistantStorage" value="Clear Persistant Storage" /></td>
+                  <td class="hint">This clears the persistant PolyChrome application contents from your machine.</td>
+              </tr>
           </table>
         </div>
       </div>
@@ -149,6 +154,13 @@
               PolyChrome.removeHeaps();
               PolyChrome.startPoly();
               e("rebuildingStatus").innerHTML = "please wait...";
+            }
+          }, false);
+          
+          //clear persistant cache
+          e("clearPersistantStorage").addEventListener("click", function() {
+            if (confirm("The data stored by PolChrome applications will be lost. Are you sure?")) {
+              PolyChrome.Sandbox.prototype.clearPersistant();
             }
           }, false);
         }

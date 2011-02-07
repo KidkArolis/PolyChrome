@@ -43,8 +43,7 @@ var PolyChrome = (function() {
             
             PolyChrome.findPoly();
             
-            //statically call the clean method
-            PolyChrome.Sandbox.prototype.clean();
+            PolyChrome.Sandbox.prototype.clear();
             
             PolyChrome.browserUI = new PolyChrome.BrowserUI({
                 onDocumentLoad : PolyChrome.processDoc,
