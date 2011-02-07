@@ -135,7 +135,7 @@ PolyChrome.BrowserUI.prototype = {
     },
     
     setStatus : function(poly) {
-        if (PolyChrome.currentApp().poly!=poly) {
+        if (PolyChrome.currentApp()==null || PolyChrome.currentApp().poly!=poly) {
             return;
         }
         e("polychrome-status").value = poly.status.s;
