@@ -283,8 +283,8 @@
 				<pre>
 	&lt;script type=&quot;application/x-polyml&quot; src=&quot;link/to/file.zip&quot;&gt;&lt;/script&gt;</pre>
 				<h2>Sandbox</h2>
-				<p>In all of the above cases, a temporary sandbox (it's not really a sandbox at the moment, that is you can freely browse the filesystem of the clients computer from the SML script) directory is created on the clients machine. The working directory of the toplevel PolyML shell is always set to that sandbox, thus you can access the downloaded files as they are all placed into this sandbox directory. These temporary directories are created in <pre>your_firefox_profile/extensions/polychrome@ed.ac.uk/sandboxes</pre></p>
-				<h2>&nbsp</h2>
+				<p>In all of the above cases, a temporary sandbox (it's not really a sandbox at the moment, that is you can freely browse the filesystem of the clients computer from the SML script) directory is created on the clients machine. The working directory of the toplevel PolyML shell is always set to that sandbox, thus you can access the downloaded files as they are all placed into this sandbox directory. These temporary directories are created in <strong>your_firefox_profile/extensions/polychrome@ed.ac.uk/storage/temporary</strong></p>
+				<h2>&nbsp;</h2>
 				<p>Obviously, a combination of the above could also be used. For example, you might include a large application by embedding the zip file and include a short snippet of code in HTML initializing the application.</p>
 			</section>
 			
@@ -639,7 +639,7 @@ end
 				<p><strong>/polychrome/poly/bin</strong> - contains some bash scripts for finding PolyML binary on the clients machine, running the main.sml script, and killing the PolyML process. This is the only bit of the whole extension that prevents it to be truly cross-platform. Hopefully, with some modifications in the next release of PolyML, these scripts won't be neccessary anymore.</p>
 				<p><strong>/polychrome/poly/isaplib/</strong> - contains the isaplib library that is used by the extension. Isaplib is part of the <a href="http://dream.inf.ed.ac.uk/projects/isaplanner/">IsaPlanner</a></p>
 				<p><strong>/polychrome/sandboxes/</strong> - is used to store all temporary files downloaded from the server (when they're included using script tags).</p>
-				<p>Read <a href="https://developer.mozilla.org/en/building_an_extension">https://developer.mozilla.org/en/building_an_extension<a> for description of the other, Firefox specific, files, such as install manifest.</p>
+				<p>Read <a href="https://developer.mozilla.org/en/building_an_extension">https://developer.mozilla.org/en/building_an_extension</a> for description of the other, Firefox specific, files, such as install manifest.</p>
 			</section>
 			
 		</div>
