@@ -81,9 +81,12 @@ PolyChrome.BrowserUI = function(callbacks) {
         self.update();
     }, false);
     
+    /*
     e("polychrome-console-button-min").addEventListener("command", function(event) {
         self.console.hide();
     }, false);
+    */
+    
     e("polychrome-icon").addEventListener("click", function(event) {
         if (event.button!=self.LEFT_MOUSE_BUTTON) return;
         if (PolyChrome.currentApp().active) {

@@ -11,11 +11,34 @@ PolyChrome.ConsoleUI = function() {
     this.logarea = e("polychrome-console-logarea").contentDocument
         .getElementById("polychrome-console-logarea");
     
-    this.input = e("polychrome-console-commandline-input");
-        
+    //this.input = e("polychrome-console-commandline-input");
+    
+    this.input = e("polychrome-console-logarea").contentDocument
+        .getElementById("polychrome-console-input-area");
     this.input.addEventListener("keydown", function(event) {
         self.handleKeyDown(event);
     }, false);
+    //TODO this is to catch paste event and update the height of the textarea
+    //there should be a separate function for doing this though.. that is we
+    //don't have to do everything that's in handleKeyDown handler...
+    this.input.addEventListener("input", function(event) {
+        self.handleKeyDown(event);
+    }, false);
+    /*
+    this.input = e("polychrome-console-logarea").contentDocument.defaultView.input;
+    this.input.win.document.body.addEventListener("keydown", function(event) {
+        log("keydown");
+        self.handleKeyDown(event);
+    }, false);
+    */
+    /*
+    this.input.grabKeys(function(event) {
+        self.handleKeyDown(event);
+    }, function(event) {
+        self.filterKeys(event);
+    });
+    */
+    
 }
 PolyChrome.ConsoleUI.prototype = {
     KEY_ENTER : 13,
@@ -126,31 +149,61 @@ PolyChrome.ConsoleUI.prototype = {
         }
     },
     
+    _isCursorAtFirstLine : function(ta) {
+        return ta.value.substr(0, ta.selectionStart).split("\n").length === 1;
+    },
+    
+    _isCursorAtLastLine : function(ta) {
+        var totalLines = ta.value.split("\n").length;
+        var cursorLine = ta.value.substr(0, ta.selectionStart).split("\n").length;
+        return totalLines === cursorLine;
+    },
+    
     handleKeyDown : function(event) {
+        if (!this.activeConsole.poly.ready) {
+            event.preventDefault();
+            return;
+        }
+        
+        var command = this.input.value;
+        
+        //TODO create a class for managing history...
+        if (this.activeConsole.historyPointer === 0) {
+            this.activeConsole.historyUpdateCurrent(command);
+        }
+
         switch (event.which) {
             case this.KEY_ENTER:
-                if (event.shiftKey)
-                    break;
-                if (this.activeConsole.poly.ready) {
-                    var command = this.input.value;
-                    if (command!="") {
-                        this.activeConsole.logInput(command);
-                        this.activeConsole.poly.sendCode(command);
-                    } else {
-                        this.activeConsole.logInput(command);
-                    }
-                    this.input.value = "";
-                    event.preventDefault();
+                if (event.shiftKey) break;
+                if (command!=="") {
+                    this.activeConsole.logInput(command);
+                    this.activeConsole.poly.sendCode(command);
+                } else {
+                    this.activeConsole.logInput(command);
+                }
+                this.input.value = "";
+                event.preventDefault();
+                break;
+            
+            case this.KEY_UP:
+                if (this._isCursorAtFirstLine(this.input)) {
+                    this.input.value = this.activeConsole.historyOlder();
                 }
                 break;
-            case this.KEY_UP:
-                this.input.value = this.activeConsole.historyOlder();
-                break;
+            
             case this.KEY_DOWN:
-                this.input.value = this.activeConsole.historyNewer();
+                if (this._isCursorAtLastLine(this.input)) {
+                    this.input.value = this.activeConsole.historyNewer();
+                }
                 break;
         }
-    }
+        
+        //simple textarea resizing
+        var rows = this.input.value.split('\n').length;
+        this.input.rows = rows+1;
+        
+        this.scrollDown();
+    },
 };
 
 }());
