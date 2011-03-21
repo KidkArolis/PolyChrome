@@ -5,8 +5,10 @@ var error = PolyChrome.error;
 
 PolyChrome.Console = function() {
     this.minimized = PolyChrome.prefs.consoleMinimizedOnStartup.value;
-    this.cmdHistory = [];
+    //the first element in the history is always the currently typed in command
+    this.cmdHistory = [""];
     this.content = [];
+    this._historyResetPointer();
 }
 PolyChrome.Console.prototype = {
     poly : null, // poly object associated with this console
@@ -14,7 +16,7 @@ PolyChrome.Console.prototype = {
     content : null,
     cmdHistory : null,
     HISTORY_LIMIT : 200,
-    historyPointer : -1,
+    historyPointer : null,
     
     log : function(m) {
         var message = {m:m, type:"output"};
@@ -33,7 +35,7 @@ PolyChrome.Console.prototype = {
         this.content.push(message);
         PolyChrome.browserUI.console.update(this, message);
         this.poly.setStatusDefault();
-        this.historyAdd(m);
+        this._historyAdd(m);
     },
     
     error : function(m) {
@@ -44,41 +46,40 @@ PolyChrome.Console.prototype = {
     },
     
     
-    historyAdd : function(m) {
-        this.historyResetPointer();
-        if (m!="" && this.historyOlder() != m) {
-            this.cmdHistory.unshift(m);
+    _historyAdd : function(m) {
+        this._historyResetPointer();
+        if (m!=="" && (m!==this.historyOlder() || this.cmdHistory.length===1)) {
+            this.cmdHistory[0] = m;
+            this.cmdHistory.unshift("");
             if (this.cmdHistory.length > this.HISTORY_LIMIT) {
                 this.cmdHistory.splice(this.cmdHistory.length-1,1);
             }
+        } else {
+            this.cmdHistory[0] = "";
         }
-        this.historyResetPointer();
+        this._historyResetPointer();
     },
     
-    historyResetPointer : function() {
-        this.historyPointer = -1;
+    _historyResetPointer : function() {
+        this.historyPointer = 0;
     },
     
     historyOlder : function() {
         if (this.historyPointer<this.cmdHistory.length-1) {
             this.historyPointer++;
         }
-        if (this.historyPointer==-1) {
-            return "";
-        } else {
-            return this.cmdHistory[this.historyPointer];
-        }
+        return this.cmdHistory[this.historyPointer];
     },
     
     historyNewer : function() {
-        if (this.historyPointer>-1) {
+        if (this.historyPointer>0) {
             this.historyPointer--;
         }
-        if (this.historyPointer==-1) {
-            return "";
-        } else {
-            return this.cmdHistory[this.historyPointer];
-        }
+        return this.cmdHistory[this.historyPointer];
+    },
+    
+    historyUpdateCurrent : function(value) {
+        this.cmdHistory[0] = value;
     },
     
     select : function() {

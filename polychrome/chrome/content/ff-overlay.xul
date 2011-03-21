@@ -64,23 +64,27 @@
 	</statusbar>
 	
 	<vbox id="appcontent">
-		<splitter id="polychrome-console-splitter" collapsed="false" />
+		<splitter id="polychrome-console-splitter" collapsed="false" style="background:black" />
 		<vbox id="polychrome-console-box" collapsed="true" persist="height" >
+				<!--
 				<hbox>
-					<label id="polychrome-console-title"	value="PolyML Console" />
+					<label id="polychrome-console-title" value="PolyML Console" />
 					<spacer flex="1" />
 					<hbox id="polychrome-console-buttons" role="toolbar">
-                        <toolbarbutton id="polychrome-console-button-min"
-                            tooltiptext="Minimize The Console" />
-                    </hbox>
+						<toolbarbutton id="polychrome-console-button-min"
+							tooltiptext="Minimize The Console" />
+					</hbox>
 				</hbox>
-				<iframe id="polychrome-console-logarea" flex="1" src="chrome://polychrome/content/logarea.html" />
+				-->
+				<iframe id="polychrome-console-logarea" flex="1" src="chrome://polychrome/content/console/logarea.html" />
+				<!--
 				<hbox id="polychrome-console-commandline-box" style="border:none">
 					<textbox id="polychrome-console-commandline-input" flex="1"
 						label="console command line"
 						aria-autocomplete="inline"
 						multiline="true" />
 				</hbox>
+				-->
 		</vbox>
 	</vbox>
 </overlay>

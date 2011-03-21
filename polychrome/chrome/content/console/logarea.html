@@ -2,10 +2,13 @@
 <html>
 	<head>
 		<style type="text/css">
-			body {
-				font-family:monospace;
+			body, html {
 				margin:0;
 				padding:0;
+				width:100%;
+			}
+			body {
+				font-family:monospace;
 				font-size:14px;
 			}
 			pre {
@@ -13,7 +16,7 @@
 				margin:0;
 			}
 			#polychrome-console-logarea {
-				
+				width:100%;
 			}
 			.polychrome-console-item-input {
 				color:#3f87fe;
@@ -46,9 +49,42 @@
 				height:100%;
 				resize:none;
 			}
+			#polychrome-console-input-area {
+				width:100%;
+				margin:0;
+				padding:4px;
+				-moz-box-sizing:border-box;
+				border:0;
+				resize: none;
+				overflow:hidden;
+				margin:0;
+				padding:0;
+				color:#333;
+				font-size:14px;
+				padding:2px 0 2px 16px;
+				background:url("chrome://polychrome/skin/arrow_right_small.png") 4px 6px no-repeat;
+			}
+			
 		</style>
+		<!--<script src="js/codemirror.js"></script>-->
 	</head>
 	<body>
 		<div id="polychrome-console-logarea"></div>
+		<textarea id="polychrome-console-input-area"></textarea>
+		<!--
+		<script>
+		var textarea = document.getElementById("polychrome-console-input-area");
+		var input = new CodeMirror(CodeMirror.replace(textarea), {
+			content: textarea.value,
+			parserfile: "parsesml.js",
+			stylesheet: "css/smlcolors.css",
+			path: "js/",
+			//autoMatchParens: true,
+			height: "dynamic",
+			tabMode: "shift",
+			enterMode: "keep"
+		});
+		</script>
+		-->
 	</body>
 </html>
