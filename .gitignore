@@ -4,5 +4,6 @@
 *.so
 *.xpi
 polychrome/sandboxes/*
+polychrome/storage/*
 *.cfg
 polychrome/profiling/output.txt
