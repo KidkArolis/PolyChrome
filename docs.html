@@ -2,10 +2,678 @@
 <html>
 	<head>
 		<title>PolyChrome - Documentation</title>
+		<link rel="stylesheet" type="text/css" href="style/docs.css">
+		<script src="js/jquery-1.5.min.js"></script>
 	</head>
+	<body>
+		
+		<nav>
+			<header>
+				<h1>PolyChrome Documentaton</h1>
+				<a href="http://kidkarolis.github.com/PolyChrome/">PolyChrome website</a>
+			</header>
+			
+			<h2>Guide</h2>
+			<ul>
+				<li class="chapter">Getting Started</li>
+				<li><a href="#intro">Intro</a></li>
+				<li><a href="#installation">Installation</a></li>
+				<li><a href="#ui">User Interface</a></li>
+				<li><a href="#helloworld">Hello World</a></li>
+				<li><a href="#demos">Demos</a></li>
+				<li><a href="#troubleshooting">Troubleshooting</a></li>
+				<li class="chapter">Fundamentals</li>
+				<li><a href="#architecture">Architecture</a></li>
+				<li><a href="#memory">Memory Sharing</a></li>
+				<li><a href="#script-tags">Script Tags</a></li>
+				<li><a href="#persistance">Persistance</a></li>
+				<!--
+				<li class="chapter">Cookbook</li>
+				<li><a href="#dom-snippets">DOM Snippets</a></li>
+				-->
+				<li class="chapter">Extending</li>
+				<li><a href="#jsffi">Using JavaScript FFI</a></li>
+				<li><a href="#callbacks">SML Callbacks</a></li>
+			</ul>
+			<h2>Library Reference</h2>
+			<ul>
+				<li><a href="#signature_dom">DOM signature</a></li>
+				<li><a href="#signature_canvas">Canvas signature</a></li>
+				<li><a href="#signature_json">JSON signature</a></li>
+				<li><a href="#signature_jsffi">JSFFI signature</a></li>
+			</ul>
+			<h2>Development</h2>
+			<ul>
+				<li><a href="#development-guidelines">Development Guide</a></li>
+				<li><a class="out" href="https://github.com/KidkArolis/PolyChrome/issues">Report Bugs</a></li>
+			</ul>
+		</nav>
+		
+		<div id="content">
+			
+			<section id="intro">
+				<h1>Warning :)</h1>
+				<p>PolyChrome is still in an early stage of development. Hopefully, one day it will be polished at least a bit more. For now, as you'll see in the documentation and the code, some things are not as nice or as clear as they could be, but you're welcome to 				<a href="https://github.com/KidkArolis/PolyChrome" target="blank">contribute with comments, ideas or code</a>.
+		</p>
+				<p>Also, this documentation is not yet exhaustive, and we about quite a few <a href="https://github.com/KidkArolis/PolyChrome/issues" target="blank">issues</a> already :) </p>
+				<h2>Updating the extension</h2>
+				<p>As of now, the extension has not been reviewed by Mozilla, therefore no updates of the extension will be automatically pushed to your browser. You'll have to manually check for new versions of the extension at <a href="https://addons.mozilla.org/en-US/firefox/addon/271847/"  target="blank">https://addons.mozilla.org/en-US/firefox/addon/271847/</a>.</p>
+			</section>
+			
+			<section id="installation">
+				<h1>Installation</h1>
+				<p contenteditable="true">To use the PolyChrome extension you'll need to install <a href="http://polyml.org/download.html">PolyML</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/271847/">the PolyChrome extension itself</a>.
+				<h2>Test It</h2>
+				<p>After you've done that, you can check whether it's working by opening up Firefox, right clicking the extension icon at the bottom right corner of the browser and clicking <strong>Start PolyML</strong>.</p>
+				<img src="images/startPolyML.png" />
+				<p>The label should change to <strong>Initializing...</strong>. This means that the neccessary heaps are being built for the first time. After the label changes to <strong>PolyML</strong> as in the screenshot below try entering some Standard ML code into the console (if you can't see the console click on the PolyChrome icon).<p>
+				<img src="images/2plus2.png" />
+				<h2>Troubleshooting</h2>
+				<p>If some of the above steps did not work, please refer to the <a href="troubleshooting.html">Troubleshooting section</a></p>
+			</section>
+			
+			<section id="ui">
+				<h1>User Interface</h1>
+				<p>You've seen most of what you need to know already and you'll see the rest as you go, but a few quick additional snippets of information in case you find this confusing.</p>
+				<p><img src="images/polyml_16x16_gray.png" /> - this icon means that PolyML is <strong>not active</strong> for this document and no Standard ML code found on this page will be executed.</p>
+				<p><img src="images/polyml_16x16.png" /> - this icon means that PolyML is <strong>active</strong> for this document.</p>
+				<p><strong>Note</strong> that by default, PolyML will never be active for documents containing no SML code. For documents containing SML code, the behavior depends on the <strong>Always Enable</strong> setting.</p>
+				<p>Also <strong>note</strong> that once you've enabled PolyML for a certain tab containing SML code, it will remain enabled until you close the tab or stop PolyML via the context menu.</p>
+			</section>
+			
+			<section id="helloworld">
+				<h1>Hello World</h1>
+				<p>This example will demonstrate how to write SML applications using the PolyChrome.</p>
+				<h2>1.</h2>
+				<p>First, create an empty document called <strong>hello.html</strong>. Paste the following code into the document, and open the document with Firefox.</p>
+				<pre class="code">
+	&lt;!DOCTYPE html&gt;
+	&lt;html&gt;
+		&lt;head&gt;
+			&lt;title&gt;Hello SML World&lt;/title&gt;
+			
+			&lt;script type=&quot;application/x-polyml&quot;&gt;
+				val hello_div = valOf (DOM.getElementById DOM.document &quot;hello&quot;)
+				val _ = DOM.setInnerHTML hello_div &quot;Hello Graphical SML World&quot;
+				
+				val paper = valOf (DOM.getElementById DOM.document &quot;paper&quot;)
+				val context = Canvas.getContext paper &quot;2d&quot;
+				val _ = Canvas.fillStyle context &quot;green&quot;
+				val _ = Canvas.fillRect context 10 10 30 50
+			&lt;/script&gt;
+		
+		&lt;/head&gt;
+		&lt;body&gt;
+			&lt;h1 id=&quot;hello&quot;&gt;&lt;/h1&gt;
+			&lt;canvas id=&quot;paper&quot;&gt;&lt;/canvas&gt;
+		&lt;/body&gt;
+	&lt;/html&gt;</pre>
+				<h2>2.</h2>
+				<p>That's it!</p>
+				<h2>What happened here?</h2>
+				<p>At first, Firefox rendered the HTML document, which is simply a blank page, because it contains an empty h1 element and an empty canvas element. Then, PolyChrome extension found the PolyML code on this page and executed it. The code used DOM library to select the h1 element and add some text into it and then used Canvas library to draw a rectangle in the canvas element.</p>
+				<p>To fully understand the above example you should be familiar with HTML and JavaScript. Even though, no JavaScript was written in this example, the usage of DOM and Canvas libraries very closely corresponds to the way you would write JavaScript. For instance, lets look at equivalent SML and JavaScript code side by side:</p>
+				<table class="comparison">
+					<tr>
+						<td><strong>Standard ML</strong></td>
+					</tr>
+					<tr>
+						<td><pre>DOM.getElementById DOM.document "hello"</pre></td>
+					</tr>
+					<tr>
+						<td><strong>JavaScript</strong></td>
+					</tr>
+					<tr>
+						<td><pre>document.getElementById("hello")</pre></td>
+					</tr>
+					<tr>
+						<td><strong>Remarks</strong></td>
+					</tr>
+					<tr>
+						<td>DOM.getElementById returns an option type, which is NONE if the element does not exist in the document. JavaScript returns null in such case.</td>
+					</tr>
+				</table>
+				<table class="comparison">
+					<tr>
+						<td><strong>Standard ML</strong></td>
+					</tr>
+					<tr>
+						<td><pre>DOM.setInnerHTML hello_div "Hello Graphical SML World"</pre></td>
+					</tr>
+					<tr>
+						<td><strong>JavaScript</strong></td>
+					</tr>
+					<tr>
+						<td><pre>hello_div.innerHTML = "Hello Graphical SML World"</pre></td>
+					</tr>
+					<tr>
+						<td><strong>Remarks</strong></td>
+					</tr>
+					<tr>
+						<td>Notice that in case of JavaScript, innerHTML is not a function but rather an attribute. Such attributes can be accessed using the setters and getters provided in the SML DOM library.</td>
+					</tr>
+				</table>
+				<table class="comparison">
+					<tr>
+						<td><strong>Standard ML</strong></td>
+					</tr>
+					<tr>
+						<td><pre>Canvas.fillRect context 10 10 30 50</pre></td>
+					</tr>
+					<tr>
+						<td><strong>JavaScript</strong></td>
+					</tr>
+					<tr>
+						<td><pre>context.fillRect(10,10,30,50)</pre></td>
+					</tr>
+					<tr>
+						<td><strong>Remarks</strong></td>
+					</tr>
+					<tr>
+						<td>In case of SML we pass the context object to a function, whereas in JS we call the method of the object itself.</td>
+					</tr>
+				</table>
+			</section>
+			
+			<section id="demos">
+				<h1>Demos</h1>
+				<p>A good way of trying out the extension is checking out the demos that can be opened via the context menu of the extension or by opening <a href="chrome://polychrome/content/demos/index.html">chrome://polychrome/content/demos/index.html</a> (note that this link will only work in Firefox with PolyChrome installed).</p>
+				<p>These demos are not intended to be polished applications. They were created for a proof-of-concept reasons. Some of them, in fact, demonstrate the limitations of the extension.</p>
+			</section>
+			
+			<section id="troubleshooting">
+				<h1>Troubleshooting</h1>
+				<p>Here are a few things you could take a look at to help in identifying some of the problems.</p>
+				<h2>PolyML Not found</h2>
+				<p>If PolyML is not installed or found on the machine, you will see this.</p>
+				<img src="images/polymlNotFound.png" />
+				<p>Click on the icon to go to settings of the extension and configure the path to your PolyML installation.</p>
+				<h2>JavaScript Error Console</h2>
+				<p>PolyChrome extension uses Firefox'es JavaScript Error Console, that can be opened by <strong>Tools > Error Console</strong> or by Ctrl-Shift-J. Note, that errors from all Firefox extensions or even websites are printed here, so not all of it may be reported by PolyChrome. Only JavaScript components of the extension will report errors here.</p>
+				<h2>stdout</h2>
+				<p>Currently, not all of the PolyML output is printed to the PolyML console in Firefox. Some of it goes to the stdout, that can be seen, for example, by opening Firefox from a terminal (e.g. on linux that would mean executing command "firefox" in the terminal)</p>
+				<h2>Rebuilding Heaps</h2>
+				<p>You'll find the "Rebuild Heaps" button in the settings page, in case that is your problem. For example, this could be needed if you updated the version of PolyML on your machine.</p>
+			</section>
+			
+			<section id="architecture">
+				<h1>Architecture</h1>
+				<p>To understand the limitations and potential applications of the PolyChrome extension, it is important to have some insight on how it works</p>
+				<h2>Firefox</h2>
+				<p>Firefox browser is as a collection of HTML rendering engine, DOM, JavaScript engine, networking components and many other components. When you enter a URL into the address bar and press enter, Firefox loads an HTML document from the server (or local filesystem), parses it into a Document Object Model (DOM), renders it on the screen and executes the JavaScript code embedded in the HTML document. JavaScript can modify how the document is rendered on screen and react to various user interaction events like mouse clicks and keyboard presses. DOM, which is the in memory representation of HTML, is reflected into JavaScript as a JavaScript object. Calling methods and modifying attributes of this DOM-JavaScript wrapper object affects the DOM and the way it is rendered to the user.</p>
+				<h2>PolyChrome</h2>
+				<p>After the document is loaded, parsed and rendered, PolyChrome looks at the DOM to see if the document contains any script tags with PolyML code. If that's the case a PolyML process is started specifically for this document. A socket communication is established between the JavaScript components and PolyML components. The code that was found on the page is sent through the socket to PolyML for evaluation.</p>
+				<h2>JS FFI</h2>
+				<p>Because we have this connection between JavaScript and PolyML and because JavaScript has access to DOM, we can now ask JavaScript to modify the DOM from within SML.</p>
+				<p>Read more about the FFI in section <a href="jsffi" target="content">Using JavaScript FFI</a> and read the next section to see what are the implications of using this socket-based-foreign-function-interface.</p>
+				<h2>PolyChrome Components</h2>
+				<p>Below is a rough scheme of the PolyChrome components and their relationships.</p>
+				<img src="images/Components.png" />
+				<h2>Additional References</h2>
+				<p>MSc thesis on PolyChrome: <a href="http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf">http://www.inf.ed.ac.uk/publications/thesis/online/IM100814.pdf</a></p>
+			</section>
+			
+			<section id="memory">
+				<h1>Memory Sharing</h1>
+				<p>DOM elements (e.g., input fields, buttons, paragraphs, images) appear in JavaScript as JavaScript objects. To work with these objects need to be able to store them and access their methods and attributes from within SML.</p>
+				<p>For example, every time, you call a DOM function that returns an HTML element, e.g.:</p>
+				<pre>
+	val getElementById : Document -> string -> HTMLElement option</pre>
+				<p>you are actually only getting a unique string identifier of this element. That is, JavaScript keeps track of all these objects that SML had interest in, by storing (string identifier, reference to the object) tuples. It only sends the string identifier of an object to SML.<p>
+				<p>If you lose the string identifier in SML, there is no way to get access to a the corresponding DOM or JavaScript object, however the reference remains stored in JavaScript, which could prevent JavaScript garbage collection and in this way leak memory.</p>
+				<h2>Memory Management</h2>
+				<p>To prevent the memory leaking, you will have to clean up any JavaScript references, when you don't need them in SML anymore. To do that you should use the jsffi.Memory structure</p>
+				<pre>
+	signature JSFFI =
+	sig
+		...
+		(* these are used for keeping the temporary memory, used for
+		   storing javascript objects, tidy *)
+		structure Memory :
+		sig
+			val switchNs : string -> unit
+			val switchDefaultNs : unit -> unit
+			val addFunctionReference : string -> fptr
+			val addFunctionReferenceOW : string -> fptr
+			val removeReference : string -> unit
+			val deleteNs : string -> unit
+			val clearNs : string -> unit
+			val clearDefaultNs : unit -> unit
+		end
+		...
+	end</pre>
+			<p>For example:</p>
+			<pre>
+	val a = valOf (DOM.getElementById DOM.document "test")
+	(* if the value is not going to be ever used anymore *)
+	val _ = jsffi.removeReference a</pre>
+			<h2>Namespacing</h2>
+			<p>It might be cumbersome to keep track of all these references individually. For convenience, you can use the "namespacing" functionality.</p>
+			<pre>
+	(* we'll be using this value throughout the lifetime of the application *)
+	val permanent = valOf (DOM.getElementById DOM.document "permanent")
+	fun temporary () =
+		let
+			val _ = jsffi.switchNs "temp"
+			val temp1 = valOf (DOM.getElementById DOM.document "temp1")
+			val temp2 = valOf (DOM.parent temp1)
+			val temp3 = valOf (DOM.lastChild temp2)
+			(* you can still access the "permanent" element here *)
+			val _ = DOM.setValue temp3 (DOM.getValue permanent)
+			val _ = jsffi.deleteNs "temp"
+		in () end</pre>
+			</section>
+			
+			<section id="script-tags">
+				<h1>Script Tags</h1>
+				<p>There are several ways of embedding SML into the HTML documents.</p>
+				<h2>Embedding code</h2>
+				<p>This could be used for short snippets of code.</p>
+				<pre>
+	&lt;script type=&quot;application/x-polyml&quot;&gt;
+	  (* sml code *)
+	&lt;/script&gt;</pre>
+				<h2>Embedding sml files</h2>
+				<p>This could be used to embed larger applications. In this case, the files are compiled immediately after they are downloaded.</p>
+				<pre>
+	&lt;script type=&quot;application/x-polyml&quot; src=&quot;link/to/file1.sml&quot;&gt;&lt;/script&gt;
+	&lt;script type=&quot;application/x-polyml&quot; src=&quot;link/to/file2.sml&quot;&gt;&lt;/script&gt;</pre>
+				<h2>Embedding zip files</h2>
+				<p>This could be used for large applications including many files. The zip file is downloaded to the client and extracted into a temporary sandbox directory.</p>
+				<pre>
+	&lt;script type=&quot;application/x-polyml&quot; src=&quot;link/to/file.zip&quot;&gt;&lt;/script&gt;</pre>
+				<h2>Sandbox</h2>
+				<p>In all of the above cases, a temporary sandbox (it's not really a sandbox at the moment, that is you can freely browse the filesystem of the clients computer from the SML script) directory is created on the clients machine. The working directory of the toplevel PolyML shell is always set to that sandbox, thus you can access the downloaded files as they are all placed into this sandbox directory. These temporary directories are created in <strong>your_firefox_profile/extensions/polychrome@ed.ac.uk/storage/temporary</strong></p>
+				<h2>&nbsp;</h2>
+				<p>Obviously, a combination of the above could also be used. For example, you might include a large application by embedding the zip file and include a short snippet of code in HTML initializing the application.</p>
+			</section>
+			
+			<section id="persistance">
+				<h1>Persistance</h1>
+				<p>Currently, you can add a "persist" class to the script tags of your PolyChrome application, to tell the extension not to remove the sandbox directory of the application</p>
+				<p>For example, you can include your application in the document like this:</p>
+				<pre>
+	&lt;script type=&quot;application/x-polyml&quot; src=&quot;link/to/file1.sml&quot; class=&quot;persist&quot;&gt;&lt;/script&gt;</pre>
+				<p>Then, your included application can create some files on the disk. The next time you open this application in the browser, those files can still be accessed by the application.</p>
+				<p>If you include multiple scripts, it's enough to add "persist" class to one of them as the persistant storage is provided to the application based on the document url.</p>
+				<p>Your PolyChrome application starts in the root of this persistant storage directory.</p>
+				<p>In the <strong>Settings</strong> page you can clear the persistant data of all applications. To delete data per application basis you'll have to do that manually by browsing to <strong>your-ff-profile/extensions/polychrome@ed.ac.uk/storage/persistant/</strong>.</p>
+				<p>It would be nice in the future to explore the HTML5 local storage capabilities, perhaps combine it with the file storage.</p>
+			</section>
+			
+			<section id="jsffi">
+				<h1>Using JavaScript FFI</h1>
+				<p>PolyChrome can execute any Standard ML code. However, the HTML/DOM interaction is limited by what is provided in the DOM and Canvas libraries. Currently these 2 libraries don't provide much functionality and they will have to be extended in order to do something useful.</p>
+				<p>It is easy to extend the libraries or implement wrappers for any other existing JavaScript libraries, by using the JavaScript Foreign Function Interface (jsffi structure). In the demos page you'll find examples of jQuery and Raphael JavaScript libraries being used from SML.</p>
+				<h2>jsffi</h2>
+				<p>There are currently 4 functions that you can use to interact with JavaScript</p>
+				<pre class="code">
+	signature JSFFI =
+	sig
+		...
+		(* these are used to call JS functions
+		   when using exec_js_r, it is up to the implementation of the wrapper
+		   function to convert the returned string to an appropriate type *)
+		(* args: an fptr to an object, a function name, an argument list *)
+		(* e.g. exec_js_r "document|" "getElementById" [arg.string "something"] *)
+		val exec_js_r : string -> string -> JSON.T list list -> string
+		val exec_js : string -> string -> JSON.T list list -> unit
+		val exec_js_get : string -> string -> JSON.T list list -> string
+		val exec_js_set : string -> string -> JSON.T list list -> unit
+		...
+	end</pre>
+				<p><strong>exec_js_r</strong> and <strong>exec_js</strong> are used to call JavaScript functions. The former expects something returned and the latter does not. They take 3 arguments. An object whose method will be called, a name of the method and a list of arguments.<strong>exec_js_get</strong> and <strong>exec_js_set</strong> are similar, but instead of calling methods they get and set attributes of the object.</p>
+				<p>To start with, you can use two fptr - "window|" and "document|". The foreign pointers are simply strings of this form "identifier|namespace". <strong>Window object</strong> in the browser is the root, global, ultimate object in the browser. Any JavaScript variable or function that is created in global scope becomes an attribute of the window object. Even the document object can be accessed using the window object fptr.</p>
+				<pre class="code">
+	exec_js_get "window|" "document" [];
+	val it = "0|": string</pre>
+				<p>Now, the fptrs "0|" and "document|" point to the same JavaScript object. Both of them can now be used as the first arguments to the exec_js functions.</p>
+				<p>For example, to call the getElementById function, we do:</p>
+				<pre class="code">
+	fun parse_element e = case e of "null" => NONE | x => SOME (HTMLElement x)
+	fun getElementById (Document d) id = parse_element (exec_js_r d "getElementById" [arg.string id])</pre>
+				<p>For example, to use the Raphael library, we can do this:</p>
+				<pre class="code">
+	...
+	&lt;script type=&quot;text/javascript&quot; src=&quot;raphael/js/raphael-1.5.2.js&quot;&gt;&lt;/script&gt;
+	&lt;script type=&quot;application/x-polyml&quot;&gt;
+	datatype paper = Paper of fptr
+	fun Raphael (x, y, w, h) = Paper (exec_js_r &quot;window|&quot; &quot;Raphael&quot; [arg.int x, arg.int y, arg.int w, arg.int h])
+	&lt;/script&gt;
+	...</pre>
+				<h2>Accessing Deeper Attributes of JavaScript Objects</h2>
+				<p>Javascript</p>
+				<pre class="code">
+	Raphael.getColor()</pre>
+				<p>is equivalent to JavaScript</p>
+				<pre class="code">
+	window.Raphael.getColor()</pre>
+				<p>which in SML can be achieved by</p>
+	<pre class="code">
+	exec_js_r "window|" "Raphael.getColor" []</pre>
+			</section>
+			
+			<section id="callbacks">
+				<h1>Callbacks</h1>
+				<p>Sometimes you need JavaScript to be able to reference PolyML memory. One of such cases is DOM events. To handle DOM events, the JavaScript FFI is used to add event listeners, but there has to be a way for the JavaScript event handler to call PolyML functions. This is currently quite cumbersome as it involves maintaining data structures to store the PolyML functions for later use. In the future, it would be nice to have this integrated in the jsffi structure.<p>
+				<p>Below is an implementation of DOM.addEventListener</p>
+				<pre>
+	structure DOM : DOM =
+	struct
 	
-	<frameset cols="210,2*" border="none">
-		<frame src="contents.htm" noresize="true" />
-		<frame src="intro.htm" name="content" />
-	</frameset>
+		local open jsffi in
+		
+		...
+		datatype EventListener = EventListener of string;
+		datatype Event = Event of fptr
+		datatype EventType = click | change | keypress | keyup | mouseover | mouseout | mousemove
+		datatype EventCallback = EventCallback of Event -> unit
+		
+		(* we'll keep event callbacks here *)
+		val eventCallbackTab = ref (Tab.empty : (HTMLElement * EventType * EventCallback) Tab.T)
+		fun handle_event id event = let
+				val (_, _, EventCallback f) = (Tab.get (!eventCallbackTab) (Name.mk id))
+					handle UNDEF => (raise Error ())
+				val _ = f (Event event)
+				val _ = Memory.removeReference event (* clean up the memory *)
+				val _ = ready ()
+			in () end
+		
+		...
+		
+		fun addEventListener_ (HTMLElement e) et f add_function_reference = let
+				val callback = "val _ = DOM.handle_event {id} {arg} ;"
+				val id = add_function_reference callback
+				val entry = (HTMLElement e, et, f)
+				val _ = (eventCallbackTab := Tab.ins (Name.mk id, entry) (!eventCallbackTab))
+				val _ = exec_js e "addEventListener" [arg.string (string_of_eventtype et),
+													  arg.reference id, arg.bool false]
+			in EventListener id end
+		fun addEventListener e et f = addEventListener_ e et f Memory.addFunctionReference
+		fun addEventListenerOW e et f = addEventListener_ e et f Memory.addFunctionReferenceOW
+	
+		fun removeEventListener (EventListener id) = let
+				val (HTMLElement e, et, _) = (Tab.get (!eventCallbackTab) (Name.mk id))
+							  handle UNDEF => (raise PolyChrome.DOMExn "Undefined listener");
+				val _ = (eventCallbackTab := (Tab.delete (Name.mk id) (!eventCallbackTab)))
+				val _ = exec_js e "removeEventListener" [arg.string (string_of_eventtype et),
+														 arg.reference id, arg.bool false]
+				val _ = Memory.removeReference id
+			in () end
+		
+		...
+		
+		end
+	end</pre>
+				<h2>Comments</h2>
+				<p>We store the HTML element, event type and event callback function to the <strong>eventCallbackTab</strong> table. We need this table to be able to call the function anytime the event fires. The event type and the HTML element has to be stored, because that information is needed when we want to remove the event listener.</p>
+				<p><strong>add_function_reference</strong> is used to create a JavaScript function, that when called, sends a string to PolyML, in this case "val _ = DOM.handle_event {id} {arg} ;", for evaluation. This way we can create a JavaScript function that can call an SML function. The obscure {id} bit is replaced by JavaScript with the string identifier of that JavaScript function. It is the same identifier that is used for all JavaScript objects that are shared between JavaScript and PolyML as discussed in the <a href="memory.html" target="content">Memory Sharing</a> section. Each of the following {arg} substrings are replaced with the argument that the JavaScript function was called with. For example, in this case, all callbacks passed to the window.document.addEventListener function are called with an event object, which in this case is going to be passed to the SML function as an argument (again, only the string identifier will be passed to SML).</p>
+				<p>The difference between Memory.addFunctionReference and Memory.addFunctionReferenceOW is that the latter can be used in case of rapidly firing events. All of the callbacks that are called using the mechanism described above are queued up in JavaScript. If, for example, you listen to the mousemove event, moving the mouse will queue up a lot of these event callbacks. If Memory.addFunctionReferenceOW is used, where OW stands for OverWritable, then only the last function call in the queue will be called when PolyML is ready to handle more events. By the way, that is what jsffi.ready() is needed for. It tells JavaScript that PolyML is ready to handle more events and the next callback from the queue is dispatched to PolyML.</p>
+				<p>To fully understand what's going on in here you will have to look at the implementation of jsffi in both SML and JS. Those can be found in jsffi.sml and JSFFI.js files.</p>
+			</section>
+			
+			<section id="signature_dom">
+				<h1>DOM signature</h1>
+				<pre>
+signature DOM =
+sig
+
+	datatype Event = Event of jsffi.fptr
+	datatype Window = Window of jsffi.fptr
+	datatype EventListener = EventListener of string
+	datatype HTMLElement = HTMLElement of jsffi.fptr
+	datatype Timeout = Timeout of string
+	datatype Interval = Interval of string
+	datatype TimerCallback = TimerCallback of unit -> unit
+	datatype EventType =
+		change
+	  | click
+	  | keypress
+	  | keyup
+	  | mousemove
+	  | mouseout
+	  | mouseover
+	datatype HTMLCollection = HTMLCollection of jsffi.fptr
+	datatype EventCallback = EventCallback of Event -> unit
+	datatype Document = Document of jsffi.fptr
+	
+	val document : Document
+	val window : Window
+	
+	val fptr_of_HTMLElement : HTMLElement -> jsffi.fptr
+	val string_of_eventtype : EventType -> string
+	val parse_element : string -> HTMLElement option
+	val parse_element_list : string -> HTMLElement list
+	
+	val getElementById : Document -> string -> HTMLElement option
+	val getElementsByTagName : Document -> string -> HTMLCollection
+	val parentNode : HTMLElement -> HTMLElement option
+	val lastChild : HTMLElement -> HTMLElement option
+	val removeChild : HTMLElement -> HTMLElement -> unit
+	val previousSibling : HTMLElement -> HTMLElement option
+	val getStyle : HTMLElement -> string -> string
+	val replaceChild : HTMLElement -> HTMLElement -> HTMLElement -> unit
+	val nextSibling : HTMLElement -> HTMLElement option
+	val setStyle : HTMLElement -> string * string -> unit
+	val firstChild : HTMLElement -> HTMLElement option
+	val appendChild : HTMLElement -> HTMLElement -> unit
+	val childNodes : HTMLElement -> HTMLElement list
+	val createElement : Document -> string -> HTMLElement
+	val createTextNode : Document -> string -> HTMLElement
+	val getAttribute : HTMLElement -> string -> string
+	val setAttribute : HTMLElement -> string * string -> unit
+	val removeAttribute : HTMLElement -> string -> unit
+	val getInnerHTML : HTMLElement -> string
+	val setInnerHTML : HTMLElement -> string -> unit
+	val getValue : HTMLElement -> string
+	val setValue : HTMLElement -> string -> unit	
+	val getHTMLCollectionItem : HTMLCollection -> int -> HTMLElement
+	
+	val addEventListener :
+	   HTMLElement -> EventType -> EventCallback -> EventListener
+	val addEventListenerOW :
+	   HTMLElement -> EventType -> EventCallback -> EventListener
+	val removeEventListener : EventListener -> unit
+	val setInterval : Window -> TimerCallback -> int -> Timeout	
+	val clearInterval : Window -> Interval -> unit
+	val setTimeout : Window -> TimerCallback -> int -> Timeout
+	val clearTimeout : Window -> Timeout -> unit
+	
+	val handle_event : string -> jsffi.fptr -> unit
+	val handle_interval : string -> unit
+	val handle_timeout : string -> unit
+	
+	val getClientX : Event -> int
+	val getClientY : Event -> int	
+	
+	val alert : Window -> string -> unit
+
+end
+				</pre>
+			</section>
+			
+			<section id="signature_canvas">
+				<h1>Canvas Signature</h1>
+				<pre>
+signature CANVAS =
+sig
+
+    datatype Context = Context of jsffi.fptr
+    
+    val getContext : DOM.HTMLElement -> string -> Context
+    val stroke : Context -> unit
+    val fillRect : Context -> int -> int -> int -> int -> unit
+    val moveTo : Context -> int -> int -> unit
+    val fill : Context -> unit
+    val lineTo : Context -> int -> int -> unit
+    val getStrokeStyle : Context -> string
+    val beginPath : Context -> unit
+    val fillStyle : Context -> string -> unit
+    val getFillStyle : Context -> string
+    val canvasHeight : Context -> int
+    val arc : Context -> int -> int -> real -> real -> real -> bool -> unit
+    val getLineWidth : Context -> string
+    val canvasWidth : Context -> int
+    val setStrokeStyle : Context -> string -> unit
+    val setFillStyle : Context -> string -> unit
+    val setLineWidth : Context -> real -> unit
+
+end
+				</pre>
+			</section>
+			
+			<section id="signature_json">
+				<h1>JSON Signature</h1>
+				<pre>
+signature JSON =
+sig
+
+	exception notobj_exn of unit
+
+	structure Tab : NAME_TAB
+	structure Name : SSTR_NAMES
+
+	datatype T =
+		Bool of bool
+	  | Int of int
+	  | List of T list
+	  | Null
+	  | Object of T Tab.T
+	  | Real of real
+	  | String of string
+	
+	val empty : T
+	val update : string * T -> T -> T
+	val add : string * T -> T -> T
+	val lookup : T -> string -> T option
+	val get : T -> string -> T
+	val delete : string -> T -> T
+	val encode : T -> string
+
+end
+				</pre>
+			</section>
+			
+			<section id="signature_jsffi">
+				<h1>JSFFI Signature</h1>
+				<pre>
+signature JSFFI =
+sig
+    type fptr
+    
+    exception Error of unit
+    
+    structure Tab : NAME_TAB
+    structure Name : SSTR_NAMES
+    
+    
+    (* this is used in combination with the exec_js_r and exec_js*)
+    structure arg :
+    sig
+        val string : string -> JSON.T list
+        val reference : fptr -> JSON.T list
+        val real : real -> JSON.T list
+        val object : JSON.T -> JSON.T list
+        val null : unit -> JSON.T list
+        val list : JSON.T list -> JSON.T list
+        val int : int -> JSON.T list
+        val callback : string -> JSON.T list
+        val bool : bool -> JSON.T list
+    end
+    
+    (* these are used to call JS functions
+       when using exec_js_r, it is up to the implementation of the wrapper
+       function to convert the returned string to an appropriate type *)
+    (* args: an fptr to an object, a function name, an argument list *)
+    (* e.g. exec_js_r "document|" "getElementById" [arg.string "something"] *)
+    val exec_js_r : string -> string -> JSON.T list list -> string
+    val exec_js : string -> string -> JSON.T list list -> unit
+    val exec_js_get : string -> string -> JSON.T list list -> string
+    val exec_js_set : string -> string -> JSON.T list list -> unit
+    
+    (* this must be called after handling each event *)
+    val ready : unit -> unit
+    
+    (* these are used for keeping the temporary memory, used for
+       storing javascript objects, tidy *)
+    structure Memory :
+    sig
+        val switchNs : string -> unit
+        val switchDefaultNs : unit -> unit
+        val addFunctionReference : string -> fptr
+        val addFunctionReferenceOW : string -> fptr
+        val removeReference : string -> unit
+        val deleteNs : string -> unit
+        val clearNs : string -> unit
+        val clearDefaultNs : unit -> unit
+    end
+    
+end
+				</pre>
+			</section>
+			
+			<section id="development-guidelines">
+				<h1>Development Guide</h1>
+				<p>The source code and the bug tracker can be found at <a href="https://github.com/KidkArolis/PolyChrome">https://github.com/KidkArolis/PolyChrome</a>.</p>
+				<h2>Setting Up the Development Environment</h2>
+				<p>Firefox extension is a zip archive with all of the extension files (with an extension .xpi), that is extracted to your Firefox profile once you install it. You could browse to your firefox profile and modify the code of the extension there, but there is a much better way of working on the code of the extension. Clone or fork the repository and create a "symlink" in your Firefox profile, pointing to the repo. Note, that this symlink is not a symlink in a usual sense, it is just a text file with a path to the extension. The simplest way of doing this is using the deploy script that you'll find in the root dir of the repo.</p>
+				<p>To use the deploy script you'll first need to create a <strong>deploy.cfg</strong> file based on the <strong>deploy.cfg.template</strong></p>
+				<p>After that, simply executing</p>
+				<pre># ./deploy run</pre>
+				<p>will place a text file in your Firefox profile with the path to the source code of the extension and will immediately run Firefox (with the error console opened up). After running the deploy script once, Firefox will always load the extension from your repository. However, you do need to restart the Firefox browser every time you modify the JavaScript components of the extension or overlays/styles, etc. If you can't see some changes that you expect to see after restarting Firefox, you might want to run the deploy script again, because it clears the extension registry/cache. To remove the extension, you can simply uninstall it via the Add-Wons manager in Firefox
+				<p>Modifying SML components requires only the refresh of the HTML document. When extension is loaded using this "symlink", the extension knows it's running in development mode (function Utils.isDevelopmentMode) and therefore recompiles the SML components every time a document is opened.</p>
+				<p>Also, you should take a look at <a href="https://developer.mozilla.org/en/setting_up_extension_development_environment">https://developer.mozilla.org/en/setting_up_extension_development_environment</a>, especially the "Development preferences".</p>
+				<p>In general <a href="https://developer.mozilla.org/">https://developer.mozilla.org/</a> is the place to look for all of the extension development related docs.</p>
+				<h2>Packaging</h2>
+				<p>Executing</p>
+				<pre># ./deploy package</pre>
+				<p>will zip the neccessary files and create an .xpi file.</p>
+				<h2>File Structure</h2>
+				<p><strong>/polychrome/chrome/content/core</strong> - contains the JavaScript components of the extension. Their relationships can be seen in the <a href="architecture.html" target="content">Architecture section</a></p>
+				<p><strong>/polychrome/chrome/content/core/PolyChrome.js</strong> - is the entry script. PolyChrome.init function, called in the ff-overlay.xul, starts the magic.</p>
+				<p><strong>/polychrome/chrome/content/ff-overlay.js</strong> - describes the GUI of the extension.</p>
+				<p><strong>/polychrome/chrome/content/docs</strong> - contains this documentation that you're reading right now. A copy of this directory is placed in the "gh-pages" branch of the repo for online access via GitHub pages.</p>
+				<p><strong>/polychrome/chrome/content/demos</strong> - contains all of the demos.</p>
+				<p><strong>/polychrome/poly</strong> - contains the SML components of the extension.</p>
+				<p><strong>/polychrome/poly/main.sml</strong> - is the entry script of the PolyML side of things. PolyChrome.main is the initialization function called in the polyml.sh bash script (that is executed in JavaScript).</p>
+				<p><strong>/polychrome/poly/bin</strong> - contains some bash scripts for finding PolyML binary on the clients machine, running the main.sml script, and killing the PolyML process. This is the only bit of the whole extension that prevents it to be truly cross-platform. Hopefully, with some modifications in the next release of PolyML, these scripts won't be neccessary anymore.</p>
+				<p><strong>/polychrome/poly/isaplib/</strong> - contains the isaplib library that is used by the extension. Isaplib is part of the <a href="http://dream.inf.ed.ac.uk/projects/isaplanner/">IsaPlanner</a></p>
+				<p><strong>/polychrome/sandboxes/</strong> - is used to store all temporary files downloaded from the server (when they're included using script tags).</p>
+				<p>Read <a href="https://developer.mozilla.org/en/building_an_extension">https://developer.mozilla.org/en/building_an_extension</a> for description of the other, Firefox specific, files, such as install manifest.</p>
+			</section>
+			
+		</div>
+		
+		<script>
+			$('nav a:not(.out)').click(function() {
+				$('section').hide();
+				$($(this).attr('href')).show();
+				$('nav li').removeClass('active');
+				$(this).parent().addClass('active');
+				window.location.hash = $(this).attr('href');
+				return false;
+			})
+			
+			if (window.location.hash.length && $('nav a[href="'+window.location.hash+'"]').length) {
+				$('nav a[href="'+window.location.hash+'"]').click();
+			} else {
+				$('nav a[href="#intro"]').click();
+			}
+			
+			
+			function staticNav() {
+				var sidenavHeight = $("nav").height(); //Get height of sidenav
+				var winHeight = $(window).height(); //Get height of viewport
+				if (sidenavHeight > winHeight) { //If sidenav is taller than viewport...
+					$("nav").css({'position' : 'absolute'});
+				} else {
+					$("nav").css({'position' : 'fixed'});
+				}
+			}
+			staticNav(); //Execute function on load
+			$(window).resize(function () { //Each time the viewport is adjusted/resized, execute the function
+				staticNav();
+			});
+		</script>
+	</body>
 </html>

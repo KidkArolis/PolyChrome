@@ -1,3 +1,5 @@
 *.komodoproject
 deploy.cfg
 *.xpi
+*.polyml-heap
+polychrome/storage/*
